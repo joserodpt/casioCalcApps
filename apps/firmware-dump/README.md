@@ -21,7 +21,8 @@ rather than dumping garbage.
 | Key | Action |
 |---|---|
 | ▲ ▼ | Select a region |
-| F1 | Dump the selected region (EXIT aborts while it runs) |
+| F1 | Dump the selected region to storage (EXIT aborts while it runs) |
+| F2 | Stream the selected region to a PC over USB (EXIT aborts) |
 | F4 / F5 (Custom) | Edit base / size; type hex digits (A–F on the letter row) |
 | DEL / AC | Edit a digit / reset the custom region |
 | OPTN or F6 | Info screen |
@@ -32,6 +33,23 @@ Custom parts are named by their start address (`DUMP\80400000.bin`,
 time: dump 4 MB, copy the files off, delete them, move the base on. The full
 ROM is larger than the free storage memory, and the OS may go past 4 MB:
 use the preview to see where the data turns into `FF FF ...`.
+
+## Streaming over USB (F2)
+
+Sends the region straight to the PC, with nothing written to storage, so
+even the full ROM fits. On the PC, start the receiver first:
+
+    scripts/firmdump-recv.py -o ~/casio-dump
+
+then press F2 on the calculator and plug the cable in (the calculator must
+not be in USB Flash mode: FirmDump drives USB itself). Each region arrives
+as one file, `OS.bin`, `ROM.bin` or `<base>.bin`; the link stays open, so
+pick another region and press F2 again. The receiver only needs the libusb
+shared library (no Python packages); on Linux it needs a udev rule once,
+which it prints if the device can't be opened. `fxlink -i` works too
+(application `firmdump`, type = the name).
+
+## Copying stored dumps
 
 Copy the files off with the USB cable or by reading the storage memory. To
 reassemble on a PC: `cat OS00.bin OS01.bin ... > firmware.bin` (custom parts

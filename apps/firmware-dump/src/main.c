@@ -8,13 +8,20 @@
 
    Nothing is modified on the calculator: it only reads memory and writes
    new files under \\fls0\DUMP. BFile can't run inside gint, so every file
-   operation goes through gint_world_switch(). */
+   operation goes through gint_world_switch().
+
+   F2 streams the region over USB instead, as one fxlink message
+   (application "firmdump", type = the file name), with nothing written to
+   storage: scripts/firmdump-recv.py (or fxlink -i) saves it on the PC. */
 
 #include <gint/display.h>
 #include <gint/keyboard.h>
 #include <gint/bfile.h>
 #include <gint/hardware.h>
 #include <gint/gint.h>
+#include <gint/clock.h>
+#include <gint/usb.h>
+#include <gint/usb-ff-bulk.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -34,6 +41,7 @@
 #define PART_SIZE (1u << 20)        /* one output file per 1 MB */
 #define CHUNK     4096              /* bytes per BFile_Write */
 #define BLOCK     0x10000u          /* bytes per world switch (64 KB) */
+#define USB_WAIT_MS 10000           /* the PC must take each block by then */
 
 //---
 //  Regions
@@ -212,9 +220,20 @@ static void draw(int sel, int digit, progress_t const *pg)
     }
 
     fkey_button_color(1, L("DUMP", "COPIAR"), COLOR);
-    fkey_button(2, "USB?");
+    fkey_button(2, "USB");
     fkey_button(6, L("ABOUT", "SOBRE"));
     dupdate();
+}
+
+/* After EXIT cancelled something: wait for the key to come up and drop its
+   events, so the main loop's getkey() doesn't see it and quit too */
+static void swallow_exit(void)
+{
+    while (keydown(KEY_EXIT)) {
+        clearevents();
+        sleep_ms(10);
+    }
+    clearevents();
 }
 
 //---
@@ -263,6 +282,7 @@ static void run_dump(int sel, progress_t *pg)
     region_t const *r = &regions[sel];
     uint16_t path[48];
 
+    usb_close();                        /* file writes leave gint: no USB */
     pg->status = ST_RUNNING;
     pg->done = 0;
     pg->parts = 0;
@@ -304,6 +324,7 @@ static void run_dump(int sel, progress_t *pg)
             clearevents();
             if (keydown(KEY_EXIT)) {
                 gint_world_switch(GINT_CALL(os_close, fd));
+                swallow_exit();
                 pg->status = ST_ABORT;
                 snprintf(pg->message, sizeof pg->message,
                     L("Aborted after %u KB", "Cancelado apos %u KB"), (unsigned)(pg->done >> 10));
@@ -321,6 +342,118 @@ static void run_dump(int sel, progress_t *pg)
         L("Done: %u KB in %d file%s under \\fls0\\DUMP",
         "Feito: %u KB em %d ficheiro%s em \\fls0\\DUMP"),
         (unsigned)(pg->done >> 10), pg->parts, pg->parts == 1 ? "" : "s");
+}
+
+//---
+//  USB streaming
+//---
+
+/* Open the USB link and wait for the PC to set it up; false if EXIT was
+   pressed or the link can't open */
+static bool usb_link(int sel, progress_t *pg)
+{
+    static usb_interface_t const *intf[] = { &usb_ff_bulk, NULL };
+
+    if (usb_is_open()) return true;
+    int rc = usb_open(intf, GINT_CALL_NULL);
+    if (rc < 0 && rc != USB_OPEN_ALREADY_OPEN) {
+        snprintf(pg->message, sizeof pg->message,
+            L("USB open failed (%d)", "Falha ao abrir USB (%d)"), rc);
+        pg->status = ST_ERROR;
+        return false;
+    }
+
+    pg->status = ST_IDLE;
+    snprintf(pg->message, sizeof pg->message, "%s",
+        L("Connect the USB cable (EXIT cancels)",
+        "Ligue o cabo USB (EXIT cancela)"));
+    draw(sel, 0, pg);
+    while (!usb_is_open()) {
+        clearevents();
+        if (keydown(KEY_EXIT)) {
+            usb_close();
+            swallow_exit();
+            pg->status = ST_ABORT;
+            snprintf(pg->message, sizeof pg->message, "%s",
+                L("USB cancelled", "USB cancelado"));
+            return false;
+        }
+        sleep_ms(50);
+    }
+    return true;
+}
+
+/* Send the region to the PC as one fxlink message. The link stays open, so
+   several regions can go one after the other */
+static void run_stream(int sel, progress_t *pg)
+{
+    static uint8_t buf[CHUNK] __attribute__((aligned(4)));
+    region_t const *r = &regions[sel];
+    char type[16];
+
+    if (!usb_link(sel, pg)) return;
+
+    if (r->editable) snprintf(type, sizeof type, "%08X", (unsigned)r->base);
+    else snprintf(type, sizeof type, "%s", r->file);
+
+    usb_fxlink_header_t header;
+    usb_fxlink_fill_header(&header, "firmdump", type, r->size);
+
+    pg->status = ST_RUNNING;
+    pg->done = 0;
+    pg->parts = 0;
+    snprintf(pg->message, sizeof pg->message,
+        L("Sending %s over USB ...", "A enviar %s por USB ..."), type);
+    draw(sel, 0, pg);
+
+    int pipe = usb_ff_bulk_output();
+    timeout_t t = timeout_make_ms(USB_WAIT_MS);
+    int rc = usb_write_sync_timeout(pipe, &header, sizeof header, false, &t);
+
+    for (uint32_t off = 0; rc == 0 && off < r->size; off += BLOCK) {
+        uint32_t n = r->size - off < BLOCK ? r->size - off : BLOCK;
+        t = timeout_make_ms(USB_WAIT_MS);
+        for (uint32_t o = 0; rc == 0 && o < n; o += CHUNK) {
+            uint32_t k = n - o < CHUNK ? n - o : CHUNK;
+            for (uint32_t i = 0; i < k; i++) buf[i] = peek(r->base + off + o + i);
+            rc = usb_write_sync_timeout(pipe, buf, k, false, &t);
+        }
+        if (rc) break;
+        pg->done += n;
+
+        draw(sel, 0, pg);
+        clearevents();
+        if (keydown(KEY_EXIT)) {
+            /* The message is cut short: drop the link so the PC sees it */
+            usb_close();
+            swallow_exit();
+            pg->status = ST_ABORT;
+            snprintf(pg->message, sizeof pg->message,
+                L("Aborted after %u KB", "Cancelado apos %u KB"),
+                (unsigned)(pg->done >> 10));
+            return;
+        }
+    }
+    if (rc == 0) {
+        t = timeout_make_ms(USB_WAIT_MS);
+        rc = usb_commit_sync_timeout(pipe, &t);
+    }
+
+    if (rc) {
+        usb_close();
+        pg->status = ST_ERROR;
+        if (rc == USB_TIMEOUT)
+            snprintf(pg->message, sizeof pg->message, "%s",
+                L("PC not reading: run firmdump-recv",
+                "PC nao le: corra firmdump-recv"));
+        else snprintf(pg->message, sizeof pg->message,
+            L("USB error %d", "Erro USB %d"), rc);
+        return;
+    }
+    pg->status = ST_DONE;
+    snprintf(pg->message, sizeof pg->message,
+        L("Sent %u KB as %s over USB", "Enviados %u KB (%s) por USB"),
+        (unsigned)(pg->done >> 10), type);
 }
 
 //---
@@ -365,7 +498,7 @@ int main(void)
         int d = key_hex(key);
         region_t *r = &regions[sel];
 
-        if (key == KEY_EXIT) return 1;
+        if (key == KEY_EXIT) { usb_close(); return 1; }
         if (key == INFO_KEY || key == KEY_F6) {
             info_show("FirmDump", L("Firmware dump " APPS_VERSION,
                 "Copia de firmware " APPS_VERSION), COLOR);
@@ -381,10 +514,7 @@ int main(void)
             continue;
         }
         if (key == KEY_F2) {
-            snprintf(pg.message, sizeof pg.message,
-                L("USB streaming not available yet",
-                "Streaming USB ainda nao disponivel"));
-            pg.status = ST_IDLE;
+            run_stream(sel, &pg);
             continue;
         }
 
