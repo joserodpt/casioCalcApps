@@ -201,7 +201,7 @@ ICONS = {
     "timer":         ((30, 80, 170), draw_timer),
     "logic":         ((112, 50, 160), draw_logic),
     "firmware-dump": ((60, 62, 74), draw_firmware_dump),
-    "converter":     ((18, 92, 120), draw_converter),
+    "chemistry":     ((18, 92, 120), draw_converter),
 }
 
 

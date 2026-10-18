@@ -66,7 +66,7 @@ static void form_run(form_t *f)
         int key = getkey().key;
         if (key == KEY_EXIT) return;
         if (key == INFO_KEY) {
-            info_show("Converter", lang_current == L_PT ? f->title_pt
+            info_show("Chemistry", lang_current == L_PT ? f->title_pt
                 : f->title_en, f->color);
             continue;
         }
@@ -124,7 +124,7 @@ static void units_screen(void)
 
         int key = getkey().key;
         if (key == KEY_EXIT) return;
-        if (key == INFO_KEY) { info_show("Converter",
+        if (key == INFO_KEY) { info_show("Chemistry",
             L("Unit converter", "Conversor de unidades"), COLOR); continue; }
         if (key == KEY_LEFT) { cat = (cat + category_count - 1)
             % category_count; from = 0; }
@@ -249,7 +249,7 @@ static void molar_screen(void)
         case KEY_9: d=9; break;
         }
         if (key == KEY_EXIT) return;
-        else if (key == INFO_KEY) info_show("Converter",
+        else if (key == INFO_KEY) info_show("Chemistry",
             L("Molar mass", "Massa molar"), COLOR);
         else if (key == KEY_UP || key == KEY_DOWN || key == KEY_LEFT
             || key == KEY_RIGHT) z = grid_move(z, key);
@@ -302,7 +302,7 @@ static void periodic_screen(void)
 
         int key = getkey().key;
         if (key == KEY_EXIT) return;
-        if (key == INFO_KEY) info_show("Converter",
+        if (key == INFO_KEY) info_show("Chemistry",
             L("Periodic table", "Tabela periodica"), COLOR);
         else z = grid_move(z, key);
     }
@@ -446,7 +446,7 @@ static tool_t const tools[] = {
 static void draw_menu(int sel)
 {
     dclear(C_WHITE);
-    info_title("Converter", COLOR);
+    info_title("Chemistry", COLOR);
     for (int i = 0; i < TOOL_COUNT; i++) {
         int y = 22 + i * 30;
         if (i == sel) drect(0, y, DWIDTH - 1, y + 27, C_RGB(28, 29, 31));
@@ -476,7 +476,7 @@ int main(void)
 
         if (key == KEY_EXIT) return 1;
         else if (key == INFO_KEY)
-            info_show("Converter", L("Units & chemistry " APPS_VERSION,
+            info_show("Chemistry", L("Units & chemistry " APPS_VERSION,
                 "Unidades e quimica " APPS_VERSION), COLOR);
         else if (key == KEY_UP) sel = (sel + TOOL_COUNT - 1) % TOOL_COUNT;
         else if (key == KEY_DOWN) sel = (sel + 1) % TOOL_COUNT;
