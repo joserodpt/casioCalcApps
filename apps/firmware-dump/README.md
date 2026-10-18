@@ -27,7 +27,14 @@ rather than dumping garbage.
 | OPTN or F6 | Info screen |
 | EXIT | Quit |
 
+Custom parts are named by their start address (`DUMP\80400000.bin`,
+`DUMP\80500000.bin`, ...), so a large area can be dumped one window at a
+time: dump 4 MB, copy the files off, delete them, move the base on. The full
+ROM is larger than the free storage memory, and the OS may go past 4 MB:
+use the preview to see where the data turns into `FF FF ...`.
+
 Copy the files off with the USB cable or by reading the storage memory. To
-reassemble on a PC: `cat OS00.bin OS01.bin ... > firmware.bin`.
+reassemble on a PC: `cat OS00.bin OS01.bin ... > firmware.bin` (custom parts
+sort by address: `cat 8*.bin > firmware.bin`).
 
 © José Rodrigues 2026

@@ -7,12 +7,14 @@
    always safe. A custom range may hit unmapped memory, so use it with care.
 
    Nothing is modified on the calculator: it only reads memory and writes
-   new files under \\fls0\DUMP. */
+   new files under \\fls0\DUMP. BFile can't run inside gint, so every file
+   operation goes through gint_world_switch(). */
 
 #include <gint/display.h>
 #include <gint/keyboard.h>
 #include <gint/bfile.h>
 #include <gint/hardware.h>
+#include <gint/gint.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -30,7 +32,8 @@
 #define ROM_BASE  0x80000000u       /* P1: cached, memory-mapped flash */
 #define OS_SIZE   0x00400000u       /* the OS occupies the first ~4 MB */
 #define PART_SIZE (1u << 20)        /* one output file per 1 MB */
-#define CHUNK     4096              /* bytes per read/write step */
+#define CHUNK     4096              /* bytes per BFile_Write */
+#define BLOCK     0x10000u          /* bytes per world switch (64 KB) */
 
 //---
 //  Regions
@@ -91,11 +94,17 @@ static bool in_emulator(void)
 
 static uint16_t const DUMP_DIR[] = u"\\\\fls0\\DUMP";
 
-/* "\\fls0\DUMP\<file>NN.bin" into out (UCS-2) */
-static void make_path(uint16_t *out, char const *file, int part)
+/* "\\fls0\DUMP\<file>NN.bin" into out (UCS-2); a custom region's parts are
+   named by their start address instead ("\\fls0\DUMP\80400000.bin"), so
+   successive windows never overwrite each other */
+static void make_path(uint16_t *out, region_t const *r, int part)
 {
     char ascii[40];
-    snprintf(ascii, sizeof ascii, "\\\\fls0\\DUMP\\%s%02d.bin", file, part);
+    if (r->editable)
+        snprintf(ascii, sizeof ascii, "\\\\fls0\\DUMP\\%08X.bin",
+            (unsigned)(r->base + (uint32_t)part * PART_SIZE));
+    else snprintf(ascii, sizeof ascii, "\\\\fls0\\DUMP\\%s%02d.bin",
+        r->file, part);
     int i = 0;
     for (; ascii[i]; i++) out[i] = (uint8_t)ascii[i];
     out[i] = 0;
@@ -212,7 +221,15 @@ static void draw(int sel, int digit, progress_t const *pg)
 //  Writing
 //---
 
-static int create_part(uint16_t const *path, uint32_t size)
+/* These run in the OS world, through gint_world_switch() */
+
+static int os_mkdir(void)
+{
+    BFile_Create(DUMP_DIR, BFile_Folder, NULL);     /* ok if it exists */
+    return 0;
+}
+
+static int os_create_part(uint16_t const *path, uint32_t size)
 {
     int isize = (int)size;
     BFile_Remove(path);                 /* ignore "not found" */
@@ -221,11 +238,28 @@ static int create_part(uint16_t const *path, uint32_t size)
     return BFile_Open(path, BFile_WriteOnly);
 }
 
+/* Copy n bytes from src to the open file, CHUNK at a time; 0 or an error */
+static int os_write(int fd, uint32_t src, uint32_t n)
+{
+    static uint8_t buf[CHUNK];
+    for (uint32_t off = 0; off < n; off += CHUNK) {
+        uint32_t k = n - off < CHUNK ? n - off : CHUNK;
+        for (uint32_t i = 0; i < k; i++) buf[i] = peek(src + off + i);
+        int wr = BFile_Write(fd, buf, (k + 1) & ~1u);    /* keep even */
+        if (wr < 0) return wr;
+    }
+    return 0;
+}
+
+static int os_close(int fd)
+{
+    return BFile_Close(fd);
+}
+
 /* Dump the region to numbered files, refreshing the screen as it goes.
    Returns via pg->status */
 static void run_dump(int sel, progress_t *pg)
 {
-    static uint8_t buf[CHUNK];
     region_t const *r = &regions[sel];
     uint16_t path[48];
 
@@ -233,15 +267,15 @@ static void run_dump(int sel, progress_t *pg)
     pg->done = 0;
     pg->parts = 0;
 
-    BFile_Create(DUMP_DIR, BFile_Folder, NULL);     /* ok if it exists */
+    gint_world_switch(GINT_CALL(os_mkdir));
 
     uint32_t remaining = r->size;
     int part = 0;
 
     while (remaining > 0) {
         uint32_t part_len = remaining < PART_SIZE ? remaining : PART_SIZE;
-        make_path(path, r->file, part);
-        int fd = create_part(path, part_len);
+        make_path(path, r, part);
+        int fd = gint_world_switch(GINT_CALL(os_create_part, path, part_len));
         if (fd < 0) {
             snprintf(pg->message, sizeof pg->message,
                 "Create failed (%d) at part %d", fd, part);
@@ -249,14 +283,13 @@ static void run_dump(int sel, progress_t *pg)
             return;
         }
 
-        for (uint32_t off = 0; off < part_len; off += CHUNK) {
-            uint32_t n = part_len - off < CHUNK ? part_len - off : CHUNK;
+        for (uint32_t off = 0; off < part_len; off += BLOCK) {
+            uint32_t n = part_len - off < BLOCK ? part_len - off : BLOCK;
             uint32_t src = r->base + (uint32_t)part * PART_SIZE + off;
-            for (uint32_t i = 0; i < n; i++) buf[i] = peek(src + i);
 
-            int wr = BFile_Write(fd, buf, (n + 1) & ~1u);    /* keep even */
+            int wr = gint_world_switch(GINT_CALL(os_write, fd, src, n));
             if (wr < 0) {
-                BFile_Close(fd);
+                gint_world_switch(GINT_CALL(os_close, fd));
                 snprintf(pg->message, sizeof pg->message,
                     "Write failed (%d)", wr);
                 pg->status = ST_ERROR;
@@ -264,22 +297,20 @@ static void run_dump(int sel, progress_t *pg)
             }
             pg->done += n;
 
-            /* Refresh and allow aborting roughly every 64 KB */
-            if ((off & 0xFFFF) == 0) {
+            /* Refresh and allow aborting after every block */
+            snprintf(pg->message, sizeof pg->message,
+                L("Writing part %d ...", "A escrever parte %d ..."), part);
+            draw(sel, 0, pg);
+            clearevents();
+            if (keydown(KEY_EXIT)) {
+                gint_world_switch(GINT_CALL(os_close, fd));
+                pg->status = ST_ABORT;
                 snprintf(pg->message, sizeof pg->message,
-                    L("Writing %s%02d.bin ...", "A escrever %s%02d.bin ..."), r->file, part);
-                draw(sel, 0, pg);
-                clearevents();
-                if (keydown(KEY_EXIT)) {
-                    BFile_Close(fd);
-                    pg->status = ST_ABORT;
-                    snprintf(pg->message, sizeof pg->message,
-                        L("Aborted after %u KB", "Cancelado apos %u KB"), (unsigned)(pg->done >> 10));
-                    return;
-                }
+                    L("Aborted after %u KB", "Cancelado apos %u KB"), (unsigned)(pg->done >> 10));
+                return;
             }
         }
-        BFile_Close(fd);
+        gint_world_switch(GINT_CALL(os_close, fd));
         remaining -= part_len;
         part++;
         pg->parts = part;
