@@ -47,6 +47,16 @@ static void form_draw(form_t *f)
 
     int rows = (f->count + f->cols - 1) / f->cols;
     int colw = DWIDTH / f->cols;
+
+    /* Fields start after the widest label (at least x+54) */
+    int fx = 54;
+    for (int i = 0; i < f->count; i++) {
+        int w;
+        dsize(lang_current == L_PT ? f->fields[i].label_pt
+            : f->fields[i].label_en, NULL, &w, NULL);
+        if (10 + w + 8 > fx) fx = 10 + w + 8;
+    }
+
     for (int i = 0; i < f->count; i++) {
         int x = (i / rows) * colw;
         int y = 24 + (i % rows) * 20;
@@ -55,8 +65,8 @@ static void form_draw(form_t *f)
             : f->fields[i].label_en;
         int bw = f->cols == 2 ? colw - 90 : 170;
         dtext(x + 10, y + 3, sel ? f->color : C_BLACK, lab);
-        numfield_draw(&f->fields[i].f, x + 54, y, bw, sel, f->color);
-        dtext(x + 54 + bw + 4, y + 3, C_DARK, f->fields[i].unit);
+        numfield_draw(&f->fields[i].f, x + fx, y, bw, sel, f->color);
+        dtext(x + fx + bw + 4, y + 3, C_DARK, f->fields[i].unit);
     }
 
     int ry = 24 + rows * 20 + 6;
@@ -372,25 +382,25 @@ static void waves_screen(void)
 //  Physical constants
 //---
 
-typedef struct { char const *name, *sym, *value, *unit; } constant_t;
+typedef struct { char const *name, *name_pt, *sym, *value, *unit; } constant_t;
 
 static constant_t const constants[] = {
-    { "Speed of light", "c", "2.99792458e8", "m/s" },
-    { "Gravity (std)", "g", "9.80665", "m/s2" },
-    { "Grav. constant", "G", "6.67430e-11", "N m2/kg2" },
-    { "Planck", "h", "6.62607015e-34", "J s" },
-    { "Reduced Planck", "h-bar", "1.054571817e-34", "J s" },
-    { "Elementary charge", "e", "1.602176634e-19", "C" },
-    { "Electron mass", "me", "9.1093837e-31", "kg" },
-    { "Proton mass", "mp", "1.6726219e-27", "kg" },
-    { "Avogadro", "NA", "6.02214076e23", "1/mol" },
-    { "Boltzmann", "kB", "1.380649e-23", "J/K" },
-    { "Gas constant", "R", "8.314462618", "J/mol/K" },
-    { "Vacuum perm.", "e0", "8.8541878e-12", "F/m" },
-    { "Vacuum mag.", "u0", "1.25663706e-6", "H/m" },
-    { "Coulomb", "k", "8.9875518e9", "N m2/C2" },
-    { "Stefan-Boltz.", "sigma", "5.670374e-8", "W/m2/K4" },
-    { "Atomic mass u", "u", "1.66053907e-27", "kg" },
+    { "Speed of light in vacuum", "Velocidade da luz no vazio", "c", "2.99792458e8", "m/s" },
+    { "Standard gravity", "Aceleracao da gravidade", "g", "9.80665", "m/s2" },
+    { "Gravitational constant", "Constante gravitacional", "G", "6.67430e-11", "N m2/kg2" },
+    { "Planck constant", "Constante de Planck", "h", "6.62607015e-34", "J s" },
+    { "Reduced Planck constant", "Constante de Planck reduzida", "h-bar", "1.054571817e-34", "J s" },
+    { "Elementary charge", "Carga elementar", "e", "1.602176634e-19", "C" },
+    { "Electron mass", "Massa do eletrao", "me", "9.1093837e-31", "kg" },
+    { "Proton mass", "Massa do protao", "mp", "1.6726219e-27", "kg" },
+    { "Avogadro constant", "Constante de Avogadro", "NA", "6.02214076e23", "1/mol" },
+    { "Boltzmann constant", "Constante de Boltzmann", "kB", "1.380649e-23", "J/K" },
+    { "Molar gas constant", "Constante dos gases ideais", "R", "8.314462618", "J/mol/K" },
+    { "Vacuum permittivity", "Permitividade do vazio", "e0", "8.8541878e-12", "F/m" },
+    { "Vacuum permeability", "Permeabilidade do vazio", "u0", "1.25663706e-6", "H/m" },
+    { "Coulomb constant", "Constante de Coulomb", "k", "8.9875518e9", "N m2/C2" },
+    { "Stefan-Boltzmann constant", "Constante de Stefan-Boltzmann", "sigma", "5.670374e-8", "W/m2/K4" },
+    { "Atomic mass unit", "Unidade de massa atomica", "u", "1.66053907e-27", "kg" },
 };
 #define CONST_COUNT (int)(sizeof constants / sizeof *constants)
 #define CONST_ROWS  11
@@ -410,8 +420,9 @@ static void constants_screen(void)
             int y = 22 + r * 16;
             bool s = i == sel;
             if (s) drect(4, y - 1, DWIDTH - 9, y + 13, C_RGB(28, 29, 31));
-            dtext(10, y, s ? COLOR : C_BLACK, constants[i].name);
-            dtext(150, y, s ? COLOR : C_DARK, constants[i].sym);
+            dtext(10, y, s ? COLOR : C_BLACK, lang_current == L_PT
+                ? constants[i].name_pt : constants[i].name);
+            dtext(310, y, s ? COLOR : C_DARK, constants[i].sym);
         }
         scrollbar_px(22, 22 + CONST_ROWS * 16, 0, CONST_COUNT, top,
             CONST_ROWS);
