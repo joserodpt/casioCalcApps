@@ -112,6 +112,17 @@ def draw_status_bar(d, c):
                             radius=1 * S, fill=WHITE)
 
 
+def draw_net_tools(d, c):
+    # Small globe above "127.0.0.1"
+    w = int(1.5 * S)
+    d.ellipse(box(37, 7, 54, 24), outline=WHITE, width=w)
+    d.ellipse(box(42, 7, 49, 24), outline=WHITE, width=w)
+    d.line(box(45.5, 7, 45.5, 24), fill=WHITE, width=w)
+    for y, dx in ((11.5, 6.5), (15.5, 8.5), (19.5, 6.5)):
+        d.line(box(45.5 - dx, y, 45.5 + dx, y), fill=WHITE, width=w)
+    text(d, 45.5, 33.5, "127.0.0.1", 12)
+
+
 # app folder -> (panel colour, pictogram)
 ICONS = {
     "electronics":   ((168, 76, 26), draw_electronics),
@@ -121,6 +132,7 @@ ICONS = {
     "os-syscalls":   ((30, 130, 140), draw_os_syscalls),
     "file-syscalls": ((215, 120, 20), draw_file_syscalls),
     "status-bar":    ((40, 70, 160), draw_status_bar),
+    "net-tools":     ((24, 112, 160), draw_net_tools),
 }
 
 
