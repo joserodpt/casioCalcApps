@@ -54,62 +54,7 @@ def draw_hello(d, c):
     text(d, 45.5, 21, "Hi!", 15, c)
 
 
-def draw_draw_syscalls(d, c):
-    # Square, circle and triangle outlines
-    w = 2 * S
-    d.rectangle(box(12, 14, 30, 32), outline=WHITE, width=w)
-    d.ellipse(box(36, 14, 54, 32), outline=WHITE, width=w)
-    d.polygon([(69 * S, 13 * S), (59 * S, 32 * S), (79 * S, 32 * S)],
-              outline=WHITE, width=w)
 
-
-def draw_key_modifiers(d, c):
-    # SHIFT and ALPHA keys in their keyboard colours
-    for x, label, col in ((14, "SHIFT", (230, 180, 0)),
-                          (49, "ALPHA", (220, 30, 30))):
-        d.rounded_rectangle(box(x, 13, x + 28, 35), radius=4 * S, fill=WHITE)
-        d.rounded_rectangle(box(x + 2, 15, x + 26, 33), radius=3 * S, fill=col)
-        text(d, x + 14, 24, label, 6)
-
-
-def gear(d, cx, cy, r, teeth, fill, hole, hole_fill):
-    pts = []
-    for i in range(teeth * 4):
-        a = 2 * math.pi * i / (teeth * 4)
-        rr = r if (i % 4) in (0, 1) else r * 0.78
-        pts.append(((cx + rr * math.cos(a)) * S, (cy + rr * math.sin(a)) * S))
-    d.polygon(pts, fill=fill)
-    d.ellipse(box(cx - hole, cy - hole, cx + hole, cy + hole), fill=hole_fill)
-
-
-def draw_os_syscalls(d, c):
-    # Gear with "OS" in the middle
-    gear(d, 45.5, 24, 16, 10, WHITE, 9, c)
-    text(d, 45.5, 24.5, "OS", 8)
-
-
-def draw_file_syscalls(d, c):
-    # Folder with a document
-    d.rounded_rectangle(box(20, 12, 40, 20), radius=2 * S, fill=WHITE)
-    d.rounded_rectangle(box(20, 16, 71, 36), radius=3 * S, fill=WHITE)
-    d.rectangle(box(46, 9, 64, 30), fill=c)
-    d.rectangle(box(48, 11, 62, 28), fill=WHITE)
-    for y in (15, 19, 23):
-        d.rectangle(box(51, y, 59, y + 1), fill=c)
-
-
-def draw_status_bar(d, c):
-    # Status bar strip with a battery and signal-style bars
-    d.rounded_rectangle(box(11, 10, 80, 19), radius=2 * S, fill=WHITE)
-    d.rectangle(box(15, 12, 29, 17), fill=c)
-    d.rectangle(box(16, 13, 22, 16), fill=WHITE)
-    d.rectangle(box(29, 13.5, 30, 15.5), fill=c)
-    for i, h in enumerate((2, 3, 4)):
-        x = 66 + 4 * i
-        d.rectangle(box(x, 17 - h, x + 2, 17), fill=c)
-    for y in (24, 30):
-        d.rounded_rectangle(box(11, y, 80 - (y - 24) * 3, y + 3),
-                            radius=1 * S, fill=WHITE)
 
 
 def draw_net_tools(d, c):
@@ -210,11 +155,6 @@ def draw_physics(d, c):
 ICONS = {
     "electronics":   ((168, 76, 26), draw_electronics),
     "hello":         ((46, 150, 70), draw_hello),
-    "draw-syscalls": ((140, 50, 180), draw_draw_syscalls),
-    "key-modifiers": ((70, 76, 90), draw_key_modifiers),
-    "os-syscalls":   ((30, 130, 140), draw_os_syscalls),
-    "file-syscalls": ((215, 120, 20), draw_file_syscalls),
-    "status-bar":    ((40, 70, 160), draw_status_bar),
     "net-tools":     ((24, 112, 160), draw_net_tools),
     "ascii-table":   ((34, 100, 130), draw_ascii_table),
     "timer":         ((30, 80, 170), draw_timer),
