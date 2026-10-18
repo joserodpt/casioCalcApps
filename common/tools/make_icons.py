@@ -187,6 +187,25 @@ def draw_converter(d, c):
     text(d, 61, 37, "u<>u", 8)
 
 
+def draw_physics(d, c):
+    # An atom: nucleus with two elliptical orbits
+    import math as _m
+    cx, cy = 46, 24
+    d.ellipse(box(cx-3, cy-3, cx+3, cy+3), fill=WHITE)   # nucleus
+    # two tilted orbits drawn as point rings
+    for ang in (35, -35):
+        pts = []
+        for i in range(0, 361, 12):
+            t = _m.radians(i)
+            ex, ey = 17*_m.cos(t), 7*_m.sin(t)
+            a = _m.radians(ang)
+            rx = ex*_m.cos(a) - ey*_m.sin(a)
+            ry = ex*_m.sin(a) + ey*_m.cos(a)
+            pts.append(((cx+rx)*S, (cy+ry)*S))
+        d.line(pts, fill=WHITE, width=S)
+    text(d, 46, 37, "F=ma", 8)
+
+
 # app folder -> (panel colour, pictogram)
 ICONS = {
     "electronics":   ((168, 76, 26), draw_electronics),
@@ -202,6 +221,7 @@ ICONS = {
     "logic":         ((112, 50, 160), draw_logic),
     "firmware-dump": ((60, 62, 74), draw_firmware_dump),
     "chemistry":     ((18, 92, 120), draw_converter),
+    "physics":       ((150, 70, 14), draw_physics),
 }
 
 
