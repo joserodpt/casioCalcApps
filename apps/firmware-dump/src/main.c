@@ -74,6 +74,16 @@ static bool mapped(uint32_t addr)
     return false;
 }
 
+/* Guess whether we are running in emuCasio rather than on a calculator.
+   The emulator has no real OS, so the firmware area reads back as all
+   zeros; a real OS fills it with code and data. Sample the first 64 KB. */
+static bool in_emulator(void)
+{
+    uint32_t acc = 0;
+    for (uint32_t off = 0; off < 0x10000u; off += 16) acc |= peek(ROM_BASE + off);
+    return acc == 0;
+}
+
 //---
 //  Path building: FONTCHARACTER (UCS-2) paths
 //---
@@ -112,6 +122,9 @@ static void draw(int sel, int digit, progress_t const *pg)
     info_title("Firmware dump", COLOR);
 
     dtext(10, 22, C_DARK, "Region");
+    bool emu = in_emulator();
+    dtext_opt(DWIDTH - 12, 22, emu ? ERRC : OKC, C_NONE, DTEXT_RIGHT,
+        DTEXT_TOP, emu ? "emulator (OS area blank)" : "real hardware");
     for (int i = 0; i < REGION_COUNT; i++) {
         region_t const *r = &regions[i];
         int y = 40 + i * 30;
