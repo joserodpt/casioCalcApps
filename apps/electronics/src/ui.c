@@ -7,6 +7,7 @@
 
 #include "ui.h"
 #include "info.h"
+#include "i18n.h"
 
 //---
 //  Symbol glyphs
@@ -224,7 +225,7 @@ char *fmt_dev(char *buf, double actual, double target)
 {
     char num[32];
     double dev = (actual - target) / target * 100;
-    if (fabs(dev) < 0.005) return strcpy(buf, "(exact)");
+    if (fabs(dev) < 0.005) return strcpy(buf, L("(exact)", "(exato)"));
     fmt_fixed(num, dev, fabs(dev) < 10 ? 2 : 1);
     sprintf(buf, "(%s%s%%)", dev > 0 ? "+" : "", num);
     return buf;

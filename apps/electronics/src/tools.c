@@ -7,6 +7,7 @@
 #include "ui.h"
 #include "eseries.h"
 #include "tools.h"
+#include "i18n.h"
 
 #define PI 3.14159265358979323846
 
@@ -49,7 +50,7 @@ static void smd_code_line(int y, char const *label, char const *code,
 {
     char a[32];
     if (!ok) {
-        result(y, label, C_DARK, "not possible");
+        result(y, label, C_DARK, L("not possible", "impossivel"));
         return;
     }
     result(y, label, SMD_COLOR, "%s", code);
@@ -65,25 +66,26 @@ static void smd_results(form_t *f, int y)
         char const *t = f->fields[0].text;
         double v = smd_decode(t);
         if (isnan(v)) {
-            result(y, "Value", C_RED, "invalid code");
+            result(y, L("Value","Valor"), C_RED, L("invalid code", "codigo invalido"));
         }
         else {
-            etext(10, y, C_DARK, DTEXT_LEFT, false, "Value");
+            etext(10, y, C_DARK, DTEXT_LEFT, false, L("Value","Valor"));
             etext(100, y - 2, SMD_COLOR, DTEXT_LEFT, true,
                 fmt_si(a, v, S_OHM, 4));
             y += 6;
             int n = strlen(t);
-            result(y + RESULT_STEP, "Type", C_BLACK, "%s",
-                v == 0 ? "0 " S_OHM " jumper" : strchr(t, 'R')
-                ? "R = decimal point" : n == 4 ? "4-digit, usually 1%"
-                : "3-digit, usually 5%");
+            result(y + RESULT_STEP, L("Type","Tipo"), C_BLACK, "%s",
+                v == 0 ? L("0 " S_OHM " jumper","ponte 0 " S_OHM) : strchr(t, 'R')
+                ? L("R = decimal point","R = virgula") : n == 4 ? L("4-digit, usually 1%","4 digitos, 1%")
+                : L("3-digit, usually 5%","3 digitos, 5%"));
             if (v > 0) {
-                result_e(y + 2 * RESULT_STEP, "Nearest", v, 24);
+                result_e(y + 2 * RESULT_STEP, L("Nearest","Mais prox."), v, 24);
                 result_e(y + 3 * RESULT_STEP, "", v, 96);
             }
         }
         etext(10, 192, C_DARK, DTEXT_LEFT, false,
-            "Press . to type R (4R7 = 4.7 " S_OHM ")");
+            L("Press . to type R (4R7 = 4.7 " S_OHM ")",
+              "Prima . para R (4R7 = 4.7 " S_OHM ")"));
         return;
     }
 
@@ -91,25 +93,25 @@ static void smd_results(form_t *f, int y)
         int n = atoi(f->fields[1].text);
         int m = e96_value(n);
         if (!m) {
-            result(y, "Value", C_RED, "code must be 01 to 96");
+            result(y, L("Value","Valor"), C_RED, L("code must be 01 to 96","codigo 01 a 96"));
             return;
         }
         double v = m * pow(10, eia96_letter_exp[f->fields[2].choice]);
-        etext(10, y, C_DARK, DTEXT_LEFT, false, "Value");
+        etext(10, y, C_DARK, DTEXT_LEFT, false, L("Value","Valor"));
         etext(100, y - 2, SMD_COLOR, DTEXT_LEFT, true,
             fmt_si(a, v, S_OHM, 4));
         y += 6;
-        result(y + RESULT_STEP, "Code", C_BLACK, "%02d%c", n,
+        result(y + RESULT_STEP, L("Code","Codigo"), C_BLACK, "%02d%c", n,
             "ZYXABCDEF"[f->fields[2].choice]);
-        result(y + 2 * RESULT_STEP, "Type", C_BLACK, "EIA-96, 1%% series");
+        result(y + 2 * RESULT_STEP, L("Type","Tipo"), C_BLACK, L("EIA-96, 1%% series","EIA-96, serie 1%%"));
         etext(10, 192, C_DARK, DTEXT_LEFT, false,
-            "Change the letter with left / right");
+            L("Change the letter with left / right","Mude a letra com esq / dir"));
         return;
     }
 
     double v = val(f, 3);
     if (isnan(v) || v < 0) {
-        result(y, "Value", C_RED, "enter a resistance");
+        result(y, L("Value","Valor"), C_RED, L("enter a resistance","introduza resistencia"));
         return;
     }
     ok = smd_encode(code, v, 2, &exact);
@@ -125,9 +127,10 @@ static void smd_results(form_t *f, int y)
 void smd_run(void)
 {
     static form_t f = {
-        .title = "SMD codes", .color = SMD_COLOR, .fields = smd_fields,
+        .color = SMD_COLOR, .fields = smd_fields,
         .count = 4, .cols = 1, .label_w = 70, .results = smd_results,
     };
+    f.title = L("SMD codes", "Codigos SMD");
     smd_fields[2].options = eia_letters;
     form_run(&f);
 }
@@ -160,28 +163,29 @@ static void rnet_results(form_t *f, int y)
         else conductance += 1 / r;
     }
     if (!n) {
-        result(y, "Total", C_DARK, "enter some resistors");
+        result(y, "Total", C_DARK, L("enter some resistors","introduza resistencias"));
         return;
     }
     double parallel = zero ? 0 : 1 / conductance;
 
-    result(y, "Resistors", C_BLACK, "%d", n);
-    result_e(y + RESULT_STEP, "Series", series, 24);
-    result_e(y + 2 * RESULT_STEP, "Parallel", parallel, 24);
+    result(y, L("Resistors","Resistencias"), C_BLACK, "%d", n);
+    result_e(y + RESULT_STEP, L("Series","Serie"), series, 24);
+    result_e(y + 2 * RESULT_STEP, L("Parallel","Paralelo"), parallel, 24);
     char a[32];
     if (!zero) result(y + 3 * RESULT_STEP, "G total", C_BLACK, "%s",
         fmt_si(a, conductance, "S", 4));
     etext(10, 192, C_DARK, DTEXT_LEFT, false,
-        "Empty fields are ignored");
+        L("Empty fields are ignored","Campos vazios sao ignorados"));
 }
 
 void rnet_run(void)
 {
     static form_t f = {
-        .title = "Series / parallel", .color = RNET_COLOR,
+        .color = RNET_COLOR,
         .fields = rnet_fields, .count = 8, .cols = 2, .label_w = 30,
         .results = rnet_results,
     };
+    f.title = L("Series / parallel", "Serie / paralelo");
     form_run(&f);
 }
 
@@ -205,10 +209,10 @@ static void div_results(form_t *f, int y)
         double i = vin / (r1 + r2);
         result(y, "Vout", DIV_COLOR, "%s", fmt_si(a, vin * r2 / (r1 + r2),
             "V", 4));
-        result_note(y, "ratio %s", fmt_num(b, r2 / (r1 + r2), 4));
-        result(y + RESULT_STEP, "Current", C_BLACK, "%s",
+        result_note(y, L("ratio %s","racio %s"), fmt_num(b, r2 / (r1 + r2), 4));
+        result(y + RESULT_STEP, L("Current","Corrente"), C_BLACK, "%s",
             fmt_si(a, i, "A", 4));
-        result(y + 2 * RESULT_STEP, "Power", C_BLACK, "R1 %s   R2 %s",
+        result(y + 2 * RESULT_STEP, L("Power","Potencia"), C_BLACK, "R1 %s   R2 %s",
             fmt_si(a, i * i * r1, "W", 3), fmt_si(b, i * i * r2, "W", 3));
     }
     else result(y, "Vout", C_DARK, "-");
@@ -216,11 +220,11 @@ static void div_results(form_t *f, int y)
     y += 3 * RESULT_STEP + 4;
     dline(6, y - 3, DWIDTH - 7, y - 3, C_LIGHT);
     if (isnan(vt) || isnan(vin) || isnan(r1) || vt <= 0 || vt >= vin) {
-        result(y, "Target R2", C_DARK, "needs 0 < target < Vin");
+        result(y, L("Target R2","R2 alvo"), C_DARK, L("needs 0 < target < Vin","precisa 0 < alvo < Vin"));
         return;
     }
     double r2t = r1 * vt / (vin - vt);
-    result(y, "Target R2", C_BLACK, "%s", fmt_si(a, r2t, S_OHM, 4));
+    result(y, L("Target R2","R2 alvo"), C_BLACK, "%s", fmt_si(a, r2t, S_OHM, 4));
     for (int k = 0; k < 2; k++) {
         int series = k ? 24 : 12;
         double e = eseries_nearest(series, r2t, false);
@@ -237,9 +241,10 @@ static void div_results(form_t *f, int y)
 void divider_run(void)
 {
     static form_t f = {
-        .title = "Voltage divider", .color = DIV_COLOR, .fields = div_fields,
+        .color = DIV_COLOR, .fields = div_fields,
         .count = 4, .cols = 1, .label_w = 108, .results = div_results,
     };
+    f.title = L("Voltage divider", "Divisor de tensao");
     form_run(&f);
 }
 
@@ -260,17 +265,17 @@ static void filt_results(form_t *f, int y)
     bool hr = r > 0, hc = c > 0, hl = l > 0;
 
     result(y, "RC  fc", FILT_COLOR, "%s", hr && hc
-        ? fmt_si(a, 1 / (2 * PI * r * c), "Hz", 4) : "needs R, C");
+        ? fmt_si(a, 1 / (2 * PI * r * c), "Hz", 4) : L("needs R, C","precisa R, C"));
     if (hr && hc) result_note(y, "tau = RC = %s", fmt_si(b, r * c, "s", 4));
     y += RESULT_STEP;
 
     result(y, "RL  fc", FILT_COLOR, "%s", hr && hl
-        ? fmt_si(a, r / (2 * PI * l), "Hz", 4) : "needs R, L");
+        ? fmt_si(a, r / (2 * PI * l), "Hz", 4) : L("needs R, L","precisa R, L"));
     if (hr && hl) result_note(y, "tau = L/R = %s", fmt_si(b, l / r, "s", 4));
     y += RESULT_STEP;
 
     result(y, "LC  f0", FILT_COLOR, "%s", hc && hl
-        ? fmt_si(a, 1 / (2 * PI * sqrt(l * c)), "Hz", 4) : "needs L, C");
+        ? fmt_si(a, 1 / (2 * PI * sqrt(l * c)), "Hz", 4) : L("needs L, C","precisa L, C"));
     if (hc && hl) result_note(y, "Z0 = %s", fmt_si(b, sqrt(l / c), S_OHM, 4));
     y += RESULT_STEP;
 
@@ -287,10 +292,11 @@ static void filt_results(form_t *f, int y)
 void filter_run(void)
 {
     static form_t f = {
-        .title = "RC / RL filters", .color = FILT_COLOR,
+        .color = FILT_COLOR,
         .fields = filt_fields, .count = 3, .cols = 1, .label_w = 30,
         .results = filt_results,
     };
+    f.title = L("RC / RL filters", "Filtros RC / RL");
     form_run(&f);
 }
 
@@ -323,10 +329,10 @@ static void t555_results(form_t *f, int y)
 
     if (f->fields[0].choice == 1) {
         if (!(r1 > 0 && c > 0)) {
-            result(y, "Pulse", C_DARK, "needs R, C");
+            result(y, L("Pulse","Pulso"), C_DARK, L("needs R, C","precisa R, C"));
             return;
         }
-        result(y, "Pulse width", T555_COLOR, "%s",
+        result(y, L("Pulse width","Largura pulso"), T555_COLOR, "%s",
             fmt_si(a, 1.1 * r1 * c, "s", 4));
         etext(10, y + 2 * RESULT_STEP, C_DARK, DTEXT_LEFT, false,
             "t = 1.1 R C");
@@ -334,18 +340,18 @@ static void t555_results(form_t *f, int y)
     }
 
     if (!(r1 > 0 && r2 > 0 && c > 0)) {
-        result(y, "Frequency", C_DARK, "needs R1, R2, C");
+        result(y, L("Frequency","Frequencia"), C_DARK, L("needs R1, R2, C","precisa R1, R2, C"));
         return;
     }
     double th = log(2) * (r1 + r2) * c;
     double tl = log(2) * r2 * c;
-    result(y, "Frequency", T555_COLOR, "%s", fmt_si(a, 1 / (th + tl),
+    result(y, L("Frequency","Frequencia"), T555_COLOR, "%s", fmt_si(a, 1 / (th + tl),
         "Hz", 4));
-    result(y + RESULT_STEP, "Period", C_BLACK, "%s",
+    result(y + RESULT_STEP, L("Period","Periodo"), C_BLACK, "%s",
         fmt_si(a, th + tl, "s", 4));
-    result(y + 2 * RESULT_STEP, "High / low", C_BLACK, "%s / %s",
+    result(y + 2 * RESULT_STEP, L("High / low","Alto / baixo"), C_BLACK, "%s / %s",
         fmt_si(a, th, "s", 4), fmt_si(b, tl, "s", 4));
-    result(y + 3 * RESULT_STEP, "Duty cycle", C_BLACK, "%s%%",
+    result(y + 3 * RESULT_STEP, L("Duty cycle","Ciclo"), C_BLACK, "%s%%",
         fmt_num(a, 100 * th / (th + tl), 1));
     etext(10, y + 4 * RESULT_STEP + 4, C_DARK, DTEXT_LEFT, false,
         "f = 1.44 / ((R1 + 2 R2) C)");
@@ -354,10 +360,11 @@ static void t555_results(form_t *f, int y)
 void timer555_run(void)
 {
     static form_t f = {
-        .title = "555 timer", .color = T555_COLOR, .fields = t555_fields,
+        .color = T555_COLOR, .fields = t555_fields,
         .count = 4, .cols = 1, .label_w = 50, .results = t555_results,
         .changed = t555_changed,
     };
+    f.title = L("555 timer", "Temporizador 555");
     form_run(&f);
 }
 
@@ -407,18 +414,18 @@ static void led_results(form_t *f, int y)
 
     if (isnan(n) || n < 1) n = 1;
     if (!(vs > 0 && vf > 0 && i > 0)) {
-        result(y, "Resistor", C_DARK, "needs supply, Vf, current");
+        result(y, L("Resistor","Resistencia"), C_DARK, L("needs supply, Vf, current","precisa Vcc, Vf, corrente"));
         return;
     }
     double vr = vs - n * vf;
     if (vr <= 0) {
-        result(y, "Resistor", C_RED, "supply below %s",
+        result(y, L("Resistor","Resistencia"), C_RED, L("supply below %s","Vcc abaixo de %s"),
             fmt_si(a, n * vf, "V", 3));
         return;
     }
 
     double r = vr / i;
-    result(y, "Resistor", LED_COLOR, "%s", fmt_si(a, r, S_OHM, 4));
+    result(y, L("Resistor","Resistencia"), LED_COLOR, "%s", fmt_si(a, r, S_OHM, 4));
     result_note(y, "%s, %s", fmt_si(b, vr * i, "W", 3), rating(vr * i));
     for (int k = 0; k < 2; k++) {
         int series = k ? 24 : 12;
@@ -431,7 +438,7 @@ static void led_results(form_t *f, int y)
         result_note(y + (k + 1) * RESULT_STEP, "%s, %s",
             fmt_si(b, ie, "A", 3), fmt_si(c, vr * ie, "W", 2));
     }
-    result(y + 3 * RESULT_STEP, "LED power", C_BLACK, "%s",
+    result(y + 3 * RESULT_STEP, L("LED power","Potencia LED"), C_BLACK, "%s",
         fmt_si(a, n * vf * i, "W", 3));
     etext(10, y + 4 * RESULT_STEP + 2, C_DARK, DTEXT_LEFT, false,
         "R = (Vs - n Vf) / I, rounded up");
@@ -440,9 +447,10 @@ static void led_results(form_t *f, int y)
 void led_run(void)
 {
     static form_t f = {
-        .title = "LED resistor", .color = LED_COLOR, .fields = led_fields,
+        .color = LED_COLOR, .fields = led_fields,
         .count = 5, .cols = 1, .label_w = 70, .results = led_results,
         .changed = led_changed,
     };
+    f.title = L("LED resistor", "Resistencia LED");
     form_run(&f);
 }

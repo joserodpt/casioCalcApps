@@ -20,8 +20,9 @@
 
 #include "utils.h"
 #include "info.h"
+#include "version.h"
+#include "i18n.h"
 
-#define VERSION   "v1.0"
 #define COLOR     C_RGB(7, 7, 9)
 #define OKC       C_RGB(2, 17, 6)
 #define ERRC      C_RGB(26, 4, 4)
@@ -113,6 +114,16 @@ typedef struct {
     char message[48];
 } progress_t;
 
+/* Translated region name */
+static char const *reg_name(int i)
+{
+    switch (i) {
+    case REG_OS:  return L("OS firmware", "Firmware da OS");
+    case REG_ROM: return L("Full ROM", "ROM completa");
+    default:      return L("Custom", "Personalizado");
+    }
+}
+
 /* Draw the region list and, if a dump happened, its result */
 static void draw(int sel, int digit, progress_t const *pg)
 {
@@ -121,17 +132,18 @@ static void draw(int sel, int digit, progress_t const *pg)
     dclear(C_WHITE);
     info_title("Firmware dump", COLOR);
 
-    dtext(10, 22, C_DARK, "Region");
+    dtext(10, 22, C_DARK, L("Region", "Regiao"));
     bool emu = in_emulator();
     dtext_opt(DWIDTH - 12, 22, emu ? ERRC : OKC, C_NONE, DTEXT_RIGHT,
-        DTEXT_TOP, emu ? "emulator (OS area blank)" : "real hardware");
+        DTEXT_TOP, emu ? L("emulator (OS area blank)", "emulador (OS vazia)")
+        : L("real hardware", "calculadora real"));
     for (int i = 0; i < REGION_COUNT; i++) {
         region_t const *r = &regions[i];
         int y = 40 + i * 30;
         bool s = (i == sel);
         if (s) drect(6, y - 4, DWIDTH - 7, y + 22, C_RGB(28, 29, 31));
 
-        dtext(14, y, s ? COLOR : C_BLACK, r->name);
+        dtext(14, y, s ? COLOR : C_BLACK, reg_name(i));
         uint32_t size = r->size;
         if (size >= (1u << 20))
             snprintf(buf, sizeof buf, "%u MB", (unsigned)(size >> 20));
@@ -142,8 +154,10 @@ static void draw(int sel, int digit, progress_t const *pg)
             buf);
         if (r->editable)
             dtext(14, y + 12, s ? COLOR : C_DARK,
-                "F4 base  F5 size  (hex digits to edit)");
-        else dprint(14, y + 12, C_DARK, "-> DUMP\\%s00.bin ...", r->file);
+                L("F4 base  F5 size  (hex digits to edit)",
+                  "F4 base  F5 tam.  (digitos hex p/ editar)"));
+        else dprint(14, y + 12, C_DARK, L("-> DUMP\\%s00.bin ...",
+            "-> DUMP\\%s00.bin ..."), r->file);
     }
     (void)digit;
 
@@ -151,7 +165,7 @@ static void draw(int sel, int digit, progress_t const *pg)
     region_t const *r = &regions[sel];
     int y = 134;
     dline(6, y - 6, DWIDTH - 7, y - 6, C_LIGHT);
-    dtext(10, y, C_DARK, "Preview");
+    dtext(10, y, C_DARK, L("Preview", "Pre-vis."));
     for (int row = 0; row < 2; row++) {
         uint32_t a = r->base + row * 16;
         char hex[64], asc[20];
@@ -188,9 +202,9 @@ static void draw(int sel, int digit, progress_t const *pg)
         if (w > 0) drect(x1 + 2, by + 2, x1 + 2 + w - 1, by + 7, COLOR);
     }
 
-    fkey_button_color(1, "DUMP", COLOR);
+    fkey_button_color(1, L("DUMP", "COPIAR"), COLOR);
     fkey_button(2, "USB?");
-    fkey_button(6, "ABOUT");
+    fkey_button(6, L("ABOUT", "SOBRE"));
     dupdate();
 }
 
@@ -253,14 +267,14 @@ static void run_dump(int sel, progress_t *pg)
             /* Refresh and allow aborting roughly every 64 KB */
             if ((off & 0xFFFF) == 0) {
                 snprintf(pg->message, sizeof pg->message,
-                    "Writing %s%02d.bin ...", r->file, part);
+                    L("Writing %s%02d.bin ...", "A escrever %s%02d.bin ..."), r->file, part);
                 draw(sel, 0, pg);
                 clearevents();
                 if (keydown(KEY_EXIT)) {
                     BFile_Close(fd);
                     pg->status = ST_ABORT;
                     snprintf(pg->message, sizeof pg->message,
-                        "Aborted after %u KB", (unsigned)(pg->done >> 10));
+                        L("Aborted after %u KB", "Cancelado apos %u KB"), (unsigned)(pg->done >> 10));
                     return;
                 }
             }
@@ -273,7 +287,8 @@ static void run_dump(int sel, progress_t *pg)
 
     pg->status = ST_DONE;
     snprintf(pg->message, sizeof pg->message,
-        "Done: %u KB in %d file%s under \\fls0\\DUMP",
+        L("Done: %u KB in %d file%s under \\fls0\\DUMP",
+        "Feito: %u KB em %d ficheiro%s em \\fls0\\DUMP"),
         (unsigned)(pg->done >> 10), pg->parts, pg->parts == 1 ? "" : "s");
 }
 
@@ -302,12 +317,15 @@ int main(void)
     bool fresh = false;         /* next digit starts a new value */
     progress_t pg = { .status = ST_IDLE };
 
+    lang_init();
+
     /* Full ROM size from the hardware info, capped to the mapped window */
     uint32_t rom = (gint[HWROM] & HW_LOADED) ? (gint[HWROM] & 0x7fffffff) : 0;
     if (rom == 0 || rom > 0x04000000u) rom = 0x04000000u;    /* 64 MB cap */
     regions[REG_ROM].size = rom;
 
-    strcpy(pg.message, "F1 dumps the selected region to \\fls0\\DUMP");
+    strcpy(pg.message, L("F1 dumps the selected region to \\fls0\\DUMP",
+        "F1 copia a regiao para \\fls0\\DUMP"));
 
     while (1) {
         draw(sel, edit, &pg);
@@ -318,7 +336,8 @@ int main(void)
 
         if (key == KEY_EXIT) return 1;
         if (key == INFO_KEY || key == KEY_F6) {
-            info_show("FirmDump", "Firmware dump " VERSION, COLOR);
+            info_show("FirmDump", L("Firmware dump " APPS_VERSION,
+                "Copia de firmware " APPS_VERSION), COLOR);
             continue;
         }
         if (key == KEY_UP) { sel = (sel + REGION_COUNT - 1) % REGION_COUNT;
@@ -332,7 +351,8 @@ int main(void)
         }
         if (key == KEY_F2) {
             snprintf(pg.message, sizeof pg.message,
-                "USB streaming not available yet");
+                L("USB streaming not available yet",
+                "Streaming USB ainda nao disponivel"));
             pg.status = ST_IDLE;
             continue;
         }

@@ -8,6 +8,7 @@
 #include "eseries.h"
 #include "tools.h"
 #include "info.h"
+#include "i18n.h"
 
 #define COLOR   C_RGB(20, 9, 3)
 
@@ -19,6 +20,16 @@ enum {
 static char const * const color_names[COLOR_COUNT] = {
     "Black", "Brown", "Red", "Orange", "Yellow", "Green", "Blue", "Violet",
     "Grey", "White", "Gold", "Silver", "None" };
+
+static char const * const color_names_pt[COLOR_COUNT] = {
+    "Preto", "Castanho", "Vermelho", "Laranja", "Amarelo", "Verde", "Azul",
+    "Violeta", "Cinza", "Branco", "Ouro", "Prata", "Nenhuma" };
+
+/* Translated colour name */
+static char const *cname(int c)
+{
+    return lang_current == L_PT ? color_names_pt[c] : color_names[c];
+}
 
 static int band_rgb(int c)
 {
@@ -53,6 +64,14 @@ typedef enum { ROLE_DIGIT, ROLE_MULT, ROLE_TOL, ROLE_TEMPCO } role_t;
 
 static char const * const role_names[] = {
     "Digit", "Multiplier", "Tolerance", "Tempco" };
+
+static char const * const role_names_pt[] = {
+    "Digito", "Multiplicador", "Tolerancia", "Tempco" };
+
+static char const *rname(int r)
+{
+    return lang_current == L_PT ? role_names_pt[r] : role_names[r];
+}
 
 /* Colours each role can take, in up/down order */
 static signed char const list_digit[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -271,25 +290,25 @@ static void draw_info(cc_t const *s)
     /* Selected band */
     role_t r = role_of(s, s->sel);
     int c = s->band[s->sel];
-    eprint(DWIDTH - 10, y - 1, C_DARK, DTEXT_RIGHT, "Band %d/%d: %s",
-        s->sel + 1, s->count, role_names[r]);
+    eprint(DWIDTH - 10, y - 1, C_DARK, DTEXT_RIGHT, L("Band %d/%d: %s",
+        "Banda %d/%d: %s"), s->sel + 1, s->count, rname(r));
     if (r == ROLE_DIGIT) snprintf(text, sizeof text, "%s = %d",
-        color_names[c], c);
+        cname(c), c);
     else if (r == ROLE_MULT) {
         fmt_si(a, pow(10, mult_exp(c)), "", 3);
         char *sp = strchr(a, ' ');     /* "1 k" -> "1k" */
         if (sp) memmove(sp, sp + 1, strlen(sp));
-        snprintf(text, sizeof text, "%s = " S_TIMES "%s", color_names[c], a);
+        snprintf(text, sizeof text, "%s = " S_TIMES "%s", cname(c), a);
     }
     else if (r == ROLE_TOL) snprintf(text, sizeof text, "%s = " S_PM "%s%%",
-        color_names[c], fmt_num(a, tolerance[c], 2));
-    else snprintf(text, sizeof text, "%s = %d ppm/K", color_names[c],
+        cname(c), fmt_num(a, tolerance[c], 2));
+    else snprintf(text, sizeof text, "%s = %d ppm/K", cname(c),
         tempco[c]);
     etext(DWIDTH - 10, y + 11, C_BLACK, DTEXT_RIGHT, false, text);
 
     y = 114;
     dline(6, y - 4, DWIDTH - 7, y - 4, C_LIGHT);
-    result(y, "Range", C_BLACK, "%s ... %s",
+    result(y, L("Range","Gama"), C_BLACK, "%s ... %s",
         fmt_si(a, v * (1 - tol / 100), "", 4),
         fmt_si(b, v * (1 + tol / 100), S_OHM, 4));
     y += RESULT_STEP;
@@ -309,13 +328,13 @@ static void draw(cc_t const *s)
     char label[8];
 
     dclear(C_WHITE);
-    info_title("Colour code", COLOR);
+    info_title(L("Colour code", "Codigo de cores"), COLOR);
     draw_resistor(s);
     draw_info(s);
 
-    sprintf(label, "%d BAND", s->count);
+    sprintf(label, L("%d BAND","%d BND"), s->count);
     efkey(1, label, COLOR);
-    efkey(2, "VALUE", C_BLACK);
+    efkey(2, L("VALUE","VALOR"), C_BLACK);
     efkey(4, "E12", C_BLACK);
     efkey(5, "E24", C_BLACK);
     efkey(6, "E96", C_BLACK);
@@ -335,11 +354,11 @@ static bool prompt_value(cc_t const *s, double *v)
         draw(s);
         drect(0, 172, DWIDTH - 1, 223, C_WHITE);
         dline(0, 172, DWIDTH - 1, 172, COLOR);
-        dtext(10, 180, COLOR, "Value");
+        dtext(10, 180, COLOR, L("Value","Valor"));
         field_box(&f, 60, 177, 160, true, COLOR);
         etext(224, 180, C_DARK, DTEXT_LEFT, false, S_OHM);
-        dtext(250, 180, C_DARK, "EXE: set bands");
-        dtext(250, 192, C_DARK, "EXIT: cancel");
+        dtext(250, 180, C_DARK, L("EXE: set bands","EXE: definir"));
+        dtext(250, 192, C_DARK, L("EXIT: cancel","EXIT: cancelar"));
         field_fkeys(&f, COLOR);
         dupdate();
 
@@ -359,7 +378,7 @@ static void set_from_value(cc_t *s, double v)
     double shown = cc_set_value(s, v);
 
     if (fabs(shown - v) > v * 1e-9)
-        snprintf(s->note, sizeof s->note, "%s shown as %s", fmt_si(a, v,
+        snprintf(s->note, sizeof s->note, L("%s shown as %s","%s mostrado %s"), fmt_si(a, v,
             S_OHM, 4), fmt_si(b, shown, S_OHM, 4));
     else s->note[0] = '\0';
 }
@@ -385,7 +404,7 @@ void colorcode_run(void)
         case KEY_EXIT:
             return;
         case INFO_KEY:
-            info_show("Electronics", "Colour code", COLOR);
+            info_show("Electronics", L("Colour code","Codigo de cores"), COLOR);
             break;
         case KEY_LEFT:
             s.sel = (s.sel + s.count - 1) % s.count;

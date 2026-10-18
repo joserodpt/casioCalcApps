@@ -9,12 +9,15 @@
 
 #include "utils.h"
 #include "info.h"
+#include "version.h"
+#include "i18n.h"
 
-#define VERSION   "v1.0"
 #define SW_COLOR  C_RGB(3, 9, 24)
 #define TICKS     128                   /* RTC ticks per second */
 #define DAY_TICKS (TICKS * 86400u)
 #define FRAME_US  50000                 /* screen refresh while waiting */
+#define L_DAYS { L("Sun","Dom"), L("Mon","Seg"), L("Tue","Ter"), \
+    L("Wed","Qua"), L("Thu","Qui"), L("Fri","Sex"), L("Sat","Sab") }
 #define MAX_LAPS  99
 
 //---
@@ -141,11 +144,11 @@ static void sw_draw(stopwatch_t const *sw)
     char a[16], b[16];
     uint32_t t = chrono_ticks(&sw->chrono);
 
-    dtext(10, 20, SW_COLOR, sw->chrono.running ? "Running"
-        : t ? "Stopped" : "Ready");
+    dtext(10, 20, SW_COLOR, sw->chrono.running ? L("Running", "A contar")
+        : t ? L("Stopped", "Parado") : L("Ready", "Pronto"));
     dtext_opt(DWIDTH / 2, 106, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
-        sw->chrono.running ? "EXE: stop   F3: lap"
-        : "EXE: start   F4 / AC: reset");
+        sw->chrono.running ? L("EXE: stop   F3: lap", "EXE: parar   F3: volta")
+        : L("EXE: start   F4 / AC: reset", "EXE: iniciar   F4 / AC: repor"));
 
     if (!sw->lap_count) return;
 
@@ -159,8 +162,8 @@ static void sw_draw(stopwatch_t const *sw)
 
     int y = 124;
     dline(6, y - 4, DWIDTH - 7, y - 4, C_LIGHT);
-    dtext(10, y, C_DARK, "Lap");
-    dtext(110, y, C_DARK, "Lap time");
+    dtext(10, y, C_DARK, L("Lap", "Volta"));
+    dtext(110, y, C_DARK, L("Lap time", "Tempo"));
     dtext(250, y, C_DARK, "Total");
     for (int k = 0; k < LAPS_SHOWN && k < sw->lap_count; k++) {
         int i = sw->lap_count - 1 - k;
@@ -180,8 +183,13 @@ static void sw_draw(stopwatch_t const *sw)
 
 enum { PH_WORK, PH_SHORT, PH_LONG };
 
-static char const * const phase_names[] = {
-    "Focus", "Short break", "Long break" };
+static char const *phase_names[3];
+static void phase_names_init(void)
+{
+    phase_names[PH_WORK]  = L("Focus", "Foco");
+    phase_names[PH_SHORT] = L("Short break", "Pausa curta");
+    phase_names[PH_LONG]  = L("Long break", "Pausa longa");
+}
 static int phase_color(int phase)
 {
     return phase == PH_WORK ? C_RGB(26, 4, 4)
@@ -252,7 +260,7 @@ static void pomo_draw(pomodoro_t const *p, bool blink)
     dtext(10, 20, color, phase_names[p->phase]);
     dtext_opt(DWIDTH / 2, 30, color, C_NONE, DTEXT_CENTER, DTEXT_TOP,
         p->chrono.running ? "" : p->alarm ? "" : chrono_ticks(&p->chrono)
-        ? "Paused" : "");
+        ? L("Paused", "Em pausa") : "");
 
     /* Progress bar */
     int x1 = 40, x2 = DWIDTH - 41, y = 126;
@@ -271,7 +279,7 @@ static void pomo_draw(pomodoro_t const *p, bool blink)
         else dcircle(cx, y + 5, 6, C_WHITE, C_LIGHT);
     }
     dprint_opt(DWIDTH - 10, y, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
-        "%d done", p->done);
+        L("%d done", "%d feitos"), p->done);
     dprint(10, y, C_DARK, "%d / %d / %d min", work_choices[p->work_i],
         break_choices[p->break_i], 3 * break_choices[p->break_i]);
 
@@ -281,13 +289,13 @@ static void pomo_draw(pomodoro_t const *p, bool blink)
         int fg = blink ? C_WHITE : color;
         drect(6, y - 3, DWIDTH - 7, y + 26, bg);
         dtext_opt(DWIDTH / 2, y, fg, C_NONE, DTEXT_CENTER, DTEXT_TOP,
-            "Time's up!");
+            L("Time's up!", "Tempo esgotado!"));
         dprint_opt(DWIDTH / 2, y + 13, fg, C_NONE, DTEXT_CENTER, DTEXT_TOP,
-            "EXE: start %s", phase_names[p->phase]);
+            L("EXE: start %s", "EXE: iniciar %s"), phase_names[p->phase]);
     }
     else dtext_opt(DWIDTH / 2, y + 6, C_DARK, C_NONE, DTEXT_CENTER,
-        DTEXT_TOP, p->chrono.running ? "EXE: pause   F3: skip"
-        : "EXE: start   F3: skip   F4: reset");
+        DTEXT_TOP, p->chrono.running ? L("EXE: pause   F3: skip", "EXE: pausar   F3: saltar")
+        : L("EXE: start   F3: skip   F4: reset", "EXE: iniciar  F3: saltar  F4: repor"));
 }
 
 //---
@@ -298,8 +306,7 @@ enum { MODE_STOPWATCH, MODE_POMODORO };
 
 static void draw_clock(void)
 {
-    static char const * const days[] = {
-        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+    char const * const days[] = L_DAYS;
     rtc_time_t t;
     rtc_get_time(&t);   /* month is the raw register, 1..12 */
     dprint_opt(DWIDTH - 10, 20, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
@@ -317,23 +324,23 @@ static void draw(int mode, stopwatch_t const *sw, pomodoro_t const *p)
     if (mode == MODE_STOPWATCH) sw_draw_big(sw);
     else pomo_draw_big(p);
 
-    info_title(mode == MODE_STOPWATCH ? "Stopwatch" : "Pomodoro", color);
+    info_title(mode == MODE_STOPWATCH ? L("Stopwatch", "Cronometro") : "Pomodoro", color);
     draw_clock();
 
     if (mode == MODE_STOPWATCH) sw_draw(sw);
     else pomo_draw(p, (now() / (TICKS / 2)) % 2);
 
     if (mode == MODE_STOPWATCH) {
-        fkey_button_color(1, "STOPW", color);
+        fkey_button_color(1, L("WATCH", "CRONO"), color);
         fkey_button(2, "POMO");
-        fkey_button(3, "LAP");
-        fkey_button(4, "RESET");
+        fkey_button(3, L("LAP", "VOLTA"));
+        fkey_button(4, L("RESET", "REPOR"));
     }
     else {
-        fkey_button(1, "STOPW");
+        fkey_button(1, L("WATCH", "CRONO"));
         fkey_button_color(2, "POMO", color);
-        fkey_button(3, "SKIP");
-        fkey_button(4, "RESET");
+        fkey_button(3, L("SKIP", "SALTAR"));
+        fkey_button(4, L("RESET", "REPOR"));
         sprintf(label, "%d MIN", work_choices[p->work_i]);
         fkey_button(5, label);
         sprintf(label, "%d MIN", break_choices[p->break_i]);
@@ -361,6 +368,9 @@ int main(void)
     static pomodoro_t p = { .phase = PH_WORK, .work_i = 2, .break_i = 1 };
     int mode = MODE_STOPWATCH;
 
+    lang_init();
+    phase_names_init();
+
     while (1) {
         pomo_update(&p);
         draw(mode, &sw, &p);
@@ -370,7 +380,8 @@ int main(void)
 
         if (key == KEY_EXIT) return 1;
         if (key == INFO_KEY) {
-            info_show("Timer", "Stopwatch / Pomodoro " VERSION,
+            info_show("Timer", L("Stopwatch / Pomodoro " APPS_VERSION,
+                "Cronometro / Pomodoro " APPS_VERSION),
                 mode == MODE_STOPWATCH ? SW_COLOR : phase_color(p.phase));
             continue;
         }

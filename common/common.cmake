@@ -6,6 +6,7 @@ set(CASIO_COMMON_DIR ${CMAKE_CURRENT_LIST_DIR})
 set(COMMON_SOURCES
   ${CASIO_COMMON_DIR}/src/utils.c
   ${CASIO_COMMON_DIR}/src/info.c
+  ${CASIO_COMMON_DIR}/src/i18n.c
 )
 
 # Shared assets: big font and the repository QR code for the info screen

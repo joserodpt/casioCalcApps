@@ -7,10 +7,11 @@
 
 #include "utils.h"
 #include "info.h"
+#include "version.h"
+#include "i18n.h"
 
 //REFERENCIA: https://git.planet-casio.com/Lephenixnoir/gint/src/branch/master/include/gint
 
-#define VERSION "v1.1"
 
 
 enum { MODE_DEC, MODE_HEX, MODE_OCT, MODE_BIN, MODE_COUNT };
@@ -261,12 +262,13 @@ static void draw(state_t const *s)
     dclear(C_WHITE);
 
     // Title bar in the colour of the active base
-    info_title("Base-N Converter", b->color);
+    info_title(L("Base-N Converter", "Conversor Base-N"), b->color);
 
     // Status line: input base on the left, word size on the right
     dtext(8, 20, b->color, b->name);
     dprint_opt(DWIDTH - 8, 20, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
-        "%d-bit  %s", width_of(s), s->is_signed ? "signed" : "unsigned");
+        "%d-bit  %s", width_of(s),
+        s->is_signed ? L("signed", "com sinal") : L("unsigned", "sem sinal"));
 
     draw_input(s);
     dline(6, 68, DWIDTH - 7, 68, C_LIGHT);
@@ -279,8 +281,8 @@ static void draw(state_t const *s)
     }
     snprintf(width_label, sizeof width_label, "%d-bit", width_of(s));
     fkey_button(5, width_label);
-    if (s->is_signed) fkey_button_color(6, "SIGNED", b->color);
-    else fkey_button(6, "SIGNED");
+    if (s->is_signed) fkey_button_color(6, L("SIGNED", "SINAL"), b->color);
+    else fkey_button(6, L("SIGNED", "SINAL"));
 
     dupdate();
 }
@@ -294,6 +296,8 @@ int main(void)
     state_t s = { .value = 0, .mode = MODE_DEC,
         .width_index = WIDTH_COUNT - 1, .is_signed = false };
 
+    lang_init();
+
     while (1) {
         draw(&s);
 
@@ -306,8 +310,8 @@ int main(void)
             case KEY_EXIT:
                 return 1;
             case INFO_KEY:
-                info_show("Base-N", "Converter " VERSION,
-                    bases[s.mode].color);
+                info_show("Base-N", L("Converter " APPS_VERSION,
+                    "Conversor " APPS_VERSION), bases[s.mode].color);
                 break;
             case KEY_F1: case KEY_F2: case KEY_F3: case KEY_F4:
                 s.mode = key - KEY_F1;

@@ -7,8 +7,9 @@
 
 #include "utils.h"
 #include "info.h"
+#include "version.h"
+#include "i18n.h"
 
-#define VERSION "v1.0"
 #define COLOR   C_RGB(4, 12, 22)
 #define CTRLC   C_RGB(24, 8, 4)     /* control characters */
 #define ROWBG   C_RGB(28, 29, 31)
@@ -189,8 +190,8 @@ static void draw_list(state_t *s)
     dtext(50, hy, C_DARK, "Hex");
     dtext(92, hy, C_DARK, "Oct");
     dtext(132, hy, C_DARK, "Binary");
-    dtext(222, hy, C_DARK, "Char");
-    dtext(270, hy, C_DARK, "Name");
+    dtext(222, hy, C_DARK, L("Char", "Car"));
+    dtext(270, hy, C_DARK, L("Name", "Nome"));
     dline(6, LIST_Y - 2, DWIDTH - 7, LIST_Y - 2, C_LIGHT);
 
     for (int r = 0; r < LIST_ROWS; r++) {
@@ -214,7 +215,7 @@ static void draw_list(state_t *s)
             dtext(230, y, fg, buf);
         }
         if (!is_control(c) || c == 32)
-            dtext(270, y, dim, c == 32 ? "Space" : short_name(c));
+            dtext(270, y, dim, c == 32 ? L("Space", "Espaco") : short_name(c));
         else {
             char const *e = c_escape(c);
             if (e) dtext(270, y, dim, e);
@@ -322,15 +323,17 @@ static void draw_utf8(state_t const *s)
     dfont(old);
 
     y = 44;
-    dprint(10, y, C_DARK, "Decimal");
+    dprint(10, y, C_DARK, L("Decimal", "Decimal"));
     dprint(96, y, C_BLACK, "%u", (unsigned)cp);
     dtext_opt(DWIDTH - 10, y, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
         block_name(cp));
     y += 13;
 
     if (is_surrogate(cp)) {
-        dtext(10, y + 6, C_RED, "Surrogate code points (D800-DFFF) are");
-        dtext(10, y + 19, C_RED, "only used in pairs by UTF-16: no UTF-8.");
+        dtext(10, y + 6, C_RED, L("Surrogate code points (D800-DFFF) are",
+            "Pontos substitutos (D800-DFFF) so"));
+        dtext(10, y + 19, C_RED, L("only used in pairs by UTF-16: no UTF-8.",
+            "usados em pares no UTF-16: sem UTF-8."));
         return;
     }
 
@@ -399,8 +402,10 @@ static void draw_utf8(state_t const *s)
         x += 8;
     }
     y += 16;
-    dtext(60, y, C_DARK, n == 1 ? "0xxxxxxx: one byte, same as ASCII"
-        : "Grey: length/continuation markers");
+    dtext(60, y, C_DARK, n == 1 ? L("0xxxxxxx: one byte, same as ASCII",
+        "0xxxxxxx: um byte, igual a ASCII")
+        : L("Grey: length/continuation markers",
+        "Cinza: marcas de tamanho/continuacao"));
 }
 
 //---
@@ -423,8 +428,9 @@ static int key_hex(int key)
 
 static void draw(state_t *s)
 {
-    static char const * const titles[] = {
-        "ASCII table", "ASCII grid", "UTF-8 encoder" };
+    char const * const titles[] = {
+        L("ASCII table", "Tabela ASCII"), L("ASCII grid", "Grelha ASCII"),
+        L("UTF-8 encoder", "Codificador UTF-8") };
 
     dclear(C_WHITE);
     info_title(titles[s->view], COLOR);
@@ -433,7 +439,8 @@ static void draw(state_t *s)
     else if (s->view == VIEW_GRID) draw_grid(s);
     else draw_utf8(s);
 
-    static char const * const labels[] = { "LIST", "GRID", "UTF-8" };
+    char const * const labels[] = { L("LIST", "LISTA"),
+        L("GRID", "GRELHA"), "UTF-8" };
     for (int i = 0; i < 3; i++) {
         if (i == s->view) fkey_button_color(i + 1, labels[i], COLOR);
         else fkey_button(i + 1, labels[i]);
@@ -452,6 +459,8 @@ int main(void)
     state_t s = { .view = VIEW_LIST, .sel = 'A', .top = 'A' - 4,
         .cp = 0xE9 };
 
+    lang_init();
+
     while (1) {
         draw(&s);
 
@@ -460,7 +469,8 @@ int main(void)
 
         if (key == KEY_EXIT) return 1;
         if (key == INFO_KEY) {
-            info_show("ASCII", "ASCII / UTF-8 table " VERSION, COLOR);
+            info_show("ASCII", L("ASCII / UTF-8 table " APPS_VERSION,
+                "Tabela ASCII / UTF-8 " APPS_VERSION), COLOR);
             continue;
         }
         if (key == KEY_F1) { s.view = VIEW_LIST; continue; }

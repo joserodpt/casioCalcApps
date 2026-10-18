@@ -8,8 +8,9 @@
 
 #include "utils.h"
 #include "info.h"
+#include "version.h"
+#include "i18n.h"
 
-#define VERSION "v1.0"
 #define COLOR   C_RGB(3, 14, 20)
 #define HOSTC   C_RGB(28, 29, 31)   /* background of host bits */
 
@@ -77,21 +78,21 @@ static bool in(uint32_t a, uint32_t net, int prefix)
 /* Special-purpose ranges (RFC 6890 and friends) */
 static char const *address_type(uint32_t a)
 {
-    if (a == 0xffffffffu)           return "Broadcast";
-    if (in(a, 0x00000000, 8))       return "This network";
-    if (in(a, 0x0a000000, 8))       return "Private";
-    if (in(a, 0x64400000, 10))      return "Shared (CGNAT)";
-    if (in(a, 0x7f000000, 8))       return "Loopback";
-    if (in(a, 0xa9fe0000, 16))      return "Link-local";
-    if (in(a, 0xac100000, 12))      return "Private";
-    if (in(a, 0xc0000200, 24))      return "Documentation";
-    if (in(a, 0xc0a80000, 16))      return "Private";
-    if (in(a, 0xc6120000, 15))      return "Benchmarking";
-    if (in(a, 0xc6336400, 24))      return "Documentation";
-    if (in(a, 0xcb007100, 24))      return "Documentation";
-    if (in(a, 0xe0000000, 4))       return "Multicast";
-    if (in(a, 0xf0000000, 4))       return "Reserved";
-    return "Public";
+    if (a == 0xffffffffu)           return L("Broadcast", "Broadcast");
+    if (in(a, 0x00000000, 8))       return L("This network", "Esta rede");
+    if (in(a, 0x0a000000, 8))       return L("Private", "Privado");
+    if (in(a, 0x64400000, 10))      return L("Shared (CGNAT)", "Partilhado CGNAT");
+    if (in(a, 0x7f000000, 8))       return L("Loopback", "Loopback");
+    if (in(a, 0xa9fe0000, 16))      return L("Link-local", "Link-local");
+    if (in(a, 0xac100000, 12))      return L("Private", "Privado");
+    if (in(a, 0xc0000200, 24))      return L("Documentation", "Documentacao");
+    if (in(a, 0xc0a80000, 16))      return L("Private", "Privado");
+    if (in(a, 0xc6120000, 15))      return L("Benchmarking", "Benchmarking");
+    if (in(a, 0xc6336400, 24))      return L("Documentation", "Documentacao");
+    if (in(a, 0xcb007100, 24))      return L("Documentation", "Documentacao");
+    if (in(a, 0xe0000000, 4))       return L("Multicast", "Multicast");
+    if (in(a, 0xf0000000, 4))       return L("Reserved", "Reservado");
+    return L("Public", "Publico");
 }
 
 //---
@@ -217,18 +218,18 @@ static void draw_results(state_t const *s)
     uint32_t bcast = net | ~mask;
     uint64_t total = (uint64_t)1 << (32 - prefix);
 
-    row(0, "Address", ip_text(a, ip), C_BLACK);
-    sprintf(text, "Class %c, %s", address_class(ip), address_type(ip));
+    row(0, L("Address", "Endereco"), ip_text(a, ip), C_BLACK);
+    sprintf(text, L("Class %c, %s", "Classe %c, %s"), address_class(ip), address_type(ip));
     note(0, text);
 
-    row(1, "Netmask", ip_text(a, mask), C_BLACK);
+    row(1, L("Netmask", "Mascara"), ip_text(a, mask), C_BLACK);
     sprintf(text, "0x%08X", (unsigned)mask);
     note(1, text);
-    row(2, "Wildcard", ip_text(a, ~mask), C_BLACK);
+    row(2, L("Wildcard", "Curinga"), ip_text(a, ~mask), C_BLACK);
 
     sprintf(text, "%s/%d", ip_text(a, net), prefix);
-    row(3, "Network", text, COLOR);
-    row(4, "Broadcast", prefix < 31 ? ip_text(a, bcast) : "none", COLOR);
+    row(3, L("Network", "Rede"), text, COLOR);
+    row(4, "Broadcast", prefix < 31 ? ip_text(a, bcast) : L("none", "nenhum"), COLOR);
 
     /* /31 links use both addresses (RFC 3021), /32 is a single host */
     uint64_t usable;
@@ -247,8 +248,8 @@ static void draw_results(state_t const *s)
         row(5, "Hosts", text, C_BLACK);
     }
 
-    row(6, "Usable", u64_text(a, usable), C_BLACK);
-    sprintf(text, "of %s address%s", u64_text(b, total),
+    row(6, L("Usable", "Utilizaveis"), u64_text(a, usable), C_BLACK);
+    sprintf(text, L("of %s address%s", "de %s endereco%s"), u64_text(b, total),
         total == 1 ? "" : "es");
     note(6, text);
 }
@@ -306,7 +307,7 @@ static void draw_grid(state_t const *s)
 static void draw(state_t const *s)
 {
     dclear(C_WHITE);
-    info_title("IP subnet calculator", COLOR);
+    info_title(L("IP subnet calculator", "Calc. de sub-rede"), COLOR);
 
     draw_input(s);
     dline(6, ROWS_Y - 5, DWIDTH - 7, ROWS_Y - 5, C_LIGHT);
@@ -314,8 +315,8 @@ static void draw(state_t const *s)
     dline(6, GRID_Y - 7, DWIDTH - 7, GRID_Y - 7, C_LIGHT);
     draw_grid(s);
 
-    fkey_button(1, "PREV");
-    fkey_button(2, "NEXT");
+    fkey_button(1, L("PREV", "ANT"));
+    fkey_button(2, L("NEXT", "SEG"));
     int prefixes[4] = { 8, 16, 24, 30 };
     for (int i = 0; i < 4; i++) {
         char label[4];
@@ -346,6 +347,8 @@ int main(void)
 {
     state_t s = { .field = { 192, 168, 1, 10, 24 }, .sel = 0 };
 
+    lang_init();
+
     while (1) {
         draw(&s);
 
@@ -356,7 +359,7 @@ int main(void)
         case KEY_EXIT:
             return 1;
         case INFO_KEY:
-            info_show("NetTools", "IP subnet calculator " VERSION, COLOR);
+            info_show("NetTools", L("IP subnet calc. " APPS_VERSION, "Calc. sub-rede " APPS_VERSION), COLOR);
             break;
         case KEY_LEFT:
             select_field(&s, s.sel - 1);

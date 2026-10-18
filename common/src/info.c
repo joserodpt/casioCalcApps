@@ -2,6 +2,7 @@
 #include <gint/keyboard.h>
 
 #include "info.h"
+#include "i18n.h"
 
 #define AUTHOR      "joserodpt"
 #define REPO_LINE1  "github.com/joserodpt/"
@@ -15,7 +16,7 @@ void info_title(char const *title, int color)
     drect(0, 0, DWIDTH - 1, 15, color);
     dtext(6, 3, C_WHITE, title);
     dtext_opt(DWIDTH - 6, 3, C_WHITE, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
-        INFO_HINT);
+        L("OPTN for info", "OPTN p/ info"));
 }
 
 /* info_screen(): About screen; returns when a key is pressed */
@@ -26,7 +27,7 @@ void info_screen(char const *name, char const *subtitle, int color,
 
     dclear(C_WHITE);
     drect(0, 0, DWIDTH - 1, 15, color);
-    dtext(6, 3, C_WHITE, "About");
+    dtext(6, 3, C_WHITE, L("About", "Sobre"));
 
     dimage(20, 36, &img_qr_repo);
 
@@ -36,15 +37,16 @@ void info_screen(char const *name, char const *subtitle, int color,
     if (subtitle) dtext(x, 54, C_DARK, subtitle);
 
     /* date is __DATE__ ("Mmm dd yyyy"), so the year starts at offset 7 */
-    dprint(x, 78, C_BLACK, "Made by " AUTHOR " (C) %s", date + 7);
-    dprint(x, 92, C_DARK, "Built %s %s", date, time);
+    dprint(x, 78, C_BLACK, L("Made by " AUTHOR " (C) %s",
+        "Feito por " AUTHOR " (C) %s"), date + 7);
+    dprint(x, 92, C_DARK, L("Built %s %s", "Compilado %s %s"), date, time);
 
-    dtext(x, 116, C_DARK, "Source code:");
+    dtext(x, 116, C_DARK, L("Source code:", "Codigo fonte:"));
     dtext(x, 130, C_BLACK, REPO_LINE1);
     dtext(x, 144, C_BLACK, REPO_LINE2);
 
     dtext_opt(DWIDTH / 2, 196, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
-        "Press any key to go back");
+        L("Press any key to go back", "Prima uma tecla para voltar"));
     dupdate();
 
     getkey();
