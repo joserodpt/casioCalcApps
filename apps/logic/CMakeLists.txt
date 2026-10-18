@@ -8,7 +8,7 @@ include(Fxconv)
 find_package(Gint 2.9 REQUIRED)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../common/common.cmake)
 
-casio_app(Logic
+casio_app(Logic NAME_PT "Logica"
   SOURCES
     src/main.c
 )

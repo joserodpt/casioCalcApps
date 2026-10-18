@@ -8,7 +8,7 @@ include(Fxconv)
 find_package(Gint 2.9 REQUIRED)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../common/common.cmake)
 
-casio_app(Chemistry
+casio_app(Chemistry NAME_PT "Quimica"
   SOURCES
     src/main.c
     src/ui.c
