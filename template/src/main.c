@@ -2,15 +2,27 @@
 #include <gint/keyboard.h>
 
 #include "utils.h"
+#include "info.h"
 
-int main(void)
+#define VERSION "v1.0"
+#define COLOR   C_BLUE
+
+static void draw(void)
 {
     dclear(C_WHITE);
-    row_title("__APP_NAME__");
+    info_title("__APP_NAME__", COLOR);
     row_print(2, 1, "Hello from __APP_NAME__!");
     row_print(4, 1, "Press EXIT to quit.");
     dupdate();
+}
 
-    while(getkey().key != KEY_EXIT) {}
-    return 1;
+int main(void)
+{
+    while(1) {
+        draw();
+
+        int key = getkey().key;
+        if(key == KEY_EXIT) return 1;
+        if(key == INFO_KEY) info_show("__APP_NAME__", VERSION, COLOR);
+    }
 }

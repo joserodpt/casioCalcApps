@@ -6,10 +6,12 @@
 #include <string.h>
 
 #include "utils.h"
+#include "info.h"
 
 //REFERENCIA: https://git.planet-casio.com/Lephenixnoir/gint/src/branch/master/include/gint
 
-extern font_t const font_big;
+#define VERSION "v1.1"
+
 
 enum { MODE_DEC, MODE_HEX, MODE_OCT, MODE_BIN, MODE_COUNT };
 
@@ -259,10 +261,7 @@ static void draw(state_t const *s)
     dclear(C_WHITE);
 
     // Title bar in the colour of the active base
-    drect(0, 0, DWIDTH - 1, 15, b->color);
-    dtext(6, 3, C_WHITE, "Base-N Converter");
-    dtext_opt(DWIDTH - 6, 3, C_WHITE, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
-        "v1.1   Coded in Portugal :)");
+    info_title("Base-N Converter", b->color);
 
     // Status line: input base on the left, word size on the right
     dtext(8, 20, b->color, b->name);
@@ -306,6 +305,10 @@ int main(void)
         switch (key) {
             case KEY_EXIT:
                 return 1;
+            case INFO_KEY:
+                info_show("Base-N", "Converter " VERSION,
+                    bases[s.mode].color);
+                break;
             case KEY_F1: case KEY_F2: case KEY_F3: case KEY_F4:
                 s.mode = key - KEY_F1;
                 break;

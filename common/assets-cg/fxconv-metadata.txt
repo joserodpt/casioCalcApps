@@ -1,0 +1,12 @@
+font_big.png:
+  type: font
+  name: font_big
+  charset: print
+  grid.size: 10x14
+  height: 14
+  char-spacing: 1
+
+qr_repo.png:
+  type: bopti-image
+  name: img_qr_repo
+  profile: p4_rgb565

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# Renders assets-cg/font_big.png: a 10x14 monospace font (charset "print",
+# Renders common/assets-cg/font_big.png: a 10x14 monospace font (charset "print",
 # 16 glyphs per row) for the large value display. Re-run after changing
-# FONT or SIZE; the grid matches assets-cg/fxconv-metadata.txt.
+# FONT or SIZE; the grid matches common/assets-cg/fxconv-metadata.txt.
 import os
 from PIL import Image, ImageDraw, ImageFont
 
