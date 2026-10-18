@@ -123,6 +123,52 @@ def draw_net_tools(d, c):
     text(d, 45.5, 33.5, "127.0.0.1", 12)
 
 
+def draw_ascii_table(d, c):
+    # "Aa" with a code below, suggesting a character table
+    text(d, 32, 20, "Aa", 15)
+    d.rounded_rectangle(box(50, 24, 80, 38), radius=3 * S, fill=WHITE)
+    text(d, 65, 31.5, "41", 9, c)
+
+
+def draw_timer(d, c):
+    # Stopwatch: a circle with a top button and two hands
+    w = 2 * S
+    d.rectangle(box(42, 6, 50, 10), fill=WHITE)
+    d.line(box(46, 10, 46, 14), fill=WHITE, width=w)
+    d.ellipse(box(30, 13, 62, 41), outline=WHITE, width=w)
+    d.line(box(46, 27, 46, 18), fill=WHITE, width=w)
+    d.line(box(46, 27, 54, 31), fill=WHITE, width=w)
+
+
+def draw_logic(d, c):
+    # Mini Karnaugh map: 2x2 grid, three cells filled, 1px gaps between
+    cells = [(0, 0, False), (1, 0, True), (0, 1, True), (1, 1, True)]
+    gx, gy, s, gap = 33, 9, 12, 1
+    d.rounded_rectangle(box(gx - 1, gy - 1, gx + 2 * s + 1, gy + 2 * s + 1),
+                        radius=2 * S, fill=WHITE)
+    for cx, cy, on in cells:
+        x1 = gx + cx * s + gap
+        y1 = gy + cy * s + gap
+        d.rectangle(box(x1, y1, x1 + s - gap, y1 + s - gap),
+                    fill=WHITE if on else c)
+    text(d, 46, 37, "AB+C", 9)
+
+
+def draw_firmware_dump(d, c):
+    # Memory chip with a down arrow (dumping out)
+    w = 2 * S
+    d.rounded_rectangle(box(30, 10, 62, 32), radius=2 * S, outline=WHITE,
+                        width=w)
+    for i in range(3):
+        y = 15 + i * 6
+        d.line(box(24, y, 30, y), fill=WHITE, width=S)
+        d.line(box(62, y, 68, y), fill=WHITE, width=S)
+    text(d, 46, 21, "ROM", 8)
+    d.line(box(46, 33, 46, 41), fill=WHITE, width=w)
+    d.polygon([(41 * S, 38 * S), (51 * S, 38 * S), (46 * S, 43 * S)],
+              fill=WHITE)
+
+
 # app folder -> (panel colour, pictogram)
 ICONS = {
     "electronics":   ((168, 76, 26), draw_electronics),
@@ -133,6 +179,10 @@ ICONS = {
     "file-syscalls": ((215, 120, 20), draw_file_syscalls),
     "status-bar":    ((40, 70, 160), draw_status_bar),
     "net-tools":     ((24, 112, 160), draw_net_tools),
+    "ascii-table":   ((34, 100, 130), draw_ascii_table),
+    "timer":         ((30, 80, 170), draw_timer),
+    "logic":         ((112, 50, 160), draw_logic),
+    "firmware-dump": ((60, 62, 74), draw_firmware_dump),
 }
 
 
