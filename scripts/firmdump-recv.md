@@ -82,13 +82,13 @@ it. It saves each region as a `.bin` file whose name starts with
 ## Method 2: storage dump
 
 1. Open FirmDump, select **OS firmware** and press **F1**. It writes
-   `\\fls0\DUMP\OS00.bin` … `OS03.bin` (4 MB). EXIT cancels.
-2. **Check whether the OS goes past 4 MB.** Select **Custom**, press **F4**
-   and type `80400000`. For A–F, press the keys with those red letters
-   (X,θ,T, log, ln, sin, cos, tan), without ALPHA.
-   If the preview shows `FF FF FF …` there, the OS fits in the 4 MB you
-   have. Otherwise, press **F5**, type `400000` and press **F1**. That
-   writes the next 4 MB as `80400000.bin` … `80700000.bin`.
+   `\\fls0\DUMP\OS00.bin` … `OS07.bin` (8 MB). EXIT cancels.
+2. **Check that the OS ends within 8 MB** (OS 3.80 ends at `0x807E6000`).
+   Select **Custom**, press **F4** and type `80800000`. For A–F, press the
+   keys with those red letters (X,θ,T, log, ln, sin, cos, tan), without
+   ALPHA. The preview should show `FF FF FF …` (erased flash). If it shows
+   data, press **F5**, type `400000` and press **F1**: that writes the next
+   4 MB as `80800000.bin` … `80B00000.bin`.
 3. **Copy the files to the PC.** Plug in the cable and choose USB Flash
    (F1). On Linux, copy with 4 kB direct reads, because of the 4 kB
    transfer limit:
@@ -101,19 +101,19 @@ it. It saves each region as a `.bin` file whose name starts with
    ```
 4. Delete the `DUMP` folder on the calculator, then eject the drive before
    unplugging.
-5. If the data went on past `80800000`, repeat steps 2–4 with the next base
-   (`80800000`, `80C00000`, …). Clearing `DUMP` between windows keeps
-   storage from filling up.
+5. For more of the flash (the full ROM doesn't fit in storage), repeat
+   steps 2–4 with the next bases (`80C00000`, `81000000`, …). Clearing
+   `DUMP` between windows keeps storage from filling up.
 6. Join the parts in address order:
    ```sh
    cd ~/casio-dump
-   cat OS00.bin OS01.bin OS02.bin OS03.bin 8*.bin > firmware.bin
+   cat OS0?.bin 8*.bin > firmware.bin
    ```
 
 ## Checking the result
 
-- **Size**: `ROM.bin` should be the ROM size FirmDump showed. The OS
-  region should be a whole number of MB.
+- **Size**: `ROM.bin` should be the ROM size FirmDump showed (32 MB on an
+  fx-CG50); the OS region 8 MB.
 - **Not blank**: `xxd ROM.bin | head` should show code, not only `00` or
   `FF`. A file of zeros means it was dumped in the emulator, which has no
   OS.

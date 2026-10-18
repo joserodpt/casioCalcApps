@@ -10,8 +10,8 @@ Pick a region with ▲/▼ and press F1 to dump it:
 
 | Region | Range |
 |---|---|
-| OS firmware | `0x80000000` + 4 MB (the OS area) |
-| Full ROM | `0x80000000` + the ROM size reported by the hardware |
+| OS firmware | `0x80000000` + 8 MB (the OS area) |
+| Full ROM | `0x80000000` + the flash size (32 MB on the fx-CG50) |
 | Custom | any base and size you enter in hex |
 
 A live hex preview of the selected base is shown (unmapped addresses read as
@@ -30,9 +30,11 @@ rather than dumping garbage.
 
 Custom parts are named by their start address (`DUMP\80400000.bin`,
 `DUMP\80500000.bin`, ...), so a large area can be dumped one window at a
-time: dump 4 MB, copy the files off, delete them, move the base on. The full
-ROM is larger than the free storage memory, and the OS may go past 4 MB:
-use the preview to see where the data turns into `FF FF ...`.
+time: dump a few MB, copy the files off, delete them, move the base on. The
+full ROM is larger than the free storage memory. The flash size comes from
+gint when it knows it, else from where the 64 MB window starts repeating
+the flash; the OS ends before 8 MB (OS 3.80: at `0x807E6000`, then erased
+flash, `FF FF ...` in the preview, up to the storage memory).
 
 ## Streaming over USB (F2)
 

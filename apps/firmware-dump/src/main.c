@@ -37,7 +37,7 @@
 #define ERRC      C_RGB(26, 4, 4)
 
 #define ROM_BASE  0x80000000u       /* P1: cached, memory-mapped flash */
-#define OS_SIZE   0x00400000u       /* the OS occupies the first ~4 MB */
+#define OS_SIZE   0x00800000u       /* the OS: OS 3.80 ends at 0x807E6000 */
 #define PART_SIZE (1u << 20)        /* one output file per 1 MB */
 #define CHUNK     4096              /* bytes per BFile_Write */
 #define BLOCK     0x10000u          /* bytes per world switch (64 KB) */
@@ -94,6 +94,22 @@ static bool in_emulator(void)
     uint32_t acc = 0;
     for (uint32_t off = 0; off < 0x10000u; off += 16) acc |= peek(ROM_BASE + off);
     return acc == 0;
+}
+
+/* The flash's size. gint knows it on some models; otherwise the 64 MB
+   window repeats the flash (an fx-CG50's 32 MB show twice), so it is the
+   first size whose copy starts like the flash. The OS area differs from
+   the erased flash after it, so 8 MB never matches on a real calculator */
+static uint32_t rom_size(void)
+{
+    uint32_t rom = (gint[HWROM] & HW_LOADED) ? (gint[HWROM] & 0x7fffffff) : 0;
+    if (rom && rom <= 0x04000000u) return rom;
+    /* emuCasio maps 32 MB of ROM and no mirror: reading past it faults */
+    if (in_emulator()) return 0x02000000u;
+    for (rom = OS_SIZE; rom < 0x04000000u; rom <<= 1)
+        if (!memcmp((void const *)ROM_BASE, (void const *)(ROM_BASE + rom), 0x10000))
+            return rom;
+    return 0x04000000u;
 }
 
 //---
@@ -484,9 +500,7 @@ int main(void)
     lang_init();
 
     /* Full ROM size from the hardware info, capped to the mapped window */
-    uint32_t rom = (gint[HWROM] & HW_LOADED) ? (gint[HWROM] & 0x7fffffff) : 0;
-    if (rom == 0 || rom > 0x04000000u) rom = 0x04000000u;    /* 64 MB cap */
-    regions[REG_ROM].size = rom;
+    regions[REG_ROM].size = rom_size();
 
     strcpy(pg.message, L("F1 dumps the selected region to \\fls0\\DUMP",
         "F1 copia a regiao para \\fls0\\DUMP"));
