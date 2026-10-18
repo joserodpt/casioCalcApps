@@ -169,6 +169,24 @@ def draw_firmware_dump(d, c):
               fill=WHITE)
 
 
+def draw_converter(d, c):
+    # A conical flask with liquid, plus a conversion double-arrow
+    w = 2 * S
+    # flask: neck + body (triangle)
+    d.line(box(30, 9, 30, 17), fill=WHITE, width=w)
+    d.line(box(38, 9, 38, 17), fill=WHITE, width=w)
+    d.line(box(28, 9, 40, 9), fill=WHITE, width=w)
+    d.polygon([(30*S,17*S),(38*S,17*S),(46*S,36*S),(22*S,36*S)],
+              outline=WHITE, width=w)
+    d.polygon([(26*S,27*S),(42*S,27*S),(46*S,36*S),(22*S,36*S)], fill=WHITE)
+    # conversion arrows on the right
+    d.line(box(52, 16, 66, 16), fill=WHITE, width=w)
+    d.polygon([(66*S,13*S),(66*S,19*S),(71*S,16*S)], fill=WHITE)
+    d.line(box(52, 26, 66, 26), fill=WHITE, width=w)
+    d.polygon([(52*S,23*S),(52*S,29*S),(47*S,26*S)], fill=WHITE)
+    text(d, 61, 37, "u<>u", 8)
+
+
 # app folder -> (panel colour, pictogram)
 ICONS = {
     "electronics":   ((168, 76, 26), draw_electronics),
@@ -183,6 +201,7 @@ ICONS = {
     "timer":         ((30, 80, 170), draw_timer),
     "logic":         ((112, 50, 160), draw_logic),
     "firmware-dump": ((60, 62, 74), draw_firmware_dump),
+    "converter":     ((18, 92, 120), draw_converter),
 }
 
 
