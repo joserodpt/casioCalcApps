@@ -3,6 +3,20 @@
 
 set(CASIO_COMMON_DIR ${CMAKE_CURRENT_LIST_DIR})
 
+# Read the shared version from version.h ("v1.0") and turn it into the g3a
+# header format "MM.mm.pppp" so the add-in's version shows on the calculator.
+file(READ ${CASIO_COMMON_DIR}/include/version.h _version_h)
+string(REGEX MATCH "APPS_VERSION[ \t]+\"v([0-9]+)\\.([0-9]+)\"" _m "${_version_h}")
+set(_vmaj ${CMAKE_MATCH_1})
+set(_vmin ${CMAKE_MATCH_2})
+if(_vmaj LESS 10)
+  set(_vmaj "0${_vmaj}")
+endif()
+if(_vmin LESS 10)
+  set(_vmin "0${_vmin}")
+endif()
+set(APPS_VERSION_G3A "${_vmaj}.${_vmin}.0000")
+
 set(COMMON_SOURCES
   ${CASIO_COMMON_DIR}/src/utils.c
   ${CASIO_COMMON_DIR}/src/info.c
@@ -35,6 +49,7 @@ function(casio_app NAME)
       NAME "${NAME}" ICON assets-fx/icon.png)
   elseif("${FXSDK_PLATFORM_LONG}" STREQUAL fxCG50)
     generate_g3a(TARGET ${NAME} OUTPUT "${NAME}.g3a"
-      NAME "${NAME}" ICONS assets-cg/icon-uns.png assets-cg/icon-sel.png)
+      NAME "${NAME}" VERSION "${APPS_VERSION_G3A}"
+      ICONS assets-cg/icon-uns.png assets-cg/icon-sel.png)
   endif()
 endfunction()
