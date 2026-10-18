@@ -23,13 +23,13 @@ void info_title(char const *title, int color)
 void info_screen(char const *name, char const *subtitle, int color,
     char const *date, char const *time)
 {
-    int const x = 150;
+    int const x = 158;
 
     dclear(C_WHITE);
     drect(0, 0, DWIDTH - 1, 15, color);
     dtext(6, 3, C_WHITE, L("About", "Sobre"));
 
-    dimage(8, 36, &img_qr_repo);
+    dimage(14, 36, &img_qr_repo);
 
     font_t const *old = dfont(&font_big);
     dtext(x, 34, color, name);
