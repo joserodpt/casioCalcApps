@@ -31,6 +31,18 @@ make clean
 
 In VS Code: `Ctrl+Shift+B` builds everything; other tasks are under *Run Task*.
 
+## Testing on a computer
+
+The apps are tested on [emuCasioFxCG](https://github.com/joserodpt/emuCasioFxCG),
+an fx-CG50 add-in emulator that runs the `.g3a` files on a PC (it also supports
+headless screenshots, which is how the screenshots in each app are produced).
+
+```sh
+./run.sh base-n              # build apps/base-n and run it in the emulator
+```
+
+Set `EMUCASIO` if your emuCasio checkout is not in `~/VSCode/emuCasio`.
+
 ## Adding code to an app
 
 List new `.c` files under `SOURCES` in the app's `CMakeLists.txt`, and images
