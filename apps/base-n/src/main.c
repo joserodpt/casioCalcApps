@@ -334,6 +334,7 @@ int main(void)
                 s.is_signed = !s.is_signed;
                 break;
             case KEY_NEG:
+            case KEY_MINUS:     // no subtraction here, so '-' negates too
                 if (s.mode == MODE_DEC) {
                     // Negatives only read in signed mode, so turn it on
                     s.is_signed = true;
