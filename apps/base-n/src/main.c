@@ -38,6 +38,7 @@ typedef struct {
     int mode;
     int width_index;
     bool is_signed;     // decimal shows two's complement values
+    bool neg_pending;   // decimal: a '-' typed while the value is still 0
 } state_t;
 
 #define BUF_SIZE 80     // 64 binary digits + 15 group spaces + '\0'
@@ -75,7 +76,10 @@ static uint64_t magnitude(state_t const *s)
 // the sign, every other base edits the raw bits
 static uint64_t edit_get(state_t const *s, bool *neg)
 {
-    *neg = s->mode == MODE_DEC && is_negative(s);
+    // In decimal, the number is negative when its bits say so, or when '-'
+    // was pressed while it was still 0 (so the next digits become negative)
+    *neg = s->mode == MODE_DEC
+        && (is_negative(s) || (s->value == 0 && s->neg_pending));
     return s->mode == MODE_DEC ? magnitude(s) : s->value;
 }
 
@@ -330,10 +334,18 @@ int main(void)
                 s.is_signed = !s.is_signed;
                 break;
             case KEY_NEG:
-                s.value = -s.value & mask(width_of(&s));
+                if (s.mode == MODE_DEC) {
+                    // Negatives only read in signed mode, so turn it on
+                    s.is_signed = true;
+                    if (s.value == 0) s.neg_pending = !s.neg_pending;
+                    else s.value = -s.value & mask(width_of(&s));
+                } else {
+                    s.value = -s.value & mask(width_of(&s));
+                }
                 break;
             case KEY_ACON:
                 s.value = 0;
+                s.neg_pending = false;
                 break;
             case KEY_DEL:
                 delete_digit(&s);
