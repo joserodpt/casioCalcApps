@@ -5,3 +5,4 @@ apps/*/*.g1a
 apps/*/*.g3a
 __pycache__/
 .DS_Store
+storage/
