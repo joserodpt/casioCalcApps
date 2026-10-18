@@ -91,6 +91,9 @@ void fkey_button(int position, char const *text);
 
 void fkey_button_selected(int position, char const *text);
 
+/* fkey_button_color(): A rectangular F-key with a custom background */
+void fkey_button_color(int position, char const *text, int color);
+
 //---
 // USB commands
 //---

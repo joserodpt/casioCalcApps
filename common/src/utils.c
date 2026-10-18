@@ -156,8 +156,8 @@ void scrollbar_px(int view_top, int view_bottom, int range_min, int range_max,
 }
 
 
-/* fkey_button(): A rectangular F-key */
-void fkey_button(int position, char const *text)
+/* fkey_button_color(): A rectangular F-key with a custom background */
+void fkey_button_color(int position, char const *text, int color)
 {
     int width;
     dsize(text, NULL, &width, NULL);
@@ -166,25 +166,20 @@ void fkey_button(int position, char const *text)
     int y = 207;
     int w = 63;
 
-    dline(x + 1, y, x + w - 2, y, C_BLACK);
-    dline(x + 1, y + 14, x + w - 2, y + 14, C_BLACK);
-    drect(x, y + 1, x + w - 1, y + 13, C_BLACK);
+    dline(x + 1, y, x + w - 2, y, color);
+    dline(x + 1, y + 14, x + w - 2, y + 14, color);
+    drect(x, y + 1, x + w - 1, y + 13, color);
 
     dtext(x + ((w - width) >> 1), y + 3, C_WHITE, text);
 }
 
+/* fkey_button(): A rectangular F-key */
+void fkey_button(int position, char const *text)
+{
+    fkey_button_color(position, text, C_BLACK);
+}
+
 void fkey_button_selected(int position, char const *text)
 {
-    int width;
-    dsize(text, NULL, &width, NULL);
-
-    int x = 4 + 65 * (position - 1);
-    int y = 207;
-    int w = 63;
-
-    dline(x + 1, y, x + w - 2, y, C_BLUE);
-    dline(x + 1, y + 14, x + w - 2, y + 14, C_BLUE);
-    drect(x, y + 1, x + w - 1, y + 13, C_BLUE);
-
-    dtext(x + ((w - width) >> 1), y + 3, C_WHITE, text);
+    fkey_button_color(position, text, C_BLUE);
 }

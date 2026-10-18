@@ -15,4 +15,5 @@ casio_app(Base-N
     assets-fx/example.png
   ASSETS_cg
     assets-cg/example.png
+    assets-cg/font_big.png
 )
