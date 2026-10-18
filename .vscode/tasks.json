@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Build all apps", "type": "shell", "command": "make", "group": { "kind": "build", "isDefault": true }, "problemMatcher": "$gcc" },
+    { "label": "Build current app", "type": "shell", "command": "make app APP=${input:app}", "problemMatcher": "$gcc" },
+    { "label": "Send app to calculator", "type": "shell", "command": "make send APP=${input:app}", "problemMatcher": "$gcc" },
+    { "label": "New app", "type": "shell", "command": "make new APP=${input:app}" }
+  ],
+  "inputs": [
+    { "id": "app", "type": "promptString", "description": "App folder name (under apps/)" }
+  ]
+}

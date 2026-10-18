@@ -1,0 +1,17 @@
+{
+  "configurations": [
+    {
+      "name": "fxSDK (fx-CG50)",
+      "includePath": [
+        "${workspaceFolder}/common/include",
+        "${workspaceFolder}/apps/**",
+        "${env:HOME}/.local/share/fxsdk/sysroot/sh3eb-elf/include"
+      ],
+      "defines": ["FXCG50", "TARGET_FXCG50"],
+      "compilerPath": "${env:HOME}/.local/bin/sh-elf-gcc",
+      "cStandard": "gnu11",
+      "intelliSenseMode": "gcc-x86"
+    }
+  ],
+  "version": 4
+}

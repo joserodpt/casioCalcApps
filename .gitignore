@@ -1,0 +1,7 @@
+build-fx/
+build-cg/
+build-cg-push/
+apps/*/*.g1a
+apps/*/*.g3a
+__pycache__/
+.DS_Store
