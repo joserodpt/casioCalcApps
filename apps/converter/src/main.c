@@ -149,7 +149,7 @@ static void units_screen(void)
 static void grid_cell_xy(int row, int col, int *x, int *y)
 {
     *x = GRID_X + col * CELL_W;
-    *y = GRID_Y + row * CELL_H + (row >= 8 ? FBLOCK_GAP : 0);
+    *y = GRID_Y + row * CELL_H + (row >= 7 ? FBLOCK_GAP : 0);
 }
 
 static void draw_grid(int cursor_z)
@@ -183,7 +183,7 @@ static int grid_move(int z, int key)
 
     for (int step = 0; step < 20; step++) {
         row += dr; col += dc;
-        if (row < 0 || row > 9 || col < 0 || col > 17) return z;
+        if (row < 0 || row > 8 || col < 0 || col > 17) return z;
         int nz = element_at_grid(row, col);
         if (nz) return nz;
     }

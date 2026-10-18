@@ -20,9 +20,10 @@ element_t const *element_by_symbol(char const *sym, int len)
    is placed on two extra rows below the main table. */
 void element_grid(int z, int *row, int *col)
 {
-    /* Lanthanides 57-71 -> row 8, actinides 89-103 -> row 9 */
-    if (z >= 57 && z <= 71) { *row = 8; *col = 2 + (z - 57); return; }
-    if (z >= 89 && z <= 103) { *row = 9; *col = 2 + (z - 89); return; }
+    /* f-block below the main table: lanthanides 57-71 -> row 7,
+       actinides 89-103 -> row 8, indented under group 3 */
+    if (z >= 57 && z <= 71) { *row = 7; *col = 2 + (z - 57); return; }
+    if (z >= 89 && z <= 103) { *row = 8; *col = 2 + (z - 89); return; }
 
     static struct { int z, period, group; } const main_[] = {
         {1,0,0},{2,0,17},
