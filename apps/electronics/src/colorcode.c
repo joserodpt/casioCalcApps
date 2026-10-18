@@ -344,34 +344,6 @@ static void draw(cc_t const *s)
 //  Value entry
 //---
 
-/* Prompt for a value at the bottom of the screen; false if cancelled */
-static bool prompt_value(cc_t const *s, double *v)
-{
-    field_t f = { .kind = F_NUM, .label = "Value", .unit = S_OHM };
-    field_set(&f, cc_value(s));
-
-    while (1) {
-        draw(s);
-        drect(0, 172, DWIDTH - 1, 223, C_WHITE);
-        dline(0, 172, DWIDTH - 1, 172, COLOR);
-        dtext(10, 180, COLOR, L("Value","Valor"));
-        field_box(&f, 60, 177, 160, true, COLOR);
-        etext(224, 180, C_DARK, DTEXT_LEFT, false, S_OHM);
-        dtext(250, 180, C_DARK, L("EXE: set bands","EXE: definir"));
-        dtext(250, 192, C_DARK, L("EXIT: cancel","EXIT: cancelar"));
-        field_fkeys(&f, COLOR);
-        dupdate();
-
-        int key = getkey().key;
-        if (key == KEY_EXIT) return false;
-        if (key == KEY_EXE) {
-            *v = field_value(&f);
-            if (!isnan(*v) && *v >= 0) return true;
-        }
-        else field_key(&f, key);
-    }
-}
-
 static void set_from_value(cc_t *s, double v)
 {
     char a[32], b[32];
@@ -381,6 +353,38 @@ static void set_from_value(cc_t *s, double v)
         snprintf(s->note, sizeof s->note, L("%s shown as %s","%s mostrado %s"), fmt_si(a, v,
             S_OHM, 4), fmt_si(b, shown, S_OHM, 4));
     else s->note[0] = '\0';
+}
+
+/* Prompt for a value at the bottom of the screen. The bands follow the value
+   as it is typed; EXE keeps them, EXIT puts the old ones back. */
+static void prompt_value(cc_t *s)
+{
+    field_t f = { .kind = F_NUM, .label = "Value", .unit = S_OHM };
+    field_set(&f, cc_value(s));
+    cc_t live = *s;
+
+    while (1) {
+        draw(&live);
+        drect(0, 172, DWIDTH - 1, 223, C_WHITE);
+        dline(0, 172, DWIDTH - 1, 172, COLOR);
+        dtext(10, 180, COLOR, L("Value","Valor"));
+        field_box(&f, 60, 177, 160, true, COLOR);
+        etext(224, 180, C_DARK, DTEXT_LEFT, false, S_OHM);
+        dtext(250, 180, C_DARK, L("EXE: keep","EXE: manter"));
+        dtext(250, 192, C_DARK, L("EXIT: cancel","EXIT: cancelar"));
+        field_fkeys(&f, COLOR);
+        dupdate();
+
+        int key = getkey().key;
+        if (key == KEY_EXIT) return;
+        if (key == KEY_EXE) {
+            if (!isnan(field_value(&f))) { *s = live; return; }
+        }
+        else if (field_key(&f, key)) {
+            double v = field_value(&f);
+            if (!isnan(v) && v >= 0) set_from_value(&live, v);
+        }
+    }
 }
 
 //---
@@ -423,7 +427,7 @@ void colorcode_run(void)
             break;
         case KEY_F2:
         case KEY_EXE:
-            if (prompt_value(&s, &v)) set_from_value(&s, v);
+            prompt_value(&s);
             break;
         case KEY_F4: case KEY_F5: case KEY_F6: {
             int series = key == KEY_F4 ? 12 : key == KEY_F5 ? 24 : 96;
