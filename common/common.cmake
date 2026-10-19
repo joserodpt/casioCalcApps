@@ -30,6 +30,7 @@ set(COMMON_SOURCES
   ${CASIO_COMMON_DIR}/src/menu.c
   ${CASIO_COMMON_DIR}/src/units.c
   ${CASIO_COMMON_DIR}/src/ui.c
+  ${CASIO_COMMON_DIR}/src/usb_screen.c
 )
 
 # Shared assets: big font and the repository QR code for the info screen

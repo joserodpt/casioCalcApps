@@ -11,6 +11,7 @@
 #include "form.h"
 #include "menu.h"
 #include "units.h"
+#include "usb_screen.h"
 
 #define COLOR   C_RGB(20, 10, 2)    /* warm orange */
 #ifndef M_PI
@@ -342,6 +343,7 @@ static menu_t const menu = {
 int main(void)
 {
     lang_init();
+    usb_screen_init();
     menu_run(&menu);
     return 1;
 }

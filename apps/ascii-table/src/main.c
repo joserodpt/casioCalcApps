@@ -10,6 +10,7 @@
 #include "keys.h"
 #include "version.h"
 #include "i18n.h"
+#include "usb_screen.h"
 
 #define COLOR   C_RGB(4, 12, 22)
 #define CTRLC   C_RGB(24, 8, 4)     /* control characters */
@@ -447,6 +448,7 @@ int main(void)
         .cp = 0xE9 };
 
     lang_init();
+    usb_screen_init();
 
     while (1) {
         draw(&s);

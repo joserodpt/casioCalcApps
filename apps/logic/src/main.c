@@ -9,6 +9,7 @@
 #include "info.h"
 #include "version.h"
 #include "i18n.h"
+#include "usb_screen.h"
 
 #define COLOR   C_RGB(14, 6, 20)
 #define ONEC    C_RGB(4, 16, 8)     /* a 1 in the table / map */
@@ -672,6 +673,7 @@ int main(void)
     int table_sel = 0;
 
     lang_init();
+    usb_screen_init();
     recompute(&m);
 
     while (1) {

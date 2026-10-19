@@ -11,6 +11,7 @@
 #include "keys.h"
 #include "version.h"
 #include "i18n.h"
+#include "usb_screen.h"
 
 #define COLOR   C_RGB(3, 14, 20)
 #define HOSTC   C_RGB(28, 29, 31)   /* background of host bits */
@@ -338,6 +339,7 @@ int main(void)
     state_t s = { .field = { 192, 168, 1, 10, 24 }, .sel = 0 };
 
     lang_init();
+    usb_screen_init();
 
     while (1) {
         draw(&s);

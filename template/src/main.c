@@ -4,6 +4,7 @@
 #include "info.h"
 #include "version.h"
 #include "i18n.h"
+#include "usb_screen.h"
 
 #define COLOR   C_BLUE
 
@@ -20,6 +21,7 @@ static void draw(void)
 int main(void)
 {
     lang_init();
+    usb_screen_init();
 
     while(1) {
         draw();

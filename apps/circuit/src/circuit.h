@@ -18,14 +18,25 @@
 #define H_EDGES  (NY * (NX - 1))
 #define EDGES    (H_EDGES + (NY - 1) * NX)
 
-typedef enum { P_NONE, P_WIRE, P_RES, P_BATT, P_LAMP, P_SWITCH } kind_t;
+typedef enum {
+    P_NONE, P_WIRE, P_RES, P_BATT, P_LAMP, P_SWITCH,
+    P_DIODE, P_LED, P_AMMETER, P_VOLTMETER, P_POT, P_FUSE,
+    P_KINDS
+} kind_t;
+
+typedef enum { LED_RED, LED_YELLOW, LED_GREEN, LED_BLUE, LED_WHITE,
+    LED_COLORS } led_color_t;
+
+/* LEDs are rated for this current: full brightness, OVERLOAD above 1.5x */
+#define LED_RATED 0.020
 
 typedef struct {
     uint8_t kind;
-    uint8_t flip;       /* battery: + terminal at end b instead of a */
-    uint8_t closed;     /* switch */
-    uint8_t pad;
-    double value;       /* resistor: ohms; battery: volts; lamp: rated V */
+    uint8_t flip;       /* battery: + at end b; diode, LED: anode at b */
+    uint8_t closed;     /* switch: closed; fuse: not blown */
+    uint8_t level;      /* potentiometer: position in %; LED: colour */
+    double value;       /* resistor, potentiometer: ohms; battery: volts;
+                           lamp: rated V; diode: forward V; fuse: amps */
     double value2;      /* lamp: rated power, W */
 } part_t;
 
@@ -54,13 +65,23 @@ typedef struct {
 void edge_ends(int e, int *a, int *b);
 bool edge_horizontal(int e);
 
-/* part_resistance(): Resistance of a resistor or lamp (V^2 / P) */
+/* part_resistance(): Resistance of a resistor, lamp (V^2 / P),
+   potentiometer (at its position) or fuse */
 double part_resistance(part_t const *p);
+
+/* led_name(), led_forward(): An LED colour's name and forward voltage */
+char const *led_name(int color);
+double led_forward(int color);
 
 /* part_default(): A new part of this kind with its default values */
 part_t part_default(kind_t kind);
 
-/* circuit_solve(): DC operating point by nodal analysis */
+/* circuit_solve(): DC operating point by nodal analysis; diodes and LEDs
+   are switched on or off until the solution agrees with them */
 void circuit_solve(circuit_t const *c, result_t *r);
+
+/* circuit_blow_fuses(): Blow the fuse most over its rating, if any;
+   returns 1 if one blew (the circuit must then be solved again) */
+int circuit_blow_fuses(circuit_t *c, result_t const *r);
 
 #endif /* CIRCUIT_H */

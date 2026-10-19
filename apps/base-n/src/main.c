@@ -10,6 +10,7 @@
 #include "keys.h"
 #include "version.h"
 #include "i18n.h"
+#include "usb_screen.h"
 
 //REFERENCIA: https://git.planet-casio.com/Lephenixnoir/gint/src/branch/master/include/gint
 
@@ -278,6 +279,7 @@ int main(void)
         .width_index = WIDTH_COUNT - 1, .is_signed = false };
 
     lang_init();
+    usb_screen_init();
 
     while (1) {
         draw(&s);

@@ -132,3 +132,74 @@ wait 400
 F4
 wait 2s
 shot drawn.png
+# New parts: the LED example with an ammeter, then the parts menu
+VARS
+wait 500
+RIGHT
+wait 1500
+shot led.png
+F5
+wait 600
+DOWN
+wait 300
+DOWN
+wait 800
+shot parts-menu.png
+EXIT
+wait 500
+# Dimmer: turn the potentiometer down with -, the lamp gets brighter
+VARS
+wait 800
+UP
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 800
+MINUS
+wait 500
+MINUS
+wait 500
+MINUS
+wait 500
+MINUS
+wait 500
+MINUS
+wait 500
+MINUS
+wait 1500
+shot dimmer.png
+# Replace the lamp with a wire: too much current, the fuse blows
+RIGHT
+wait 250
+RIGHT
+wait 250
+RIGHT
+wait 250
+RIGHT
+wait 250
+RIGHT
+wait 250
+RIGHT
+wait 250
+RIGHT
+wait 300
+DOWN
+wait 800
+F1
+wait 2s
+shot fuse-blown.png

@@ -14,6 +14,7 @@
 #include "menu.h"
 #include "units.h"
 #include "periodic.h"
+#include "usb_screen.h"
 
 #define COLOR   C_RGB(5, 14, 20)
 #define NA      6.02214076e23       /* Avogadro */
@@ -336,6 +337,7 @@ static menu_t const menu = {
 int main(void)
 {
     lang_init();
+    usb_screen_init();
     menu_run(&menu);
     return 1;
 }

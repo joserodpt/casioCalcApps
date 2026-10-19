@@ -11,6 +11,7 @@
 #include "info.h"
 #include "version.h"
 #include "i18n.h"
+#include "usb_screen.h"
 
 #define SW_COLOR  C_RGB(3, 9, 24)
 #define TICKS     128                   /* RTC ticks per second */
@@ -372,6 +373,7 @@ int main(void)
     int mode = MODE_STOPWATCH;
 
     lang_init();
+    usb_screen_init();
     phase_names_init();
 
     while (1) {
