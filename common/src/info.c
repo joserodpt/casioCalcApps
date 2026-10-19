@@ -6,7 +6,7 @@
 
 #define AUTHOR      "joserodpt"
 #define REPO_LINE1  "github.com/joserodpt/"
-#define REPO_LINE2  "casioPrizmApps"
+#define REPO_LINE2  "casioCalcApps"
 
 char const *app_name = "";
 

@@ -1,5 +1,5 @@
 //---
-//	version - Shared version number for every app in casioPrizmApps
+//	version - Shared version number for every app in casioCalcApps
 //---
 
 #ifndef CASIO_VERSION

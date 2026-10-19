@@ -20,7 +20,7 @@ it.
 
 1. **Build FirmDump** and copy it to the calculator:
    ```sh
-   cd ~/VSCode/casioPrizmApps
+   cd ~/VSCode/casioCalcApps
    make app APP=firmware-dump          # -> dist/g3a/FirmDump.g3a
    ```
    Then put the calculator in USB Flash mode (plug in the cable, F1) and
@@ -43,7 +43,7 @@ it.
 
 1. On the PC, start the receiver and leave it running:
    ```sh
-   ~/VSCode/casioPrizmApps/scripts/firmdump-recv.py -o ~/casio-dump
+   ~/VSCode/casioCalcApps/scripts/firmdump-recv.py -o ~/casio-dump
    ```
    It prints `waiting for the calculator ...`.
 2. On the calculator, **with the cable unplugged**, open FirmDump. The top

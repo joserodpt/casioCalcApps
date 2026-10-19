@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# Record a demo GIF and screenshots of one app or all apps in emuCasioFXCG.
+# Record a demo GIF and screenshots of one app or all apps in emuCasioCalc.
 #   scripts/screenshots.sh            -> every app with screenshots/demo.script
 #   scripts/screenshots.sh base-n     -> only apps/base-n
 # Each apps/<app>/screenshots/demo.script lists emulator steps (keys,
 # "wait 1s", "shot name.png"); the run writes demo.gif and the shots there.
 # An fx-demo.script does the same for the .g1a (fx-*.png, no GIF).
-# Set EMUCASIO if the emulator checkout is not in ~/VSCode/emuCasioFxCG.
+# Set EMUCASIO if the emulator checkout is not in ~/VSCode/emuCasioCalc.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-EMUDIR="${EMUCASIO:-$HOME/VSCode/emuCasioFxCG}"
-EMU="$EMUDIR/build-linux/emucasiofxcg"
-[[ "$(uname)" == Darwin ]] && EMU="$EMUDIR/build/emucasiofxcg"
+EMUDIR="${EMUCASIO:-$HOME/VSCode/emuCasioCalc}"
+EMU="$EMUDIR/build-linux/emucasiocalc"
+[[ "$(uname)" == Darwin ]] && EMU="$EMUDIR/build/emucasiocalc"
 
 if [[ ! -x "$EMU" ]]; then
-  echo "emucasiofxcg not built at $EMU (run the emulator's run.sh once)" >&2
+  echo "emucasiocalc not built at $EMU (run the emulator's run.sh once)" >&2
   exit 1
 fi
 if [[ -d "$HOME/.local/casio-deps/lib" ]]; then

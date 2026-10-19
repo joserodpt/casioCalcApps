@@ -1,4 +1,4 @@
-# casioPrizmApps — build every add-in into dist/g3a and dist/g1a
+# casioCalcApps — build every add-in into dist/g3a and dist/g1a
 #   make                 build all apps
 #   make app APP=base-n  build one app
 #   make send APP=base-n build + send one app to a connected calculator

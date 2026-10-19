@@ -3,7 +3,7 @@
 //
 //	Call usb_screen_init() once at start-up, after lang_init() (a world
 //	switch closes the USB link). It opens gint's fxlink USB interface and
-//	sends every frame dupdate() shows, so emuCasioFxCG (File > Show
+//	sends every frame dupdate() shows, so emuCasioCalc (File > Show
 //	calculator's screen) or `fxlink -i` can show the app live.
 //
 //	It never makes the app wait for the PC: a frame is sent only once the

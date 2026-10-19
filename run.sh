@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Build an app and run it in emuCasioFXCG, as the fx-CG (.g3a, colour) or
+# Build an app and run it in emuCasioCalc, as the fx-CG (.g3a, colour) or
 # the fx-9860G (.g1a, black and white) version.
 #   ./run.sh                        ask which version, then which app
 #   ./run.sh cg base-n              run apps/base-n's .g3a
 #   ./run.sh fx base-n --scale 3    extra options are passed to the emulator
 # Only apps marked FX in their CMakeLists.txt have an fx version.
-# Set EMUCASIO if the emulator checkout is not in ~/VSCode/emuCasioFxCG.
+# Set EMUCASIO if the emulator checkout is not in ~/VSCode/emuCasioCalc.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-EMU="${EMUCASIO:-$HOME/VSCode/emuCasioFxCG}/run.sh"
+EMU="${EMUCASIO:-$HOME/VSCode/emuCasioCalc}/run.sh"
 
 if [[ ! -x "$EMU" ]]; then
   echo "emuCasio not found at $EMU (set EMUCASIO to its folder)" >&2

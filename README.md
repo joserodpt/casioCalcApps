@@ -1,6 +1,6 @@
 <div align="center">
 
-# casioPrizmApps
+# casioCalcApps
 
 **Useful add-ins for the Casio fx-CG50 / fx-CG10 / fx-CG20 (Prizm) graphing calculators,
 with black and white versions of most of them for the fx-9860G family**
@@ -192,7 +192,7 @@ Click an app to see it in action.
 
 </details>
 
-> The screenshots come from the [emuCasioFxCG](https://github.com/joserodpt/emuCasioFxCG)
+> The screenshots come from the [emuCasioCalc](https://github.com/joserodpt/emuCasioCalc)
 > emulator, which has no Casio OS, so FirmDump only shows blank memory there.
 
 ## Installing on the calculator
@@ -223,7 +223,7 @@ In VS Code, `Ctrl+Shift+B` builds everything; the other tasks are under *Run Tas
 
 ### Running on a computer
 
-The apps are tested on [emuCasioFxCG](https://github.com/joserodpt/emuCasioFxCG),
+The apps are tested on [emuCasioCalc](https://github.com/joserodpt/emuCasioCalc),
 an fx-CG50 add-in emulator that runs `.g3a` files on a PC.
 
 ```sh
@@ -233,7 +233,7 @@ an fx-CG50 add-in emulator that runs `.g3a` files on a PC.
 scripts/screenshots.sh   # regenerate every app's demo GIF and screenshots
 ```
 
-Set `EMUCASIO` if your emuCasioFxCG checkout is not in `~/VSCode/emuCasioFxCG`.
+Set `EMUCASIO` if your emuCasioCalc checkout is not in `~/VSCode/emuCasioCalc`.
 Each app's screenshots come from the key steps in `apps/<app>/screenshots/demo.script`
 (keys, `wait 1s`, `shot name.png`), run headless with a fixed clock, so the
 results are the same every time.
@@ -241,7 +241,7 @@ results are the same every time.
 ## Project layout
 
 ```
-casioPrizmApps/
+casioCalcApps/
 ├── apps/                one folder per add-in
 │   └── base-n/
 │       ├── src/         app source code
@@ -288,7 +288,7 @@ the modules it uses.
 | `units.h` | unit tables, `unit_convert()` and the converter screen |
 | `ui.h` | text with Ω µ ± symbols, `fmt_si()` (4.7 kΩ, 250 mA), number fields with SI-prefix F-keys, forms |
 | `fmt.h` | `fmt_g()` / `fmt_fixed()`: doubles without printf's `%f` |
-| `usb_screen.h` | `usb_screen_init()`: sends each frame over USB, for emuCasioFxCG's File > Show calculator's screen or `fxlink -i`; never makes the app wait. Every app but firmware-dump calls it after `lang_init()` |
+| `usb_screen.h` | `usb_screen_init()`: sends each frame over USB, for emuCasioCalc's File > Show calculator's screen or `fxlink -i`; never makes the app wait. Every app but firmware-dump calls it after `lang_init()` |
 | `keys.h` | `key_digit()` / `key_hex()` (A-F on X,theta,T log ln sin cos tan) |
 | `utils.h` | F-key buttons, scrollbar |
 

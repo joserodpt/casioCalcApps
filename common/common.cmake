@@ -1,4 +1,4 @@
-# Shared helpers for every app in casioPrizmApps.
+# Shared helpers for every app in casioCalcApps.
 # Include from an app's CMakeLists.txt, then call casio_app(<target> ...).
 
 set(CASIO_COMMON_DIR ${CMAKE_CURRENT_LIST_DIR})

@@ -6,7 +6,7 @@ import os
 import qrcode
 from PIL import Image
 
-URL = "https://github.com/joserodpt/casioPrizmApps"
+URL = "https://github.com/joserodpt/casioCalcApps"
 SCALE = 4  # pixels per module
 
 out = os.path.join(os.path.dirname(__file__), "..", "assets-cg", "qr_repo.png")
