@@ -349,7 +349,7 @@ int main(void)
         case KEY_EXIT:
             return 1;
         case INFO_KEY:
-            info_show("NetTools", L("IP subnet calc. " APPS_VERSION, "Calc. sub-rede " APPS_VERSION), COLOR);
+            info_show(L("NetTools", "Redes"), L("IP subnet calc. " APPS_VERSION, "Calc. sub-rede " APPS_VERSION), COLOR);
             break;
         case KEY_LEFT:
             select_field(&s, s.sel - 1);

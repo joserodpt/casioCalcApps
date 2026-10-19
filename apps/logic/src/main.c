@@ -682,7 +682,7 @@ int main(void)
 
         if (key == KEY_EXIT) return 1;
         if (key == INFO_KEY) {
-            info_show("Logic", L("Truth table / K-map " APPS_VERSION,
+            info_show(L("Logic", "Logica"), L("Truth table / K-map " APPS_VERSION,
                 "Tabela / Mapa K " APPS_VERSION), COLOR);
             continue;
         }

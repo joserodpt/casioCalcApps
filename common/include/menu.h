@@ -27,7 +27,7 @@ typedef struct {
 } menu_item_t;
 
 typedef struct {
-    char const *app;                    /* title bar and info screen */
+    char const *app, *app_pt;           /* title bar and info screen */
     char const *about_en, *about_pt;    /* subtitle on the info screen */
     int color;
     menu_item_t const *items;

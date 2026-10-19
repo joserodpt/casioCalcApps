@@ -164,7 +164,7 @@ static void draw(int sel, int digit, progress_t const *pg)
     char buf[64];
 
     dclear(C_WHITE);
-    info_title("Firmware dump", COLOR);
+    info_title(L("Firmware dump", "Copia do firmware"), COLOR);
 
     dtext(10, 22, C_DARK, L("Region", "Regiao"));
     bool emu = in_emulator();

@@ -383,7 +383,7 @@ int main(void)
 
         if (key == KEY_EXIT) return 1;
         if (key == INFO_KEY) {
-            info_show("Timer", L("Stopwatch / Pomodoro " APPS_VERSION,
+            info_show(L("Timer", "Temporizador"), L("Stopwatch / Pomodoro " APPS_VERSION,
                 "Cronometro / Pomodoro " APPS_VERSION),
                 mode == MODE_STOPWATCH ? SW_COLOR : phase_color(p.phase));
             continue;

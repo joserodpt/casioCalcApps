@@ -334,7 +334,7 @@ static menu_item_t const tools[] = {
 };
 
 static menu_t const menu = {
-    "Physics", "Physics toolkit " APPS_VERSION,
+    "Physics", "Fisica", "Physics toolkit " APPS_VERSION,
     "Ferramentas de fisica " APPS_VERSION, COLOR,
     tools, (int)(sizeof tools / sizeof *tools),
 };

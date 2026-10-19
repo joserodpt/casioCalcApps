@@ -38,7 +38,7 @@ static menu_item_t const tools[] = {
 };
 
 static menu_t const menu = {
-    "Electronics", "Toolkit " APPS_VERSION, "Ferramentas " APPS_VERSION,
+    "Electronics", "Eletronica", "Toolkit " APPS_VERSION, "Ferramentas " APPS_VERSION,
     COLOR, tools, (int)(sizeof tools / sizeof *tools),
 };
 

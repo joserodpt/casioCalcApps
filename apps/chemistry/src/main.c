@@ -328,7 +328,7 @@ static menu_item_t const tools[] = {
 };
 
 static menu_t const menu = {
-    "Chemistry", "Units & chemistry " APPS_VERSION,
+    "Chemistry", "Quimica", "Units & chemistry " APPS_VERSION,
     "Unidades e quimica " APPS_VERSION, COLOR,
     tools, (int)(sizeof tools / sizeof *tools),
 };

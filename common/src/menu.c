@@ -17,7 +17,7 @@ static void menu_draw(menu_t const *m, int sel)
         ? &roomy : &tight;
 
     dclear(C_WHITE);
-    info_title(m->app, m->color);
+    info_title(L(m->app, m->app_pt), m->color);
 
     for (int i = 0; i < m->count; i++) {
         menu_item_t const *it = &m->items[i];
@@ -43,7 +43,7 @@ static void menu_draw(menu_t const *m, int sel)
 void menu_run(menu_t const *m)
 {
     int sel = 0;
-    app_name = m->app;
+    app_name = L(m->app, m->app_pt);
 
     while (1) {
         menu_draw(m, sel);
@@ -52,7 +52,7 @@ void menu_run(menu_t const *m)
 
         if (key == KEY_EXIT) return;
         if (key == INFO_KEY)
-            info_show(m->app, L(m->about_en, m->about_pt), m->color);
+            info_show(app_name, L(m->about_en, m->about_pt), m->color);
         else if (key == KEY_UP) sel = (sel + m->count - 1) % m->count;
         else if (key == KEY_DOWN) sel = (sel + 1) % m->count;
         else if (key == KEY_EXE || key == KEY_RIGHT) open = sel;
