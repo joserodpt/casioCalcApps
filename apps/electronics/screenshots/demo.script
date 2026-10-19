@@ -1,0 +1,53 @@
+# Electronics: tool menu
+wait 2s
+shot menu.png
+# Colour code: default 4-band resistor
+EXE
+wait 1500
+shot colorcode.png
+# Value to bands: type 68k
+F2
+wait 800
+AC
+wait 400
+6
+wait 400
+8
+wait 400
+F5
+wait 800
+EXE
+wait 1500
+shot colorcode-68k.png
+EXIT
+wait 1s
+# Voltage divider: 9 V in
+4
+wait 1s
+AC
+wait 400
+9
+wait 1500
+shot divider.png
+EXIT
+wait 1s
+# 555 timer astable
+6
+wait 1500
+shot timer555.png
+EXIT
+wait 1s
+# LED resistor: blue LED
+7
+wait 1s
+RIGHT
+wait 600
+RIGHT
+wait 600
+RIGHT
+wait 600
+RIGHT
+wait 1500
+shot led.png
+EXIT
+wait 1s

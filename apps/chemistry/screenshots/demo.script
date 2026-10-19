@@ -1,0 +1,86 @@
+# Chemistry: menu, unit converter, molar mass, ideal gas, periodic table
+wait 2s
+shot main.png
+# Unit converter (starts on Volume): 2.5 dm3 in every unit
+1
+wait 1s
+2
+wait 400
+DP
+wait 400
+5
+wait 1500
+shot units.png
+EXIT
+wait 1s
+# Molar mass: build CO2
+2
+wait 1s
+EXE
+wait 700
+RIGHT
+wait 500
+RIGHT
+wait 700
+EXE
+wait 700
+2
+wait 1500
+shot molar.png
+EXIT
+wait 1s
+# Ideal gas law: P=101.325 kPa, n=1 mol, T=273.15 K -> V
+5
+wait 1s
+1
+0
+1
+DP
+3
+2
+5
+wait 500
+EXE
+wait 500
+EXE
+wait 500
+1
+wait 500
+EXE
+wait 500
+2
+7
+3
+DP
+1
+5
+wait 1500
+shot gas.png
+EXIT
+wait 1s
+# Periodic table: walk to iron
+6
+wait 1s
+DOWN
+wait 400
+DOWN
+wait 400
+DOWN
+wait 600
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 1500
+shot periodic.png
+EXIT
+wait 1s

@@ -1,0 +1,54 @@
+# ASCII: list view, grid view, UTF-8 encoder with euro sign and emoji
+wait 2s
+shot list.png
+DOWN
+wait 700
+DOWN
+wait 700
+# Jump to decimal code 97 ('a')
+9
+wait 600
+7
+wait 1200
+shot list-jump.png
+F2
+wait 1s
+RIGHT
+wait 600
+DOWN
+wait 600
+RIGHT
+wait 1200
+shot grid.png
+EXE
+wait 1500
+shot utf8-char.png
+# Type U+20AC (euro sign)
+AC
+wait 700
+2
+wait 500
+0
+wait 500
+XOT
+wait 500
+LN
+wait 1500
+shot utf8-euro.png
+# Type U+1F600 (4-byte emoji)
+AC
+wait 700
+1
+wait 500
+TAN
+wait 500
+6
+wait 500
+0
+wait 500
+0
+wait 1500
+shot utf8-emoji.png
+wait 1s
+EXIT
+wait 1s

@@ -18,4 +18,4 @@ DEC / HEX / OCT / BIN conversions and a 64-bit grid of its bits below.
 The large font and the info screen's QR code are shared by every app; see
 `common/` in the repository README.
 
-© José Rodrigues 2024
+© José Rodrigues 2026

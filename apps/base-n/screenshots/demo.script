@@ -1,0 +1,55 @@
+# Base-N: decimal input, hex at 16 bits, signed view, negative decimal
+wait 1500
+2
+wait 600
+0
+wait 600
+2
+wait 600
+4
+wait 1500
+shot decimal.png
+wait 600
+AC
+wait 800
+# Word size 64 -> 8 -> 16 bits
+F5
+wait 800
+F5
+wait 1000
+# HEX input: C A F E (A-F are XOT LOG LN SIN COS TAN)
+F2
+wait 1000
+LN
+wait 600
+XOT
+wait 600
+TAN
+wait 600
+COS
+wait 1500
+shot hex-16bit.png
+wait 600
+# Signed: same bits read as two's complement
+F6
+wait 1500
+shot signed.png
+wait 600
+# Back to DEC, type -42
+F1
+wait 1000
+AC
+wait 800
+NEG
+wait 600
+4
+wait 600
+2
+wait 1500
+shot negative.png
+wait 600
+OPTN
+wait 1500
+shot about.png
+EXIT
+wait 1000

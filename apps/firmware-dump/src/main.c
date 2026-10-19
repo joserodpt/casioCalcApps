@@ -202,22 +202,14 @@ static void draw(int sel, int digit, progress_t const *pg)
     dtext(10, y, C_DARK, L("Preview", "Pre-vis."));
     for (int row = 0; row < 2; row++) {
         uint32_t a = r->base + row * 16;
-        char hex[64], asc[20];
-        int hp = 0;
-        for (int c = 0; c < 16; c++) {
-            bool ok = mapped(a + c);
-            uint8_t b = ok ? peek(a + c) : 0;
-            hp += snprintf(hex + hp, sizeof hex - hp, "%s%s",
-                ok ? (char[]){ "0123456789ABCDEF"[b >> 4],
-                    "0123456789ABCDEF"[b & 15], 0 } : "--",
-                c == 7 ? " " : " ");
-            asc[c] = ok && b >= 32 && b < 127 ? b : '.';
-        }
-        asc[16] = '\0';
         int ry = y + 13 + row * 12;
-        dprint(10, ry, C_DARK, "%08X", (unsigned)a);
-        dtext(78, ry, C_BLACK, hex);
-        (void)asc;
+        dprint(8, ry, C_DARK, "%08X", (unsigned)a);
+        /* One byte every 19 px, with a gap after the 8th, fits in 396 px */
+        for (int c = 0; c < 16; c++) {
+            int x = 78 + c * 19 + (c >= 8 ? 4 : 0);
+            if (!mapped(a + c)) { dtext(x, ry, C_LIGHT, "--"); continue; }
+            dprint(x, ry, C_BLACK, "%02X", peek(a + c));
+        }
     }
 
     /* Status line, then progress bar */

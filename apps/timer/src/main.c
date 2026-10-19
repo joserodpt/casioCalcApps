@@ -148,6 +148,7 @@ static void sw_draw(stopwatch_t const *sw)
         : t ? L("Stopped", "Parado") : L("Ready", "Pronto"));
     dtext_opt(DWIDTH / 2, 106, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
         sw->chrono.running ? L("EXE: stop   F3: lap", "EXE: parar   F3: volta")
+        : t ? L("EXE: resume   F4 / AC: reset", "EXE: retomar   F4 / AC: repor")
         : L("EXE: start   F4 / AC: reset", "EXE: iniciar   F4 / AC: repor"));
 
     if (!sw->lap_count) return;
@@ -295,6 +296,8 @@ static void pomo_draw(pomodoro_t const *p, bool blink)
     }
     else dtext_opt(DWIDTH / 2, y + 6, C_DARK, C_NONE, DTEXT_CENTER,
         DTEXT_TOP, p->chrono.running ? L("EXE: pause   F3: skip", "EXE: pausar   F3: saltar")
+        : chrono_ticks(&p->chrono) ? L("EXE: resume   F3: skip   F4: reset",
+            "EXE: retomar  F3: saltar  F4: repor")
         : L("EXE: start   F3: skip   F4: reset", "EXE: iniciar  F3: saltar  F4: repor"));
 }
 

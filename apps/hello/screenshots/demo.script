@@ -1,0 +1,9 @@
+# Hello: start screen, then the OPTN info
+wait 2s
+shot main.png
+OPTN
+wait 1s
+shot info.png
+wait 1s
+EXIT
+wait 1s

@@ -88,6 +88,7 @@ static void molar_screen(void)
     int z = 6;                          /* cursor on Carbon */
     struct { int z, count; } parts[20];
     int np = 0;
+    bool typing = false;                /* digits go into the last count */
 
     while (1) {
         dclear(C_WHITE);
@@ -140,15 +141,17 @@ static void molar_screen(void)
             /* Merge with the previous part if it is the same element */
             if (np > 0 && parts[np - 1].z == z) parts[np - 1].count++;
             else if (np < 20) { parts[np].z = z; parts[np].count = 1; np++; }
+            typing = false;
         }
         else if (d >= 0 && np > 0) {
-            int c = parts[np - 1].count;
-            c = (c >= 10 ? 0 : c) * 10 + d;     /* first digit replaces 1 */
+            /* The first digit replaces the count, the next ones append */
+            int c = typing ? parts[np - 1].count * 10 + d : d;
+            typing = true;
             if (c == 0) c = 1;
             parts[np - 1].count = c > 999 ? 999 : c;
         }
-        else if (key == KEY_DEL) { if (np) np--; }
-        else if (key == KEY_ACON) np = 0;
+        else if (key == KEY_DEL) { if (np) np--; typing = false; }
+        else if (key == KEY_ACON) { np = 0; typing = false; }
     }
 }
 

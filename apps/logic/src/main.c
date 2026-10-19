@@ -409,45 +409,58 @@ static void draw_input(model_t const *m, cover_t const *cov)
         "Var A-D: F4-F6 e X,log,ln,sin   +*^()! = ops"));
 }
 
-#define T_X0   40
 #define T_ROWH 11
+#define T_SEL  C_RGB(25, 20, 29)    /* selected row */
 
-static void draw_table(model_t const *m)
+/* draw_table(): 8 rows per column, so 4 variables use two side by side */
+static void draw_table(model_t const *m, int sel)
 {
     int vc = m->var_count, rows = rows_of(m);
-    int colw = 26;
-    int x0 = (DWIDTH - (vc + 2) * colw) / 2;
+    int per_col = rows > 8 ? 8 : rows;
+    int blocks = rows / per_col;
+    int colw = 26, gap = 30;
+    /* A block is the "#" column (24 px) and the variable and F columns */
+    int bw = 24 + (vc + 1) * colw;
+    int left = (DWIDTH - blocks * bw - (blocks - 1) * gap) / 2;
     int y0 = 30;
 
-    /* Header */
-    for (int i = 0; i < vc; i++)
-        dprint_opt(x0 + i * colw + colw / 2, y0, COLOR, C_NONE, DTEXT_CENTER,
-            DTEXT_TOP, "%c", vnames[i]);
-    dtext_opt(x0 + (vc + 1) * colw - 2, y0, C_BLACK, C_NONE, DTEXT_RIGHT,
-        DTEXT_TOP, "F");
-    dtext_opt(x0 - 8, y0, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP, "#");
-    y0 += 14;
-    dline(x0 - 24, y0 - 1, x0 + (vc + 1) * colw, y0 - 1, C_LIGHT);
-    drect(x0 + vc * colw - 3, y0 - 14, x0 + vc * colw - 3,
-        y0 + rows * T_ROWH, C_LIGHT);
+    for (int b = 0; b < blocks; b++) {
+        int x0 = left + b * (bw + gap) + 24;
+        int y = y0;
 
-    for (int r = 0; r < rows; r++) {
-        int y = y0 + r * T_ROWH;
-        bool one = (m->minterms >> r) & 1;
-        if (r % 2) drect(x0 - 24, y, x0 + (vc + 1) * colw, y + T_ROWH - 1,
-            C_RGB(29, 29, 30));
-        dprint_opt(x0 - 8, y + 1, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
-            "%d", r);
-        for (int i = 0; i < vc; i++) {
-            int bit = (r >> (vc - 1 - i)) & 1;
-            dprint_opt(x0 + i * colw + colw / 2, y + 1, C_BLACK, C_NONE,
-                DTEXT_CENTER, DTEXT_TOP, "%d", bit);
+        /* Header */
+        for (int i = 0; i < vc; i++)
+            dprint_opt(x0 + i * colw + colw / 2, y, COLOR, C_NONE,
+                DTEXT_CENTER, DTEXT_TOP, "%c", vnames[i]);
+        dtext_opt(x0 + (vc + 1) * colw - 2, y, C_BLACK, C_NONE, DTEXT_RIGHT,
+            DTEXT_TOP, "F");
+        dtext_opt(x0 - 8, y, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP, "#");
+        y += 14;
+        dline(x0 - 24, y - 1, x0 + (vc + 1) * colw, y - 1, C_LIGHT);
+        drect(x0 + vc * colw - 3, y - 14, x0 + vc * colw - 3,
+            y + per_col * T_ROWH, C_LIGHT);
+
+        for (int k = 0; k < per_col; k++) {
+            int r = b * per_col + k;
+            int ry = y + k * T_ROWH;
+            bool one = (m->minterms >> r) & 1;
+            if (r == sel) drect(x0 - 24, ry, x0 + (vc + 1) * colw, ry + T_ROWH - 1,
+                T_SEL);
+            else if (k % 2) drect(x0 - 24, ry, x0 + (vc + 1) * colw,
+                ry + T_ROWH - 1, C_RGB(29, 29, 30));
+            dprint_opt(x0 - 8, ry + 1, r == sel ? COLOR : C_DARK, C_NONE,
+                DTEXT_RIGHT, DTEXT_TOP, "%d", r);
+            for (int i = 0; i < vc; i++) {
+                int bit = (r >> (vc - 1 - i)) & 1;
+                dprint_opt(x0 + i * colw + colw / 2, ry + 1, C_BLACK, C_NONE,
+                    DTEXT_CENTER, DTEXT_TOP, "%d", bit);
+            }
+            dprint_opt(x0 + (vc + 1) * colw - 2, ry + 1, one ? ONEC : C_LIGHT,
+                C_NONE, DTEXT_RIGHT, DTEXT_TOP, "%d", one);
         }
-        dprint_opt(x0 + (vc + 1) * colw - 2, y + 1, one ? ONEC : C_LIGHT,
-            C_NONE, DTEXT_RIGHT, DTEXT_TOP, "%d", one);
     }
 
-    dtext_opt(DWIDTH / 2, 30 + 14 + rows * T_ROWH + 6, C_DARK, C_NONE,
+    dtext_opt(DWIDTH / 2, y0 + 14 + per_col * T_ROWH + 8, C_DARK, C_NONE,
         DTEXT_CENTER, DTEXT_TOP, L("EXE on a row toggles F (minterm mode)",
         "EXE numa linha troca F (modo minterm)"));
 }
@@ -515,8 +528,6 @@ static void draw_kmap(model_t const *m, cover_t const *cov)
             drect(x + 1, y + 1, x + cell - 1, y + cell - 1,
                 one ? C_RGB(10, 24, 14) : C_WHITE);
             drect_border(x, y, x + cell, y + cell, C_NONE, 1, C_LIGHT);
-            dprint_opt(x + cell - 4, y + cell - 12, C_LIGHT, C_NONE,
-                DTEXT_RIGHT, DTEXT_TOP, "%d", row);
             font_t const *old = dfont(&font_big);
             dtext_opt(x + cell / 2 - 3, y + 10, one ? C_WHITE : C_LIGHT,
                 C_NONE, DTEXT_LEFT, DTEXT_TOP, one ? "1" : "0");
@@ -554,6 +565,18 @@ static void draw_kmap(model_t const *m, cover_t const *cov)
                 if (!nb[3]) drect(xr - 1, yt, xr, yb, color);
             }
     }
+
+    /* Minterm numbers on top of the outlines, on the cell's colour */
+    for (int r = 0; r < rows_n; r++)
+        for (int c = 0; c < cols_n; c++) {
+            int cols, row = kmap_row(m, r, c, &cols);
+            int x = x0 + c * cell, y = y0 + r * cell;
+            bool one = (m->minterms >> row) & 1;
+            dprint_opt(x + cell - 2, y + cell - 11,
+                one ? C_RGB(26, 31, 27) : C_DARK,
+                one ? C_RGB(10, 24, 14) : C_WHITE,
+                DTEXT_RIGHT, DTEXT_TOP, "%d", row);
+        }
 
     /* Legend: one coloured term per group, down the left side */
     dtext(10, 34, C_DARK, L("Groups", "Grupos"));
@@ -615,7 +638,7 @@ static char shifted_op(int key)
     }
 }
 
-static void draw(model_t *m, cover_t const *cov, int view)
+static void draw(model_t *m, cover_t const *cov, int view, int table_sel)
 {
     char const * const titles[] = {
         L("Boolean expression", "Expressao booleana"),
@@ -625,7 +648,7 @@ static void draw(model_t *m, cover_t const *cov, int view)
     info_title(titles[view], COLOR);
 
     if (view == VIEW_INPUT) draw_input(m, cov);
-    else if (view == VIEW_TABLE) draw_table(m);
+    else if (view == VIEW_TABLE) draw_table(m, table_sel);
     else draw_kmap(m, cov);
 
     char const * const labels[] = { L("EDIT", "EDITAR"), L("TABLE", "TABELA"), "KMAP" };
@@ -653,7 +676,7 @@ int main(void)
 
     while (1) {
         minimal_cover(&m, &cov);
-        draw(&m, &cov, view);
+        draw(&m, &cov, view, table_sel);
 
         int key = getkey().key;
 
@@ -696,6 +719,9 @@ int main(void)
             int rows = rows_of(&m);
             if (key == KEY_UP) table_sel = (table_sel + rows - 1) % rows;
             else if (key == KEY_DOWN) table_sel = (table_sel + 1) % rows;
+            /* With two columns, LEFT/RIGHT jump to the other one */
+            else if ((key == KEY_LEFT || key == KEY_RIGHT) && rows > 8)
+                table_sel = (table_sel + 8) % rows;
             else if (key == KEY_EXE) {
                 m.from_expr = false;
                 m.minterms ^= 1 << table_sel;
@@ -707,6 +733,7 @@ int main(void)
                 if (m.var_count > 2) {
                     m.var_count--;
                     m.minterms &= (1 << rows_of(&m)) - 1;
+                    if (table_sel >= rows_of(&m)) table_sel = 0;
                 }
             }
             continue;

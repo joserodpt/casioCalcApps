@@ -1,0 +1,89 @@
+# Physics: tool menu
+wait 1500
+shot main.png
+# Unit converter: 100 m in every length unit
+1
+wait 800
+1
+0
+0
+wait 1200
+shot units.png
+EXIT
+wait 700
+# Kinematics: u = 0, a = 9.8, t = 3 -> solves s and v
+2
+wait 800
+DOWN
+wait 300
+0
+EXE
+wait 300
+DOWN
+wait 300
+9
+DP
+8
+EXE
+wait 300
+3
+wait 1200
+shot kinematics.png
+EXIT
+wait 700
+# Energy & power: m = 2, v = 5, h = 10, F = 50, d = 4, t = 2
+4
+wait 800
+2
+EXE
+5
+EXE
+1
+0
+EXE
+5
+0
+EXE
+4
+EXE
+2
+wait 1200
+shot energy.png
+EXIT
+wait 700
+# Waves & optics: f = 440, lambda = 0.78, Snell 1 -> 1.5 at 30 deg
+5
+wait 800
+4
+4
+0
+EXE
+0
+DP
+7
+8
+EXE
+1
+EXE
+3
+0
+EXE
+1
+DP
+5
+wait 1200
+shot waves.png
+EXIT
+wait 700
+# Constants: scroll to Planck constant
+6
+wait 800
+DOWN
+wait 400
+DOWN
+wait 400
+DOWN
+wait 1200
+shot constants.png
+EXIT
+wait 800

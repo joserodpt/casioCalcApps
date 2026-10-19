@@ -1,0 +1,49 @@
+# NetTools: IP subnet calculator tour
+wait 2s
+shot main.png
+# Clear and type 10.20.30.40/22
+AC
+wait 800
+1
+wait 300
+0
+wait 300
+DP
+wait 500
+2
+wait 300
+0
+wait 300
+DP
+wait 500
+3
+wait 300
+0
+wait 500
+4
+wait 300
+0
+wait 500
+2
+wait 300
+2
+wait 1500
+shot custom.png
+# Step to the next /22 subnet
+F2
+wait 1200
+F2
+wait 1500
+shot next.png
+# Narrow down to a /30 point-to-point link
+F6
+wait 1500
+shot slash30.png
+# Prefix +1 -> /31 (RFC 3021)
+UP
+wait 1500
+shot slash31.png
+OPTN
+wait 1500
+EXIT
+wait 1s

@@ -354,7 +354,7 @@ static void t555_results(eform_t *f, int y)
     result(y + 3 * RESULT_STEP, L("Duty cycle","Ciclo"), C_BLACK, "%s%%",
         fmt_num(a, 100 * th / (th + tl), 1));
     etext(10, y + 4 * RESULT_STEP + 4, C_DARK, DTEXT_LEFT, false,
-        "f = 1.44 / ((R1 + 2 R2) C)");
+        "f = 1 / (ln2 (R1 + 2 R2) C)");
 }
 
 void timer555_run(void)

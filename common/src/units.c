@@ -5,6 +5,7 @@
 
 #include "units.h"
 #include "numfield.h"
+#include "keys.h"
 #include "fmt.h"
 #include "info.h"
 #include "i18n.h"
@@ -101,6 +102,7 @@ void units_screen(int cat, int color)
 {
     int from = 1;
     numfield_t val = { "1" };
+    bool fresh = true;                  /* the first number typed replaces 1 */
 
     while (1) {
         category_t const *c = &categories[cat];
@@ -141,6 +143,11 @@ void units_screen(int cat, int color)
         }
         else if (key == KEY_UP) from = (from + c->count - 1) % c->count;
         else if (key == KEY_DOWN) from = (from + 1) % c->count;
-        else numfield_key(&val, key);
+        else {
+            bool typed = key_digit(key) >= 0 || key == KEY_DOT
+                || key == KEY_EXP || key == KEY_NEG || key == KEY_MINUS;
+            if (fresh && typed) val.text[0] = '\0';
+            if (numfield_key(&val, key)) fresh = false;
+        }
     }
 }

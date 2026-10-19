@@ -1,0 +1,32 @@
+# Timer: stopwatch with laps, then the Pomodoro mode
+wait 1500
+shot stopwatch.png
+# Start the stopwatch and record three laps
+EXE
+wait 2s
+F3
+wait 1500
+F3
+wait 2500
+F3
+wait 1200
+EXE
+wait 1200
+shot laps.png
+# Pomodoro mode: change focus and break lengths, then start
+F2
+wait 1500
+shot pomodoro.png
+F5
+wait 800
+F6
+wait 800
+EXE
+wait 3s
+shot pomodoro-running.png
+# Skip to the break phase
+F3
+wait 1500
+shot break.png
+EXIT
+wait 1s

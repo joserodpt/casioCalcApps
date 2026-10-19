@@ -1,0 +1,56 @@
+# Logic: default expression, type a 4-variable one, then table and K-map
+wait 2s
+shot main.png
+AC
+wait 800
+# AB + !AC + BD + !B!D
+XOT
+wait 400
+LOG
+wait 400
+PLUS
+wait 400
+DIV
+wait 400
+XOT
+wait 400
+LN
+wait 400
+PLUS
+wait 400
+LOG
+wait 400
+SIN
+wait 400
+PLUS
+wait 400
+DIV
+wait 400
+LOG
+wait 400
+DIV
+wait 400
+SIN
+wait 1500
+shot expression.png
+F2
+wait 1500
+DOWN
+wait 500
+DOWN
+wait 500
+DOWN
+wait 800
+shot truth-table.png
+F3
+wait 2s
+shot kmap.png
+F2
+wait 1s
+EXE
+wait 1s
+F3
+wait 2s
+shot kmap-edited.png
+EXIT
+wait 1s

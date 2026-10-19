@@ -1,0 +1,50 @@
+# FirmDump: region list, custom range in RAM, dump it, info screen
+wait 2s
+shot main.png
+# Select the custom region
+DOWN
+wait 800
+DOWN
+wait 1s
+# F4: base = 0x88000000 (RAM)
+F4
+wait 600
+8
+wait 300
+8
+wait 300
+0
+wait 300
+0
+wait 300
+0
+wait 300
+0
+wait 300
+0
+wait 300
+0
+wait 800
+# F5: size = 0x20000 (128 KB)
+F5
+wait 600
+2
+wait 300
+0
+wait 300
+0
+wait 300
+0
+wait 300
+0
+wait 1500
+shot custom.png
+# Dump it to storage
+F1
+wait 3s
+shot dump.png
+OPTN
+wait 1500
+shot about.png
+EXIT
+wait 1s
