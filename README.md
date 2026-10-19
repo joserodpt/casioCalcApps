@@ -23,16 +23,16 @@ interfaces and in English and Portuguese.
 
 | | App | What it does | Download |
 |:---:|---|---|:---:|
-| <img src="apps/electronics/assets-cg/icon-sel.png" width="46"> | [**Electronics**](apps/electronics) | Resistor colour and SMD codes, series/parallel, voltage divider, RC/RL/LC filters, 555 timer, LED resistor | [Electronics.g3a](dist/Electronics.g3a) |
-| <img src="apps/circuit/assets-cg/icon-sel.png" width="46"> | [**Circuit**](apps/circuit) | DC circuit simulator: wires, batteries, resistors, lamps, switches, diodes, LEDs, meters, potentiometers and fuses, with V, A/mA and W for each part | [Circuit.g3a](dist/Circuit.g3a) |
-| <img src="apps/chemistry/assets-cg/icon-sel.png" width="46"> | [**Chemistry**](apps/chemistry) | Periodic table, molar mass from a formula, moles, concentration, ideal gas law, unit converter | [Chemistry.g3a](dist/Chemistry.g3a) |
-| <img src="apps/physics/assets-cg/icon-sel.png" width="46"> | [**Physics**](apps/physics) | Kinematics (SUVAT), dynamics, energy and power, waves and optics, physical constants, unit converter | [Physics.g3a](dist/Physics.g3a) |
-| <img src="apps/logic/assets-cg/icon-sel.png" width="46"> | [**Logic**](apps/logic) | Boolean expression → truth table, coloured Karnaugh map and simplified sum of products | [Logic.g3a](dist/Logic.g3a) |
-| <img src="apps/base-n/assets-cg/icon-sel.png" width="46"> | [**Base-N**](apps/base-n) | Programmer's converter: DEC / HEX / OCT / BIN live, 8–64-bit, signed or unsigned, bit grid | [Base-N.g3a](dist/Base-N.g3a) |
-| <img src="apps/net-tools/assets-cg/icon-sel.png" width="46"> | [**Net Tools**](apps/net-tools) | IPv4 subnet calculator: netmask, network, broadcast, host range, address class, bit grid | [NetTools.g3a](dist/NetTools.g3a) |
-| <img src="apps/ascii-table/assets-cg/icon-sel.png" width="46"> | [**ASCII**](apps/ascii-table) | ASCII table as a list or a 16×8 grid, and a UTF-8 / UTF-16 encoder for any code point | [ASCII.g3a](dist/ASCII.g3a) |
-| <img src="apps/timer/assets-cg/icon-sel.png" width="46"> | [**Timer**](apps/timer) | Stopwatch with laps and a Pomodoro timer, driven by the real-time clock | [Timer.g3a](dist/Timer.g3a) |
-| <img src="apps/firmware-dump/assets-cg/icon-sel.png" width="46"> | [**FirmDump**](apps/firmware-dump) | Dumps the OS, the full ROM or any memory region to storage or over USB, read-only | [FirmDump.g3a](dist/FirmDump.g3a) |
+| <img src="apps/electronics/assets-cg/icon-sel.png" width="46"> | [**Electronics**](apps/electronics) | Resistor colour and SMD codes, series/parallel, voltage divider, RC/RL/LC filters, 555 timer, LED resistor | [Electronics.g3a](dist/g3a/Electronics.g3a) |
+| <img src="apps/circuit/assets-cg/icon-sel.png" width="46"> | [**Circuit**](apps/circuit) | DC circuit simulator: wires, batteries, resistors, lamps, switches, diodes, LEDs, meters, potentiometers and fuses, with V, A/mA and W for each part | [Circuit.g3a](dist/g3a/Circuit.g3a) |
+| <img src="apps/chemistry/assets-cg/icon-sel.png" width="46"> | [**Chemistry**](apps/chemistry) | Periodic table, molar mass from a formula, moles, concentration, ideal gas law, unit converter | [Chemistry.g3a](dist/g3a/Chemistry.g3a) |
+| <img src="apps/physics/assets-cg/icon-sel.png" width="46"> | [**Physics**](apps/physics) | Kinematics (SUVAT), dynamics, energy and power, waves and optics, physical constants, unit converter | [Physics.g3a](dist/g3a/Physics.g3a) |
+| <img src="apps/logic/assets-cg/icon-sel.png" width="46"> | [**Logic**](apps/logic) | Boolean expression → truth table, coloured Karnaugh map and simplified sum of products | [Logic.g3a](dist/g3a/Logic.g3a) |
+| <img src="apps/base-n/assets-cg/icon-sel.png" width="46"> | [**Base-N**](apps/base-n) | Programmer's converter: DEC / HEX / OCT / BIN live, 8–64-bit, signed or unsigned, bit grid | [Base-N.g3a](dist/g3a/Base-N.g3a) |
+| <img src="apps/net-tools/assets-cg/icon-sel.png" width="46"> | [**Net Tools**](apps/net-tools) | IPv4 subnet calculator: netmask, network, broadcast, host range, address class, bit grid | [NetTools.g3a](dist/g3a/NetTools.g3a) |
+| <img src="apps/ascii-table/assets-cg/icon-sel.png" width="46"> | [**ASCII**](apps/ascii-table) | ASCII table as a list or a 16×8 grid, and a UTF-8 / UTF-16 encoder for any code point | [ASCII.g3a](dist/g3a/ASCII.g3a) |
+| <img src="apps/timer/assets-cg/icon-sel.png" width="46"> | [**Timer**](apps/timer) | Stopwatch with laps and a Pomodoro timer, driven by the real-time clock | [Timer.g3a](dist/g3a/Timer.g3a) |
+| <img src="apps/firmware-dump/assets-cg/icon-sel.png" width="46"> | [**FirmDump**](apps/firmware-dump) | Dumps the OS, the full ROM or any memory region to storage or over USB, read-only | [FirmDump.g3a](dist/g3a/FirmDump.g3a) |
 
 Every app has its own README with the full key reference. Press **OPTN** in any
 app for its About screen.
@@ -181,7 +181,7 @@ Click an app to see it in action.
 
 ## Installing on the calculator
 
-1. Download the `.g3a` files you want from the table above (or from [`dist/`](dist)).
+1. Download the `.g3a` files you want from the table above (or from [`dist/g3a/`](dist/g3a)).
 2. Connect the calculator to your computer with its USB cable and choose
    **USB Flash** (F1) on the calculator.
 3. Copy the `.g3a` files to the root of the calculator's drive, then eject it.
@@ -194,7 +194,8 @@ You need the [fxSDK](https://gitea.planet-casio.com/Lephenixnoir/fxsdk) with
 with [GiteaPC](https://gitea.planet-casio.com/Lephenixnoir/GiteaPC)).
 
 ```sh
-make                            # build all apps -> dist/*.g3a
+make                            # build all apps -> dist/g3a/*.g3a
+make fx                         # also build the fx-9860G .g1a -> dist/g1a/
 make app APP=base-n             # build one app
 make send APP=base-n            # build and send to a connected calculator
 make new APP=my-app NAME=MyApp  # create apps/my-app from the template
@@ -232,7 +233,7 @@ casioPrizmApps/
 ├── common/              code and assets shared by the apps
 ├── template/            skeleton used by `make new` (also apps/hello)
 ├── scripts/             build.sh, screenshots.sh, new-app.sh...
-└── dist/                compiled .g3a for every app
+└── dist/                compiled add-ins: g3a/ (fx-CG), g1a/ (fx-9860G)
 ```
 
 <details>

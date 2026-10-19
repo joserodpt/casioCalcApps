@@ -21,11 +21,11 @@ it.
 1. **Build FirmDump** and copy it to the calculator:
    ```sh
    cd ~/VSCode/casioPrizmApps
-   make app APP=firmware-dump          # -> dist/FirmDump.g3a
+   make app APP=firmware-dump          # -> dist/g3a/FirmDump.g3a
    ```
    Then put the calculator in USB Flash mode (plug in the cable, F1) and
    use the emulator's File > Copy add-in to calculator with
-   `dist/FirmDump.g3a` open. A plain copy can fail on Linux with
+   `dist/g3a/FirmDump.g3a` open. A plain copy can fail on Linux with
    "Input/output error": the calculator only accepts 4 kB transfers.
 2. **Allow USB access (Linux, once).** This is needed for streaming. Run it
    as root, then unplug and plug the calculator in again:
