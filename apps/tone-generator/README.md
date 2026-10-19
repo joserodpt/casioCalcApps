@@ -14,7 +14,7 @@ port** (the 2.5 mm jack on top), so you need a cable to headphones, an
 amplifier or a piezo buzzer (see [Wiring](#wiring)). Without one, the app
 still shows the waveform, the note and the period of every tone.
 
-The app opens on a menu of four screens.
+The app opens on a menu of five screens.
 
 ![Tone generator](screenshots/square.png) ![Piano](screenshots/piano.png)
 
@@ -58,6 +58,38 @@ takes the same time) and what happens at the end: stop, repeat, or go back
 down. EXE starts and stops it, and F6 changes the waveform.
 
 ![Sweep](screenshots/sweep.png) ![Sweep settings](screenshots/sweep-settings.png)
+
+## Melodies
+
+Seventeen tunes, each with who wrote it and how long it lasts. UP/DOWN
+chooses one and EXE plays it. They use the tone generator's waveform, duty
+cycle and volume; LEFT/RIGHT changes the waveform here.
+
+| # | Tune |
+|---|---|
+| 1 | Happy Birthday |
+| 2 | Ode to Joy (Beethoven) |
+| 3 | Für Elise (Beethoven) |
+| 4 | Jingle Bells |
+| 5 | Twinkle Twinkle Little Star |
+| 6 | Korobeiniki (the Tetris tune) |
+| 7 | A Portuguesa, the Portuguese anthem (official 1957 version) |
+| 8 | Dance of the Sugar Plum Fairy (Tchaikovsky, The Nutcracker) |
+| 9 | The Entertainer (Joplin): the introduction and the first strain |
+| 10 | In the Hall of the Mountain King (Grieg), three times, faster each time |
+| 11 | Beethoven's 5th: the opening |
+| 12 | William Tell Overture (Rossini): the galop |
+| 13 | Can-Can (Offenbach) |
+| 14 | Wedding March (Mendelssohn): the fanfare and the theme |
+| 15 | Swan Lake (Tchaikovsky): the oboe's theme |
+| 16 | We Wish You a Merry Christmas |
+| 17 | La Marseillaise |
+
+While a tune plays, the screen shows each note, its frequency and how far
+into the tune it is. UP/DOWN skips to the previous or next tune, and any
+other key stops.
+
+![Melodies](screenshots/melodies.png) ![Playing A Portuguesa](screenshots/melody.png)
 
 ## Output and wiring
 
@@ -119,7 +151,12 @@ OPTN opens the info screen and EXIT goes back (from the menu, it quits).
   fields at a time.
 - The output screen is text only: the method, the pins and the wiring in
   brief.
+- The Melodies list shows five tunes at a time, without the composer and
+  length. While one plays, the screen shows the note, its frequency and a
+  progress bar.
 
 ![fx-9860G tone generator](screenshots/fx-sine.png) ![fx-9860G piano](screenshots/fx-piano.png)
+
+![fx-9860G melodies](screenshots/fx-melodies.png) ![fx-9860G playing a melody](screenshots/fx-melody.png)
 
 © José Rodrigues 2026

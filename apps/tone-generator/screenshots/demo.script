@@ -1,5 +1,5 @@
 # Tone: the tone generator (square, duty cycle, sine, a typed frequency),
-# then the piano, a sweep and the output screen
+# then the piano, a sweep, the melodies and the output screen
 wait 1s
 shot menu.png
 EXE
@@ -69,6 +69,31 @@ shot sweep.png
 F1
 wait 600
 shot sweep-settings.png
+EXIT
+wait 400
+EXIT
+wait 400
+DOWN
+wait 300
+EXE
+wait 600
+DOWN
+wait 200
+DOWN
+wait 200
+DOWN
+wait 200
+DOWN
+wait 200
+DOWN
+wait 200
+DOWN
+wait 400
+shot melodies.png
+EXE
+wait 1500
+shot melody.png
+wait 1s
 EXIT
 wait 400
 EXIT

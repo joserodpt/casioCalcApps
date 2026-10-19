@@ -22,6 +22,7 @@
 #define PIANO_COLOR C_RGB(4, 10, 24)
 #define SWEEP_COLOR C_RGB(24, 10, 0)
 #define OUT_COLOR   C_RGB(8, 12, 14)
+#define MELODY_COLOR C_RGB(22, 4, 10)
 #define PLAY_COLOR  C_RGB(2, 18, 6)
 #define SOUND_SPEED 343.0               /* m/s, in air at 20 °C */
 
@@ -209,17 +210,452 @@ static void draw_status(int x, int y, char const *idle)
 #endif
 }
 
-/* getkey() that gives up after `us`; 0 then */
-static int getkey_for(int us)
+/* getkey() that gives up after `us`; type KEYEV_NONE then */
+static key_event_t getkey_ev_for(int us)
 {
     volatile int flag = 0;
     int t = timer_configure(TIMER_ANY, us,
         GINT_CALL(timer_timeout, (void *)&flag));
-    if (t < 0) return getkey().key;
+    if (t < 0) return getkey();
     timer_start(t);
     key_event_t ev = getkey_opt(GETKEY_DEFAULT, &flag);
     timer_stop(t);
+    return ev;
+}
+
+/* The same, for the key only; 0 if none */
+static int getkey_for(int us)
+{
+    key_event_t ev = getkey_ev_for(us);
     return ev.type == KEYEV_NONE ? 0 : ev.key;
+}
+
+//---
+//  Melodies
+//---
+
+/* A MIDI note (0: a rest) and its length in units of the melody */
+typedef struct { uint8_t midi, len; } note_t;
+
+typedef struct {
+    char const *name, *origin_en, *origin_pt;
+    int unit_ms;
+    note_t const *notes;
+    int count;
+} melody_t;
+
+/* Lengths in sixteenths: 4 is a quarter note */
+static note_t const birthday[] = {
+    {67,3},{67,1},{69,4},{67,4},{72,4},{71,8},
+    {67,3},{67,1},{69,4},{67,4},{74,4},{72,8},
+    {67,3},{67,1},{79,4},{76,4},{72,4},{71,4},{69,8},
+    {77,3},{77,1},{76,4},{72,4},{74,4},{72,12},
+};
+static note_t const ode[] = {
+    {76,4},{76,4},{77,4},{79,4},{79,4},{77,4},{76,4},{74,4},
+    {72,4},{72,4},{74,4},{76,4},{76,6},{74,2},{74,8},
+    {76,4},{76,4},{77,4},{79,4},{79,4},{77,4},{76,4},{74,4},
+    {72,4},{72,4},{74,4},{76,4},{74,6},{72,2},{72,8},
+};
+static note_t const elise[] = {
+    {76,1},{75,1},{76,1},{75,1},{76,1},{71,1},{74,1},{72,1},
+    {69,2},{0,1},{60,1},{64,1},{69,1},{71,2},{0,1},{64,1},{68,1},{71,1},
+    {72,2},{0,1},{64,1},{76,1},{75,1},
+    {76,1},{75,1},{76,1},{71,1},{74,1},{72,1},
+    {69,2},{0,1},{60,1},{64,1},{69,1},{71,2},{0,1},{64,1},{72,1},{71,1},
+    {69,6},
+};
+static note_t const jingle[] = {
+    {76,4},{76,4},{76,8},{76,4},{76,4},{76,8},
+    {76,4},{79,4},{72,6},{74,2},{76,16},
+    {77,4},{77,4},{77,6},{77,2},{77,4},{76,4},{76,4},{76,2},{76,2},
+    {76,4},{74,4},{74,4},{76,4},{74,8},{79,8},
+    {76,4},{76,4},{76,8},{76,4},{76,4},{76,8},
+    {76,4},{79,4},{72,6},{74,2},{76,16},
+    {77,4},{77,4},{77,6},{77,2},{77,4},{76,4},{76,4},{76,2},{76,2},
+    {79,4},{79,4},{77,4},{74,4},{72,16},
+};
+static note_t const twinkle[] = {
+    {72,4},{72,4},{79,4},{79,4},{81,4},{81,4},{79,8},
+    {77,4},{77,4},{76,4},{76,4},{74,4},{74,4},{72,8},
+    {79,4},{79,4},{77,4},{77,4},{76,4},{76,4},{74,8},
+    {79,4},{79,4},{77,4},{77,4},{76,4},{76,4},{74,8},
+    {72,4},{72,4},{79,4},{79,4},{81,4},{81,4},{79,8},
+    {77,4},{77,4},{76,4},{76,4},{74,4},{74,4},{72,8},
+};
+static note_t const korobeiniki[] = {
+    {76,4},{71,2},{72,2},{74,4},{72,2},{71,2},
+    {69,4},{69,2},{72,2},{76,4},{74,2},{72,2},
+    {71,6},{72,2},{74,4},{76,4},{72,4},{69,4},{69,8},
+    {0,2},{74,4},{77,2},{81,4},{79,2},{77,2},
+    {76,6},{72,2},{76,4},{74,2},{72,2},
+    {71,4},{71,2},{72,2},{74,4},{76,4},{72,4},{69,4},{69,8},
+};
+/* From the official 1957 version, in E flat as it is sung */
+static note_t const portuguesa[] = {
+    {70,1},{67,3},{63,1},
+    {72,8},{70,7},{72,1},
+    {70,4},{68,4},{67,3},{63,1},{63,3},{63,1},
+    {67,8},{69,3},{70,1},{72,3},{74,1},
+    {70,12},{70,3},{74,1},
+    {77,8},{74,4},{70,2},{68,2},
+    {68,8},{67,4},{70,3},{67,1},
+    {63,8},{63,2},{65,2},{67,2},{70,2},
+    {65,10},{0,6},
+    {65,6},{67,2},{63,4},{63,2},{67,2},
+    {68,6},{70,2},{67,4},{67,2},{70,2},
+    {75,6},{70,2},{70,2},{73,4},{71,2},
+    {70,4},{65,8},{0,2},{68,2},
+    {66,4},{70,4},{70,4},{68,2},{66,2},
+    {65,12},{0,2},{68,2},
+    {66,4},{70,3},{70,1},{70,4},{68,2},{66,2},
+    {70,3},{70,1},{70,6},{0,5},{70,1},
+    {75,8},{74,4},{0,3},{68,1},
+    {72,8},{70,4},{63,2},{65,2},
+    {67,4},{67,4},{70,4},{67,4},
+    {65,10},{0,5},{70,1},
+    {75,8},{74,4},{0,3},{68,1},
+    {72,8},{70,4},{67,1},{70,2},{75,1},
+    {79,8},{77,7},{75,1},
+    {75,10},{67,2},{68,2},{70,2},
+    {72,4},{72,4},{70,4},{68,2},{70,2},
+    {75,16},
+};
+/* The Nutcracker: Dance of the Sugar Plum Fairy, the celesta's theme */
+static note_t const sugarplum[] = {
+    {0,4},{79,2},{76,2},{79,4},{78,4},
+    {75,4},{76,4},{74,2},{74,2},{74,4},
+    {73,2},{73,2},{73,4},{72,2},{72,2},{72,4},
+    {71,2},{76,2},{72,2},{76,2},{71,4},{64,1},{62,1},{60,1},{59,1},
+    {58,4},{67,2},{64,2},{67,4},{66,4},
+    {72,4},{71,4},{79,2},{79,2},{79,4},
+    {78,2},{78,2},{78,4},{76,2},{76,2},{76,4},
+    {75,2},{78,2},{76,2},{78,2},{74,4},{71,1},{69,1},{67,1},{66,1},
+    {64,4},{79,2},{76,2},{79,4},{78,4},
+    {75,4},{76,4},{74,2},{74,2},{74,4},
+    {73,2},{73,2},{73,4},{72,2},{72,2},{72,4},
+    {71,2},{76,2},{72,2},{76,2},{71,4},{67,1},{66,1},{64,1},{62,1},
+    {61,4},{76,2},{73,2},{76,4},{75,4},
+    {59,4},{74,2},{71,2},{74,4},{73,4},
+    {57,4},{72,2},{69,2},{72,4},{71,4},
+    {0,4},{59,1},{63,1},{66,1},{71,1},{64,8},
+};
+
+/* Ragtime: the introduction and the first strain */
+static note_t const entertainer[] = {
+    {86,1},{88,1},{84,1},{81,2},{83,1},{79,2},{74,1},{76,1},{72,1},{69,2},
+    {71,1},{67,2},{62,1},{64,1},{60,4},{0,8},{62,1},{63,1},{64,1},{72,2},
+    {64,1},{72,2},{64,1},{72,6},{84,1},{86,1},{87,1},{88,1},{84,1},{86,1},
+    {88,2},{83,1},{86,2},{84,6},{62,1},{63,1},{64,1},{72,2},{64,1},{72,2},
+    {64,1},{72,7},{81,1},{79,1},{78,1},{81,1},{84,1},{88,2},{86,1},{84,1},
+    {81,1},{86,6},{62,1},{63,1},{64,1},{72,2},{64,1},{72,2},{64,1},{72,6},
+    {84,1},{86,1},{87,1},{88,1},{84,1},{86,1},{88,2},{83,1},{86,2},{84,6},
+    {84,1},{86,1},{88,1},{84,1},{86,1},{88,2},{84,1},{86,1},{84,1},{88,1},
+    {84,1},{86,1},{88,2},{84,1},{86,1},{84,1},{88,1},{84,1},{86,1},{88,2},
+    {83,1},{86,2},{84,8},
+};
+
+/* Played three times, faster each time, as the piece speeds up */
+static note_t const mountain[] = {
+    {71,4},{73,4},{74,4},{76,4},{78,4},{74,4},{78,8},{77,4},{73,4},{77,8},
+    {76,4},{72,4},{76,8},{71,4},{73,4},{74,4},{76,4},{78,4},{74,4},{78,4},
+    {83,4},{81,4},{78,4},{74,4},{78,4},{81,8},{0,8},{78,4},{80,4},{82,4},
+    {83,4},{85,4},{82,4},{85,8},{86,4},{82,4},{86,8},{85,4},{82,4},{85,8},
+    {78,4},{80,4},{82,4},{83,4},{85,4},{82,4},{85,8},{86,4},{82,4},{86,8},
+    {85,8},{0,8},{71,3},{73,3},{74,3},{76,3},{78,3},{74,3},{78,6},{77,3},
+    {73,3},{77,6},{76,3},{72,3},{76,6},{71,3},{73,3},{74,3},{76,3},{78,3},
+    {74,3},{78,3},{83,3},{81,3},{78,3},{74,3},{78,3},{81,6},{0,6},{78,3},
+    {80,3},{82,3},{83,3},{85,3},{82,3},{85,6},{86,3},{82,3},{86,6},{85,3},
+    {82,3},{85,6},{78,3},{80,3},{82,3},{83,3},{85,3},{82,3},{85,6},{86,3},
+    {82,3},{86,6},{85,6},{0,6},{71,2},{73,2},{74,2},{76,2},{78,2},{74,2},
+    {78,4},{77,2},{73,2},{77,4},{76,2},{72,2},{76,4},{71,2},{73,2},{74,2},
+    {76,2},{78,2},{74,2},{78,2},{83,2},{81,2},{78,2},{74,2},{78,2},{81,4},
+    {0,4},{78,2},{80,2},{82,2},{83,2},{85,2},{82,2},{85,4},{86,2},{82,2},
+    {86,4},{85,2},{82,2},{85,4},{78,2},{80,2},{82,2},{83,2},{85,2},{82,2},
+    {85,4},{86,2},{82,2},{86,4},{85,4},{0,4},{71,8},
+};
+
+/* The opening: two motifs and their fermatas */
+static note_t const fifth[] = {
+    {0,2},{67,2},{67,2},{67,2},{63,20},{0,4},{65,2},{65,2},{65,2},{62,28},
+};
+
+/* The galop of the finale */
+static note_t const tell[] = {
+    {74,2},{74,2},{74,4},{74,2},{74,2},{74,4},{74,2},{74,2},{79,4},{81,4},
+    {83,4},{74,2},{74,2},{74,4},{74,2},{74,2},{79,4},{83,4},{81,4},{78,4},
+    {74,4},{74,2},{74,2},{74,4},{74,2},{74,2},{74,4},{74,2},{74,2},{79,4},
+    {81,4},{83,4},{79,2},{83,2},{86,10},{84,2},{83,2},{81,2},{79,4},{83,4},
+    {79,8},
+};
+
+static note_t const cancan[] = {
+    {72,8},{74,2},{77,2},{76,2},{74,2},{79,4},{79,4},{79,2},{81,2},{76,2},
+    {77,2},{74,4},{74,4},{74,2},{77,2},{76,2},{74,2},{72,2},{84,2},{83,2},
+    {81,2},{79,2},{77,2},{76,2},{74,2},{72,4},{72,4},{74,2},{77,2},{76,2},
+    {74,2},{79,4},{79,4},{79,2},{81,2},{76,2},{77,2},{74,4},{74,4},{74,2},
+    {77,2},{76,2},{74,2},{72,2},{79,2},{74,2},{76,2},{72,4},{84,4},
+};
+
+/* The trumpets' fanfare and the theme. Lengths in twelfths of a quarter
+   note, for the triplets */
+static note_t const wedding[] = {
+    {72,4},{72,4},{72,4},{72,36},{72,4},{72,4},{72,4},{72,36},{72,4},{72,4},
+    {72,4},{76,12},{76,4},{76,4},{76,4},{76,12},{76,4},{76,4},{76,4},
+    {79,12},{79,4},{79,4},{79,4},{79,24},{84,24},{83,18},{78,6},{81,12},
+    {79,12},{77,12},{74,12},{72,24},{74,12},{67,9},{74,3},{76,30},{72,6},
+    {76,6},{79,6},{84,24},{83,18},{78,6},{81,12},{79,12},{77,12},{74,12},
+    {72,24},{76,12},{74,9},{76,3},{74,24},{72,36},
+};
+
+/* The oboe's theme */
+static note_t const swan[] = {
+    {78,8},{71,2},{73,2},{74,2},{76,2},{78,6},{74,2},{78,6},{74,2},
+    {78,6},{71,2},{74,2},{71,2},{67,2},{74,2},{71,16},
+};
+
+static note_t const wish[] = {
+    {74,4},{79,4},{79,2},{81,2},{79,2},{78,2},{76,4},{76,4},{76,4},{81,4},
+    {81,2},{83,2},{81,2},{79,2},{78,4},{74,4},{74,4},{83,4},{83,2},{84,2},
+    {83,2},{81,2},{79,4},{76,4},{74,2},{74,2},{76,4},{81,4},{78,4},{79,8},
+    {74,4},{79,4},{79,4},{79,4},{78,8},{78,4},{79,4},{78,4},{76,4},{74,8},
+    {74,4},{83,4},{81,4},{79,4},{86,4},{74,4},{74,2},{74,2},{76,4},{81,4},
+    {78,4},{79,12},
+};
+
+static note_t const marseillaise[] = {
+    {67,1},{67,3},{67,1},{72,4},{72,4},{74,4},{74,4},{79,6},{77,2},{76,2},
+    {0,1},{72,1},{76,3},{72,1},{69,4},{77,8},{74,3},{71,1},{72,8},{0,4},
+    {72,3},{74,1},{76,4},{76,4},{76,4},{77,3},{76,1},{76,4},{74,2},{0,6},
+    {74,3},{76,1},{77,4},{77,4},{77,4},{79,3},{77,1},{77,4},{76,4},{0,4},
+    {79,3},{79,1},{79,4},{76,3},{72,1},{79,4},{76,3},{72,1},{67,8},{0,3},
+    {67,1},{67,3},{67,1},{71,6},{74,2},{77,6},{74,2},{74,2},{72,2},{72,2},
+    {0,6},{68,4},{67,4},{72,3},{72,1},{72,4},{71,3},{72,1},{74,8},{0,4},
+    {74,4},{75,6},{75,2},{75,2},{75,2},{77,2},{79,2},{74,8},{0,4},{75,2},
+    {74,2},{72,4},{72,4},{75,4},{74,3},{72,1},{72,4},{71,2},{0,9},{79,1},
+    {79,10},{76,2},{72,3},{72,1},{74,8},{0,7},{79,1},{79,10},{76,2},{72,3},
+    {72,1},{74,8},{0,4},{67,4},{72,8},{0,4},{72,4},{76,8},{0,8},{77,8},
+    {79,6},{81,2},{71,8},{0,7},{81,1},{79,10},{76,2},{77,2},{74,2},{72,8},
+};
+
+#define MELODY(name, en, pt, ms, notes) \
+    { name, en, pt, ms, notes, (int)(sizeof notes / sizeof *notes) }
+static melody_t const melodies[] = {
+    MELODY("Happy Birthday", "Hill sisters, 1893", "Irmas Hill, 1893", 150,
+        birthday),
+    MELODY("Ode to Joy", "Beethoven, 1824", "Beethoven, 1824", 125, ode),
+    MELODY("Fur Elise", "Beethoven, 1810", "Beethoven, 1810", 140, elise),
+    MELODY("Jingle Bells", "Pierpont, 1857", "Pierpont, 1857", 95, jingle),
+    MELODY("Twinkle Twinkle", "French tune, 1761", "Franca, 1761", 140,
+        twinkle),
+    MELODY("Korobeiniki", "Russian folk song", "Cancao russa", 100,
+        korobeiniki),
+    MELODY("A Portuguesa", "Keil, 1890", "Keil, 1890", 160, portuguesa),
+    MELODY("Sugar Plum Fairy", "Tchaikovsky, 1892", "Tchaikovsky, 1892", 160,
+        sugarplum),
+    MELODY("The Entertainer", "Joplin, 1902", "Joplin, 1902", 160,
+        entertainer),
+    MELODY("Mountain King", "Grieg, 1875", "Grieg, 1875", 65, mountain),
+    MELODY("Beethoven's 5th", "Beethoven, 1808", "Beethoven, 1808", 70, fifth),
+    MELODY("William Tell", "Rossini, 1829", "Rossini, 1829", 60, tell),
+    MELODY("Can-Can", "Offenbach, 1858", "Offenbach, 1858", 75, cancan),
+    MELODY("Wedding March", "Mendelssohn, 1842", "Mendelssohn, 1842", 38,
+        wedding),
+    MELODY("Swan Lake", "Tchaikovsky, 1876", "Tchaikovsky, 1876", 120, swan),
+    MELODY("Merry Christmas", "English carol", "Cancao inglesa", 90, wish),
+    MELODY("La Marseillaise", "Rouget de Lisle", "Rouget de Lisle", 130,
+        marseillaise),
+};
+#define MELODIES (int)(sizeof melodies / sizeof *melodies)
+
+static void melody_draw(int m, int i)
+{
+    char a[32];
+    melody_t const *mel = &melodies[m];
+    int midi = mel->notes[i].midi;
+
+    dclear(C_WHITE);
+    if (midi) sprintf(a, "%s%d", note_names[midi % 12], midi / 12 - 1);
+    else strcpy(a, "-");
+#if GINT_HW_FX
+    big_text(DWIDTH / 2, 10, midi ? C_BLACK : C_LIGHT, a, 1);
+    info_title(mel->name, MELODY_COLOR);
+    dtext(1, 26, C_DARK, midi ? fmt_hz(a, midi_freq(midi)) : L("rest",
+        "pausa"));
+    dprint_opt(DWIDTH - 1, 26, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
+        "%d/%d", i + 1, mel->count);
+    drect_border(0, 35, DWIDTH - 1, 41, C_WHITE, 1, C_BLACK);
+    drect(1, 36, 1 + (DWIDTH - 3) * (i + 1) / mel->count, 40, C_DARK);
+    if (message) dtext(1, 46, C_BLACK, message);
+    else dtext(1, 46, C_BLACK, L("UP/DOWN: tune", "CIMA/BX: musica"));
+    dtext(1, 55, C_DARK, L("Other key: stop", "Outra tecla: parar"));
+#else
+    char line[96];
+    big_text(DWIDTH / 2, 30, midi ? C_BLACK : C_LIGHT, a, 3);
+    info_title(mel->name, MELODY_COLOR);
+    dtext_opt(DWIDTH / 2, 86, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
+        midi ? fmt_hz(a, midi_freq(midi)) : L("rest", "pausa"));
+
+    int x1 = 20, x2 = DWIDTH - 21, y = 108;
+    int x = x1 + 1 + (x2 - x1 - 2) * (i + 1) / mel->count;
+    drect_border(x1, y, x2, y + 14, C_WHITE, 1, C_DARK);
+    drect(x1 + 1, y + 1, x, y + 13, C_RGB(31, 20, 24));
+    sprintf(line, L("Note %d of %d", "Nota %d de %d"), i + 1, mel->count);
+    dtext(x1, y + 20, C_DARK, line);
+    sprintf(line, L("Wave: %s", "Onda: %s"), wave_name(cfg.wave));
+    dtext_opt(x2, y + 20, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP, line);
+
+    if (message) dtext(10, 160, C_RED, message);
+    else {
+        drect(10, 161, 17, 168, PLAY_COLOR);
+        sprintf(line, L("Playing on the 3-pin port (%s)",
+            "A tocar na porta de 3 pinos (%s)"), method_name(cfg.method));
+        dtext(22, 160, PLAY_COLOR, line);
+    }
+    dtext(10, 180, C_DARK, L("UP/DOWN: previous/next tune    Any key: stop",
+        "CIMA/BAIXO: musica anterior/seguinte    Outra tecla: parar"));
+#endif
+    dupdate();
+}
+
+/* Play melody m with the tone's wave, duty and volume. UP/DOWN goes to the
+   previous/next one; any other key stops. Returns the last melody played */
+static int melody_run(int m)
+{
+    int last = m;
+    message = NULL;
+    port_ready();
+
+    while (m >= 0) {
+        melody_t const *mel = &melodies[m];
+        int next = -1;
+        for (int i = 0; i < mel->count && next < 0; i++) {
+            note_t n = mel->notes[i];
+            int ms = n.len * mel->unit_ms;
+            /* A short silence between notes, so repeated ones are heard */
+            int gap = n.midi ? (ms >= 120 ? 30 : ms / 4) : 0;
+
+            audio_silence();
+            melody_draw(m, i);
+            if (n.midi && audio_is_open())
+                audio_play(midi_freq(n.midi), cfg.wave, cfg.duty, cfg.volume);
+
+            key_event_t ev = getkey_ev_for((ms - gap) * 1000);
+            if (ev.type == KEYEV_NONE && gap) {
+                audio_silence();
+                ev = getkey_ev_for(gap * 1000);
+            }
+            if (ev.type == KEYEV_NONE) continue;
+            if (ev.key == KEY_UP) next = (m + MELODIES - 1) % MELODIES;
+            else if (ev.key == KEY_DOWN) next = (m + 1) % MELODIES;
+            else next = MELODIES;
+        }
+        m = next < MELODIES ? next : -1;
+        if (m >= 0) last = m;
+    }
+    audio_silence();
+    message = NULL;
+    return last;
+}
+
+#if !GINT_HW_FX
+/* "0:13": how long a melody plays */
+static char *fmt_length(char *buf, melody_t const *mel)
+{
+    int ms = 0;
+    for (int i = 0; i < mel->count; i++) ms += mel->notes[i].len * mel->unit_ms;
+    int s = (ms + 500) / 1000;
+    sprintf(buf, "%d:%02d", s / 60, s % 60);
+    return buf;
+}
+#endif
+
+#if GINT_HW_FX
+#define MEL_ROWS 5
+#else
+#define MEL_ROWS 9
+#endif
+
+/* top: the first melody shown; the list scrolls to keep sel in view */
+static void melodies_draw(int sel, int top)
+{
+    char line[64];
+    dclear(C_WHITE);
+    info_title(L("Melodies", "Melodias"), MELODY_COLOR);
+
+    for (int k = 0; k < MEL_ROWS && top + k < MELODIES; k++) {
+        int i = top + k;
+        melody_t const *mel = &melodies[i];
+        bool on = i == sel;
+#if GINT_HW_FX
+        int y = 10 + 9 * k;
+        if (on) drect(0, y - 1, DWIDTH - 4, y + 7, C_BLACK);
+        dprint(2, y, on ? C_WHITE : C_DARK, "%d", i + 1);
+        dtext(14, y, on ? C_WHITE : C_BLACK, mel->name);
+#else
+        int y = 22 + 18 * k;
+        if (on) drect(0, y - 3, DWIDTH - 8, y + 13, C_RGB(31, 26, 28));
+        dprint_opt(28, y, on ? MELODY_COLOR : C_DARK, C_NONE, DTEXT_RIGHT,
+            DTEXT_TOP, "%d", i + 1);
+        dtext(40, y, on ? MELODY_COLOR : C_BLACK, mel->name);
+        dtext(200, y, C_DARK, L(mel->origin_en, mel->origin_pt));
+        char a[16];
+        dtext_opt(DWIDTH - 14, y, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
+            fmt_length(a, mel));
+#endif
+    }
+
+    /* Scroll bar */
+#if GINT_HW_FX
+    int y1 = 9, y2 = 53, x = DWIDTH - 2;
+#else
+    int y1 = 19, y2 = 180, x = DWIDTH - 4;
+#endif
+    int h = y2 - y1;
+    drect(x, y1, x + (GINT_HW_FX ? 1 : 2), y2, C_LIGHT);
+    drect(x, y1 + h * top / MELODIES, x + (GINT_HW_FX ? 1 : 2),
+        y1 + h * (top + MEL_ROWS) / MELODIES - 1, MELODY_COLOR);
+
+#if GINT_HW_FX
+    dtext(1, 56, C_DARK, L("EXE: play", "EXE: tocar"));
+    static char const *const shrt[] = { "SQR", "SIN", "TRI", "SAW" };
+    sprintf(line, "<> %s", shrt[cfg.wave]);
+    dtext_opt(DWIDTH - 1, 56, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP, line);
+#else
+    drect(0, 183, DWIDTH - 1, 183, C_LIGHT);
+    sprintf(line, L("Wave: %s", "Onda: %s"), wave_name(cfg.wave));
+    if (cfg.wave == WAVE_SQUARE)
+        sprintf(line + strlen(line), L(", %d%% duty", ", ciclo %d%%"), cfg.duty);
+    dtext_opt(DWIDTH - 10, 190, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP, line);
+    dtext(10, 190, C_DARK, L("EXE: play", "EXE: tocar"));
+    dtext(10, 205, C_DARK, L("UP/DOWN: choose  LEFT/RIGHT: wave  EXIT: back",
+        "CIMA/BAIXO: escolher  ESQ/DIR: onda  EXIT: sair"));
+#endif
+    dupdate();
+}
+
+static void melodies_run(void)
+{
+    static int sel = 0, top = 0;
+    message = NULL;
+
+    while (1) {
+        if (sel < top) top = sel;
+        if (sel >= top + MEL_ROWS) top = sel - MEL_ROWS + 1;
+        melodies_draw(sel, top);
+        int key = getkey().key;
+
+        if (key == KEY_EXIT) break;
+        if (key == INFO_KEY)
+            info_app(L("Melodies " APPS_VERSION, "Melodias " APPS_VERSION),
+                MELODY_COLOR);
+        else if (key == KEY_UP) sel = (sel + MELODIES - 1) % MELODIES;
+        else if (key == KEY_DOWN) sel = (sel + 1) % MELODIES;
+        else if (key == KEY_LEFT) cfg.wave = (cfg.wave + WAVES - 1) % WAVES;
+        else if (key == KEY_RIGHT) cfg.wave = (cfg.wave + 1) % WAVES;
+        else if (key == KEY_EXE) sel = melody_run(sel);
+    }
+    audio_silence();
 }
 
 //---
@@ -836,13 +1272,16 @@ static menu_item_t const items[] = {
       "Mantenha as teclas numericas para tocar", piano_run, PIANO_COLOR },
     { "Sweep", "Varrimento", "Glide from one frequency to another",
       "Deslize de uma frequencia para outra", sweep_run, SWEEP_COLOR },
+    { "Melodies", "Melodias", "Classics, carols and anthems",
+      "Classicos, natal e hinos", melodies_run, MELODY_COLOR },
     { "Output and wiring", "Saida e ligacoes",
       "UART or pin, and how to wire the 3-pin jack",
       "UART ou pino, e como ligar a ficha de 3 pinos", output_run, OUT_COLOR },
 };
 
 static menu_t const menu = { "Tone", "Som", "Tone generator " APPS_VERSION,
-    "Gerador de tons " APPS_VERSION, COLOR, items, 4 };
+    "Gerador de tons " APPS_VERSION, COLOR, items,
+    (int)(sizeof items / sizeof *items) };
 
 int main(void)
 {

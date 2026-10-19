@@ -77,6 +77,31 @@ DOWN
 wait 300
 EXE
 wait 600
+DOWN
+wait 200
+DOWN
+wait 200
+DOWN
+wait 200
+DOWN
+wait 200
+DOWN
+wait 200
+DOWN
+wait 400
+shot fx-melodies.png
+EXE
+wait 1500
+shot fx-melody.png
+wait 1s
+EXIT
+wait 400
+EXIT
+wait 400
+DOWN
+wait 300
+EXE
+wait 600
 shot fx-output.png
 EXIT
 wait 400

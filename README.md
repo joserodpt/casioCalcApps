@@ -35,7 +35,7 @@ and Portuguese.
 | <img src="apps/net-tools/assets-cg/icon-sel.png" width="46"> | [**Net Tools**](apps/net-tools) | IPv4 subnet calculator: netmask, network, broadcast, host range, address class, bit grid | [NetTools.g3a](dist/g3a/NetTools.g3a) | [NetTools.g1a](dist/g1a/NetTools.g1a) |
 | <img src="apps/ascii-table/assets-cg/icon-sel.png" width="46"> | [**ASCII**](apps/ascii-table) | ASCII table as a list or a 16×8 grid, and a UTF-8 / UTF-16 encoder for any code point | [ASCII.g3a](dist/g3a/ASCII.g3a) | [ASCII.g1a](dist/g1a/ASCII.g1a) |
 | <img src="apps/timer/assets-cg/icon-sel.png" width="46"> | [**Timer**](apps/timer) | Stopwatch with laps and a Pomodoro timer, driven by the real-time clock | [Timer.g3a](dist/g3a/Timer.g3a) | [Timer.g1a](dist/g1a/Timer.g1a) |
-| <img src="apps/tone-generator/assets-cg/icon-sel.png" width="46"> | [**Tone**](apps/tone-generator) | Tone generator on the 3-pin link port: square, sine, triangle and sawtooth from 20 Hz to 20 kHz, a piano and frequency sweeps | [Tone.g3a](dist/g3a/Tone.g3a) | [Tone.g1a](dist/g1a/Tone.g1a) |
+| <img src="apps/tone-generator/assets-cg/icon-sel.png" width="46"> | [**Tone**](apps/tone-generator) | Tone generator on the 3-pin link port: square, sine, triangle and sawtooth from 20 Hz to 20 kHz, a piano, frequency sweeps and 17 melodies | [Tone.g3a](dist/g3a/Tone.g3a) | [Tone.g1a](dist/g1a/Tone.g1a) |
 | <img src="apps/firmware-dump/assets-cg/icon-sel.png" width="46"> | [**FirmDump**](apps/firmware-dump) | Dumps the OS, the full ROM or any memory region to storage or over USB, read-only | [FirmDump.g3a](dist/g3a/FirmDump.g3a) | – |
 
 Every app has its own README with the full key reference. Press **OPTN** in any
@@ -198,7 +198,7 @@ Click an app to see it in action.
 </details>
 
 <details>
-<summary><b>Tone</b>: tone generator, piano and sweeps on the link port</summary>
+<summary><b>Tone</b>: tone generator, piano, sweeps and melodies on the link port</summary>
 <br>
 
 <img src="apps/tone-generator/screenshots/demo.gif" width="600" alt="Tone demo">
@@ -207,6 +207,7 @@ Click an app to see it in action.
 |:---:|:---:|
 | <img src="apps/tone-generator/screenshots/square.png" width="396"><br>440 Hz square wave | <img src="apps/tone-generator/screenshots/sine.png" width="396"><br>Sine, a semitone at a time |
 | <img src="apps/tone-generator/screenshots/piano.png" width="396"><br>Piano on the number and F keys | <img src="apps/tone-generator/screenshots/sweep.png" width="396"><br>Logarithmic sweep |
+| <img src="apps/tone-generator/screenshots/melodies.png" width="396"><br>Seventeen melodies | <img src="apps/tone-generator/screenshots/melody.png" width="396"><br>Playing the Portuguese anthem |
 | <img src="apps/tone-generator/screenshots/output.png" width="396"><br>Output method and wiring | <img src="apps/tone-generator/screenshots/fx-sine.png" width="256"><br>fx-9860G version |
 
 </details>
