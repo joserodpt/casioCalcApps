@@ -14,7 +14,7 @@ English and Portuguese.
 ![Apps](https://img.shields.io/badge/apps-9-2ea44f)
 
 <img src="apps/electronics/screenshots/demo.gif" width="32%" alt="Electronics demo">
-<img src="apps/logic/screenshots/demo.gif" width="32%" alt="Logic demo">
+<img src="apps/base-n/screenshots/demo.gif" width="32%" alt="Base-N demo">
 <img src="apps/chemistry/screenshots/demo.gif" width="32%" alt="Chemistry demo">
 
 </div>
