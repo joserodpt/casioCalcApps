@@ -36,6 +36,10 @@ static glyph_t const glyphs[] = {
         "#...#", ".#.#.", "..#..", ".#.#.", "#...#", NULL } },
     { CH_PI, false, 2, {
         "#####", ".#.#.", ".#.#.", ".#.#.", ".#..#", NULL } },
+    { CH_DEG, false, 0, {
+        ".#.", "#.#", ".#.", NULL } },
+    { CH_ANGLE, false, 2, {
+        "...#", "..#.", ".#..", "#...", "####", NULL } },
 #else
     { CH_OHM, false, 0, {
         "..####..", ".##..##.", "##....##", "##....##", "##....##",
@@ -51,6 +55,11 @@ static glyph_t const glyphs[] = {
     { CH_PI, false, 2, {
         "#######", ".##.##.", ".##.##.", ".##.##.", ".##.##.", ".##.##.",
         ".##..##", NULL } },
+    { CH_DEG, false, 0, {
+        ".##.", "#..#", "#..#", ".##.", NULL } },
+    { CH_ANGLE, false, 1, {
+        ".....##", "....##.", "...##..", "..##...", ".##....", "##.....",
+        "#######", "#######", NULL } },
 #endif
     { CH_OHM, true, 1, {
         "...####...", "..######..", ".###..###.", "##......##",
@@ -75,7 +84,7 @@ static glyph_t const *find_glyph(char ch, bool big)
 
 static bool is_symbol(char c)
 {
-    return c >= CH_OHM && c <= CH_PI;
+    return c >= CH_OHM && c <= CH_ANGLE;
 }
 
 static int glyph_width(glyph_t const *g)

@@ -15,11 +15,15 @@
 #define CH_PM     '\x03'
 #define CH_TIMES  '\x04'
 #define CH_PI     '\x05'
+#define CH_DEG    '\x06'
+#define CH_ANGLE  '\x07'
 #define S_OHM     "\x01"
 #define S_MU      "\x02"
 #define S_PM      "\x03"
 #define S_TIMES   "\x04"
 #define S_PI      "\x05"
+#define S_DEG     "\x06"
+#define S_ANGLE   "\x07"
 
 /* etext(): Text that may contain the symbols above; big selects font_big */
 void etext(int x, int y, int fg, int halign, bool big, char const *s);

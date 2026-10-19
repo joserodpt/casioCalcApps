@@ -184,7 +184,19 @@ def icon_electronics(i):
     i.rect(19, 6, 19, 12, fill=True)
 
 
+def icon_tone(i):
+    # A speaker and three sound waves
+    i.rect(5, 7, 8, 11, fill=True)
+    for k in range(5):
+        i.rect(9 + k, 6 - k, 9 + k, 12 + k, fill=True)
+    for r in (4, 8, 12):
+        for k in range(-40, 41, 4):
+            a = math.radians(k)
+            i.set(round(14 + r * math.cos(a)), round(9 + r * math.sin(a)))
+
+
 ICONS = {
+    "tone-generator": icon_tone,
     "physics": icon_physics,
     "chemistry": icon_chemistry,
     "electronics": icon_electronics,

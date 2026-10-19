@@ -194,6 +194,45 @@ def draw_circuit(d, c):
     d.line(box(lx - 3.5, ly + 3.5, lx + 3.5, ly - 3.5), fill=c, width=S)
 
 
+def draw_tone(d, c):
+    # A speaker giving out sound waves
+    d.rectangle(box(20, 18, 28, 30), fill=WHITE)
+    d.polygon([(28 * S, 18 * S), (40 * S, 9 * S), (40 * S, 39 * S),
+               (28 * S, 30 * S)], fill=WHITE)
+    w = int(2.2 * S)
+    for r in (8, 15, 22):
+        d.arc(box(36 - r, 24 - r, 36 + r, 24 + r), -42, 42, fill=WHITE,
+              width=w)
+
+
+def draw_ac_circuit(d, c):
+    # An AC source on the left feeding a coil and a capacitor
+    w = 2 * S
+    x1, y1, x2, y2 = 18, 11, 74, 37
+    d.line(box(x1, y1, x2, y1), fill=WHITE, width=w)
+    d.line(box(x1, y2, x2, y2), fill=WHITE, width=w)
+    d.line(box(x1, y1, x1, y2), fill=WHITE, width=w)
+    d.line(box(x2, y1, x2, y2), fill=WHITE, width=w)
+    # source: a circle with a sine wave
+    cy = 24
+    d.ellipse(box(x1 - 8, cy - 8, x1 + 8, cy + 8), fill=c, outline=WHITE,
+              width=S)
+    pts = [((x1 - 5 + 10 * t / 40) * S,
+            (cy - 3.2 * math.sin(2 * math.pi * t / 40)) * S)
+           for t in range(41)]
+    d.line(pts, fill=WHITE, width=int(1.4 * S), joint="curve")
+    # coil on the top wire
+    d.rectangle(box(36, y1 - 3, 56, y1 + 3), fill=c)
+    for k in range(4):
+        cx = 38.5 + 5 * k
+        d.arc(box(cx - 2.5, y1 - 4, cx + 2.5, y1 + 4), 180, 360, fill=WHITE,
+              width=int(1.6 * S))
+    # capacitor on the right wire
+    d.rectangle(box(x2 - 4, 21, x2 + 4, 27), fill=c)
+    d.rectangle(box(x2 - 7, 20.5, x2 + 7, 22), fill=WHITE)
+    d.rectangle(box(x2 - 7, 26, x2 + 7, 27.5), fill=WHITE)
+
+
 # app folder -> (panel colour, pictogram)
 ICONS = {
     "electronics":   ((168, 76, 26), draw_electronics),
@@ -206,6 +245,8 @@ ICONS = {
     "chemistry":     ((18, 92, 120), draw_converter),
     "physics":       ((150, 70, 14), draw_physics),
     "circuit":       ((16, 130, 98), draw_circuit),
+    "tone-generator": ((160, 32, 160), draw_tone),
+    "ac-circuit":    ((160, 24, 64), draw_ac_circuit),
 }
 
 

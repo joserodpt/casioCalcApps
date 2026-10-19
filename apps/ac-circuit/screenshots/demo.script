@@ -1,0 +1,173 @@
+# AC Circuit: the RC low-pass and its phasors, waveforms and frequency
+# response, then the series RLC, power factor and LC tank examples
+wait 2s
+shot lowpass.png
+RIGHT
+wait 200
+RIGHT
+wait 200
+RIGHT
+wait 200
+RIGHT
+wait 200
+RIGHT
+wait 200
+RIGHT
+wait 200
+RIGHT
+wait 200
+RIGHT
+wait 200
+RIGHT
+wait 200
+wait 1s
+shot voltmeter.png
+1
+wait 800
+shot phasors.png
+EXIT
+wait 400
+2
+wait 800
+shot waveforms.png
+EXIT
+wait 400
+3
+wait 5s
+RIGHT
+wait 120
+RIGHT
+wait 120
+RIGHT
+wait 120
+RIGHT
+wait 120
+RIGHT
+wait 120
+RIGHT
+wait 120
+RIGHT
+wait 120
+RIGHT
+wait 120
+RIGHT
+wait 120
+RIGHT
+wait 120
+RIGHT
+wait 120
+RIGHT
+wait 120
+RIGHT
+wait 120
+RIGHT
+wait 120
+wait 600
+shot bode.png
+EXIT
+wait 500
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+wait 400
+EXE
+wait 800
+shot edit-capacitor.png
+EXIT
+wait 500
+VARS
+wait 1s
+RIGHT
+wait 250
+RIGHT
+wait 250
+wait 1500
+shot rlc.png
+XOT
+wait 500
+AC
+wait 200
+5
+wait 200
+0
+wait 200
+3
+wait 500
+shot frequency.png
+EXIT
+wait 2s
+shot rlc-resonance.png
+VARS
+wait 1s
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+DOWN
+wait 250
+DOWN
+wait 250
+wait 800
+shot pf-switch.png
+EXE
+wait 1s
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+UP
+wait 250
+UP
+wait 250
+wait 1500
+shot pf-corrected.png
+1
+wait 800
+shot pf-phasors.png
+EXIT
+wait 500
+VARS
+wait 1s
+RIGHT
+wait 200
+RIGHT
+wait 200
+RIGHT
+wait 200
+RIGHT
+wait 200
+RIGHT
+wait 200
+RIGHT
+wait 200
+RIGHT
+wait 200
+RIGHT
+wait 200
+RIGHT
+wait 200
+wait 1s
+shot tank.png
+3
+wait 5s
+shot tank-bode.png
+EXIT
+wait 500
+LEFT
+wait 300
+F6
+wait 600
+shot parts-menu.png
+EXIT
+wait 500

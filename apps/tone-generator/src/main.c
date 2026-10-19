@@ -1,0 +1,856 @@
+#include <gint/display.h>
+#include <gint/keyboard.h>
+#include <gint/timer.h>
+#include <gint/clock.h>
+#include <gint/rtc.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "audio.h"
+#include "menu.h"
+#include "ui.h"
+#include "numfield.h"
+#include "utils.h"
+#include "keys.h"
+#include "info.h"
+#include "version.h"
+#include "i18n.h"
+#include "usb_screen.h"
+
+#define COLOR       C_RGB(20, 4, 20)
+#define PIANO_COLOR C_RGB(4, 10, 24)
+#define SWEEP_COLOR C_RGB(24, 10, 0)
+#define OUT_COLOR   C_RGB(8, 12, 14)
+#define PLAY_COLOR  C_RGB(2, 18, 6)
+#define SOUND_SPEED 343.0               /* m/s, in air at 20 °C */
+
+#if GINT_HW_FX
+#define FK(cg, fx) fx
+#else
+#define FK(cg, fx) cg
+#endif
+
+/* The tone: shared by the screens */
+static struct {
+    double freq;
+    int wave, duty, volume;
+    out_t method;
+} cfg = { 440, WAVE_SQUARE, 50, 100, OUT_UART };
+
+static int const duties[] = { 50, 25, 10 };
+static int const volumes[] = { 100, 50, 25 };
+#define DUTIES  (int)(sizeof duties / sizeof *duties)
+#define VOLUMES (int)(sizeof volumes / sizeof *volumes)
+
+/* A one-off message on the status line (port errors) */
+static char const *message;
+
+#if !GINT_HW_FX
+static char const *wave_name(int w)
+{
+    switch (w) {
+    case WAVE_SQUARE: return L("square", "quadrada");
+    case WAVE_SINE: return L("sine", "seno");
+    case WAVE_TRIANGLE: return L("triangle", "triangulo");
+    default: return L("sawtooth", "dente de serra");
+    }
+}
+#endif
+
+static char const *method_name(int m)
+{
+    return m == OUT_UART ? "UART" : L("pin", "pino");
+}
+
+/* Open the port if needed; false (and a message) if it can't be */
+static bool port_ready(void)
+{
+    if (!audio_supported()) {
+        message = L("Not on this model (SH3 serial port)",
+            "Nao neste modelo (porta serie SH3)");
+        return false;
+    }
+    if (!audio_open(cfg.method)) {
+        message = L("Could not open the 3-pin port",
+            "Nao foi possivel abrir a porta de 3 pinos");
+        return false;
+    }
+    return true;
+}
+
+static void play(double freq)
+{
+    if (port_ready()) audio_play(freq, cfg.wave, cfg.duty, cfg.volume);
+}
+
+static double clamp_freq(double f)
+{
+    return f < FREQ_MIN ? FREQ_MIN : f > FREQ_MAX ? FREQ_MAX : f;
+}
+
+//---
+//  Text helpers
+//---
+
+#if GINT_HW_FX
+/* "250", "12.5k": a frequency in few characters (fx-9860G) */
+static char *fmt_short_hz(char *buf, double f)
+{
+    if (f < 1000) return fmt_num(buf, f, 0);
+    fmt_num(buf, f / 1000, 1);
+    strcat(buf, "k");
+    return buf;
+}
+#endif
+
+static char const *const note_names[12] = { "C", "C#", "D", "D#", "E", "F",
+    "F#", "G", "G#", "A", "A#", "B" };
+
+static double midi_freq(int midi)
+{
+    return 440 * pow(2, (midi - 69) / 12.0);
+}
+
+/* "A4 +0 cents" (short: "A4 +0c") */
+static char *fmt_note(char *buf, double f, bool shrt)
+{
+    double n = 12 * log(f / 440) / log(2) + 69;
+    int m = (int)floor(n + 0.5);
+    int cents = (int)floor((n - m) * 100 + 0.5);
+    sprintf(buf, "%s%d %s%d%s", note_names[(m % 12 + 12) % 12], m / 12 - 1,
+        cents >= 0 ? "+" : "", cents, shrt ? "c" : L(" cents", " cents"));
+    return buf;
+}
+
+/* "440 Hz", "261.63 Hz" */
+static char *fmt_hz(char *buf, double f)
+{
+    fmt_num(buf, f, f < 1000 ? 2 : 1);
+    strcat(buf, " Hz");
+    return buf;
+}
+
+/* Text in font_big, each pixel a scale x scale block, centred on cx. It is
+   first drawn at the top left of the VRAM and read back: call it before
+   drawing anything there (the title bar comes after it) */
+static void big_text(int cx, int y, int color, char const *text, int scale)
+{
+    static uint8_t bits[14][160];
+    font_t const *old = dfont(&font_big);
+    if (scale == 1) {
+        dtext_opt(cx, y, color, C_NONE, DTEXT_CENTER, DTEXT_TOP, text);
+        dfont(old);
+        return;
+    }
+    int w, h;
+    dsize(text, NULL, &w, &h);
+    if (w > 160) w = 160;
+    if (h > 14) h = 14;
+
+    drect(0, 0, w + 1, h + 1, C_WHITE);
+    dtext(0, 0, C_BLACK, text);
+    for (int r = 0; r < h; r++)
+        for (int c = 0; c < w; c++)
+            bits[r][c] = dgetpixel(c, r) == C_BLACK;
+    drect(0, 0, w + 1, h + 1, C_WHITE);
+    dfont(old);
+
+    int x0 = cx - w * scale / 2;
+    for (int r = 0; r < h; r++)
+        for (int c = 0; c < w; c++)
+            if (bits[r][c])
+                drect(x0 + c * scale, y + r * scale,
+                    x0 + (c + 1) * scale - 1, y + (r + 1) * scale - 1, color);
+}
+
+/* Two periods of the waveform in a box */
+static void draw_wave(int x1, int y1, int x2, int y2, int wave, int color)
+{
+    int mid = (y1 + y2) / 2;
+    int amp = (y2 - y1) / 2 - 2;
+    /* A square wave on the pin is always at full amplitude */
+    if (!(wave == WAVE_SQUARE && cfg.method == OUT_PIN))
+        amp = amp * cfg.volume / 100;
+
+    drect_border(x1, y1, x2, y2, C_WHITE, 1, C_LIGHT);
+    for (int x = x1 + 2; x < x2 - 1; x += 4) dpixel(x, mid, C_LIGHT);
+
+    int px = -1, py = 0, w = x2 - x1 - 4;
+    for (int x = x1 + 2; x <= x2 - 2; x++) {
+        double v = audio_sample(wave, cfg.duty, 2.0 * (x - x1 - 2) / w);
+        int y = mid - (int)(v * amp + (v < 0 ? -0.5 : 0.5));
+        if (px >= 0) dline(px, py, x, y, color);
+        px = x;
+        py = y;
+    }
+}
+
+/* Status line: playing or not, or the message */
+static void draw_status(int x, int y, char const *idle)
+{
+    char line[64];
+    if (message) {
+        dtext(x, y, GINT_HW_FX ? C_BLACK : C_RED, message);
+        return;
+    }
+    if (!audio_playing()) {
+        dtext(x, y, C_DARK, idle);
+        return;
+    }
+#if GINT_HW_FX
+    sprintf(line, L("PLAYING (%s)", "A TOCAR (%s)"), method_name(cfg.method));
+    dtext(x, y, C_BLACK, line);
+#else
+    drect(x, y + 1, x + 7, y + 8, PLAY_COLOR);
+    sprintf(line, L("Playing on the 3-pin port (%s)",
+        "A tocar na porta de 3 pinos (%s)"), method_name(cfg.method));
+    dtext(x + 12, y, PLAY_COLOR, line);
+#endif
+}
+
+/* getkey() that gives up after `us`; 0 then */
+static int getkey_for(int us)
+{
+    volatile int flag = 0;
+    int t = timer_configure(TIMER_ANY, us,
+        GINT_CALL(timer_timeout, (void *)&flag));
+    if (t < 0) return getkey().key;
+    timer_start(t);
+    key_event_t ev = getkey_opt(GETKEY_DEFAULT, &flag);
+    timer_stop(t);
+    return ev.type == KEYEV_NONE ? 0 : ev.key;
+}
+
+//---
+//  Tone generator
+//---
+
+static double const steps[] = { 0.1, 1, 10, 100, 1000 };
+#define STEPS (int)(sizeof steps / sizeof *steps)
+
+static void tone_fkeys(void)
+{
+    char label[16];
+    static char const *const cg[] = { "SQUARE", "SINE", "TRI", "SAW" };
+    static char const *const fx[] = { "SQR", "SIN", "TRI", "SAW" };
+    for (int w = 0; w < WAVES; w++) {
+        char const *s = GINT_HW_FX ? fx[w] : cg[w];
+        if (w == cfg.wave) fkey_button_color(w + 1, s, COLOR);
+        else fkey_button(w + 1, s);
+    }
+    if (cfg.wave == WAVE_SQUARE) {
+        sprintf(label, FK(L("DUTY %d%%", "CICLO %d%%"), "%d%%"), cfg.duty);
+        fkey_button(5, label);
+    }
+    sprintf(label, FK("VOL %d%%", "VOL"), cfg.volume);
+    fkey_button(6, label);
+}
+
+static void tone_draw(int step, numfield_t const *typing)
+{
+    char a[32], b[32], c[32], line[96];
+    double f = cfg.freq;
+
+    dclear(C_WHITE);
+#if GINT_HW_FX
+    if (!typing) big_text(DWIDTH / 2, 10, C_BLACK, fmt_hz(a, f), 1);
+    info_title(L("Tone generator", "Gerador de tons"), COLOR);
+    if (typing) {
+        dtext(1, 13, C_BLACK, L("Freq:", "Freq:"));
+        numfield_draw(typing, 30, 12, 76, true, COLOR);
+        dtext(108, 13, C_DARK, "Hz");
+        dtext(1, 26, C_DARK, L("EXE: set  EXIT: back", "EXE: ok  EXIT: sair"));
+    }
+    else {
+        dtext(1, 26, C_BLACK, fmt_note(a, f, true));
+        dtext_opt(DWIDTH - 1, 26, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
+            fmt_si(b, 1 / f, "s", 3));
+    }
+    draw_wave(0, 34, DWIDTH - 1, 46, cfg.wave, C_BLACK);
+    draw_status(1, 48, L("EXE: play", "EXE: tocar"));
+    if (!message && !audio_playing()) {
+        sprintf(line, "+-%s", fmt_num(c, steps[step], 1));
+        dtext_opt(DWIDTH - 1, 48, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP, line);
+    }
+#else
+    if (!typing) big_text(DWIDTH / 2, 30, C_BLACK, fmt_hz(a, f), 3);
+    info_title(L("Tone generator", "Gerador de tons"), COLOR);
+    if (typing) {
+        dtext(30, 47, COLOR, L("New frequency", "Nova frequencia"));
+        numfield_draw(typing, 150, 44, 140, true, COLOR);
+        dtext(298, 47, C_DARK, "Hz");
+        dtext_opt(DWIDTH / 2, 68, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
+            L("EXE: set    EXIT: cancel", "EXE: definir    EXIT: cancelar"));
+    }
+    dtext(10, 84, COLOR, fmt_note(a, f, false));
+    sprintf(line, "%s", wave_name(cfg.wave));
+    if (cfg.wave == WAVE_SQUARE)
+        sprintf(line + strlen(line), L(", %d%% duty", ", ciclo %d%%"), cfg.duty);
+    dtext_opt(DWIDTH - 10, 84, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP, line);
+    sprintf(line, L("Period %s", "Periodo %s"), fmt_si(b, 1 / f, "s", 4));
+    dtext(10, 98, C_DARK, line);
+    sprintf(line, L("Wavelength in air %s", "Comprimento no ar %s"),
+        fmt_si(c, SOUND_SPEED / f, "m", 3));
+    dtext_opt(DWIDTH - 10, 98, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP, line);
+
+    draw_wave(10, 114, DWIDTH - 11, 151, cfg.wave, COLOR);
+
+    draw_status(10, 157, L("Stopped.  EXE: play", "Parado.  EXE: tocar"));
+    sprintf(line, L("Step %s", "Passo %s"), fmt_hz(a, steps[step]));
+    dtext_opt(DWIDTH - 10, 157, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP, line);
+    dtext(10, 174, C_DARK, L("UP/DOWN: +/- step    LEFT/RIGHT: step size",
+        "CIMA/BAIXO: +/- passo    ESQ/DIR: passo"));
+    dtext(10, 188, C_DARK, L("+/-: semitone    0-9: type a frequency",
+        "+/-: meio-tom    0-9: escrever a frequencia"));
+#endif
+    tone_fkeys();
+    dupdate();
+}
+
+static void tone_run(void)
+{
+    static int step = 2;
+    numfield_t typed;
+    bool typing = false;
+    message = NULL;
+
+    while (1) {
+        tone_draw(step, typing ? &typed : NULL);
+        int key = getkey().key;
+        message = NULL;
+        bool changed = false;
+
+        if (typing) {
+            if (key == KEY_EXIT) typing = false;
+            else if (key == KEY_EXE) {
+                double v = numfield_value(&typed);
+                if (v >= FREQ_MIN && v <= FREQ_MAX) {
+                    cfg.freq = v;
+                    changed = true;
+                    typing = false;
+                }
+                else message = L("From 20 Hz to 20000 Hz", "De 20 Hz a 20000 Hz");
+            }
+            else numfield_key(&typed, key);
+        }
+        else if (key == KEY_EXIT) {
+            audio_silence();
+            return;
+        }
+        else if (key == INFO_KEY)
+            info_app(L("Tone generator " APPS_VERSION,
+                "Gerador de tons " APPS_VERSION), COLOR);
+        else if (key == KEY_EXE) {
+            if (audio_playing()) audio_silence();
+            else play(cfg.freq);
+        }
+        else if (key == KEY_UP || key == KEY_DOWN) {
+            /* Back on the step's grid, then one step */
+            double s = steps[step];
+            double f = floor(cfg.freq / s + 0.5) * s;
+            cfg.freq = clamp_freq(f + (key == KEY_UP ? s : -s));
+            changed = true;
+        }
+        else if (key == KEY_LEFT && step < STEPS - 1) step++;
+        else if (key == KEY_RIGHT && step > 0) step--;
+        else if (key == KEY_PLUS || key == KEY_MINUS) {
+            cfg.freq = clamp_freq(cfg.freq * pow(2, (key == KEY_PLUS ? 1 : -1)
+                / 12.0));
+            changed = true;
+        }
+        else if (key >= KEY_F1 && key <= KEY_F4) {
+            cfg.wave = key - KEY_F1;
+            changed = true;
+        }
+        else if (key == KEY_F5 && cfg.wave == WAVE_SQUARE) {
+            int i = 0;
+            while (i < DUTIES && duties[i] != cfg.duty) i++;
+            cfg.duty = duties[(i + 1) % DUTIES];
+            changed = true;
+        }
+        else if (key == KEY_F6) {
+            int i = 0;
+            while (i < VOLUMES && volumes[i] != cfg.volume) i++;
+            cfg.volume = volumes[(i + 1) % VOLUMES];
+            changed = true;
+        }
+        else if (key_digit(key) >= 0 || key == KEY_DOT) {
+            memset(&typed, 0, sizeof typed);
+            numfield_key(&typed, key);
+            typing = true;
+        }
+
+        if (changed && audio_playing()) play(cfg.freq);
+    }
+}
+
+//---
+//  Piano: notes while their key is held
+//---
+
+/* White keys on 1-8 (C to C), black keys on F1-F5 */
+static int const white_keys[8] = { KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6,
+    KEY_7, KEY_8 };
+static int const white_semis[8] = { 0, 2, 4, 5, 7, 9, 11, 12 };
+static int const black_keys[5] = { KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5 };
+static int const black_semis[5] = { 1, 3, 6, 8, 10 };
+/* A black key sits after this white key */
+static int const black_after[5] = { 0, 1, 3, 4, 5 };
+
+#if GINT_HW_FX
+#define PK_X 4
+#define PK_Y 19
+#define PK_W 15
+#define PK_H 28
+#define PK_BW 9
+#define PK_BH 16
+#else
+#define PK_X 22
+#define PK_Y 58
+#define PK_W 44
+#define PK_H 110
+#define PK_BW 26
+#define PK_BH 66
+#endif
+
+/* semi: the key held (-1: none); last: the last note played, as a MIDI
+   number (-1: none yet), shown until the next one */
+static void piano_draw(int octave, int semi, int last)
+{
+    char a[32], line[64];
+    dclear(C_WHITE);
+    info_title("Piano", PIANO_COLOR);
+
+    for (int k = 0; k < 8; k++) {
+        int x = PK_X + k * PK_W;
+        bool on = semi == white_semis[k];
+        drect_border(x, PK_Y, x + PK_W, PK_Y + PK_H, on ? (GINT_HW_FX ? C_LIGHT
+            : C_RGB(20, 26, 31)) : C_WHITE, 1, C_BLACK);
+        dprint_opt(x + PK_W / 2 + 1, PK_Y + PK_H - (GINT_HW_FX ? 8 : 16),
+            on ? PIANO_COLOR : C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
+            "%d", k + 1);
+    }
+    for (int k = 0; k < 5; k++) {
+        int x = PK_X + (black_after[k] + 1) * PK_W - PK_BW / 2;
+        bool on = semi == black_semis[k];
+        drect(x, PK_Y, x + PK_BW, PK_Y + PK_BH, on ? (GINT_HW_FX ? C_DARK
+            : PIANO_COLOR) : C_BLACK);
+#if !GINT_HW_FX
+        dprint_opt(x + PK_BW / 2 + 1, PK_Y + PK_BH - 14, C_WHITE, C_NONE,
+            DTEXT_CENTER, DTEXT_TOP, "F%d", k + 1);
+#endif
+    }
+
+    if (last >= 0) sprintf(line, "%s%d  %s", note_names[last % 12],
+        last / 12 - 1, fmt_hz(a, midi_freq(last)));
+#if GINT_HW_FX
+    if (last < 0) strcpy(line, L("UP/DOWN: octave", "CIMA/BX: oitava"));
+    dtext(1, 10, semi >= 0 ? C_BLACK : C_DARK, line);
+    dprint_opt(DWIDTH - 1, 10, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
+        L("Oct %d", "Oit %d"), octave);
+    if (message) dtext(1, 48, C_BLACK, message);
+    /* No room for labels on the black keys: the F-keys that play them
+       carry their notes, the one held shown selected */
+    for (int k = 0; k < 5; k++)
+        fkey_button_color(k + 1, note_names[black_semis[k]],
+            semi == black_semis[k] ? PIANO_COLOR : C_BLACK);
+    fkey_button(6, "WAV");
+#else
+    sprintf(line, L("Octave %d (C%d to C%d)    UP/DOWN: change",
+        "Oitava %d (C%d a C%d)    CIMA/BAIXO: mudar"), octave, octave,
+        octave + 1);
+    dtext(10, 22, C_DARK, line);
+    if (last >= 0) {
+        char note[64];
+        sprintf(note, "%s%d   %s", note_names[last % 12], last / 12 - 1,
+            fmt_hz(a, midi_freq(last)));
+        dtext(10, 37, semi >= 0 ? PIANO_COLOR : C_DARK, note);
+    }
+    sprintf(line, L("Wave: %s", "Onda: %s"), wave_name(cfg.wave));
+    dtext_opt(DWIDTH - 10, 37, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP, line);
+    if (message) dtext(10, 176, C_RED, message);
+    else dtext(10, 176, C_DARK, L("Hold 1-8: white keys    F1-F5: black keys",
+        "Mantenha 1-8: brancas    F1-F5: pretas"));
+    dtext(10, 190, C_DARK, L("F6: waveform    EXIT: back",
+        "F6: forma de onda    EXIT: voltar"));
+    fkey_button(6, L("WAVE", "ONDA"));
+#endif
+    dupdate();
+}
+
+/* The note whose key is held, as semitones above C; -1 if none */
+static int held_note(void)
+{
+    for (int k = 0; k < 5; k++) if (keydown(black_keys[k])) return black_semis[k];
+    for (int k = 0; k < 8; k++) if (keydown(white_keys[k])) return white_semis[k];
+    return -1;
+}
+
+static void piano_run(void)
+{
+    static int octave = 4, last = -1;
+    int semi = -1, drawn_semi = -2, drawn_octave = -1, drawn_wave = -1;
+    /* Without the port the keys still show the notes */
+    message = NULL;
+    port_ready();
+
+    while (1) {
+        key_event_t ev;
+        bool quit = false;
+        while ((ev = pollevent()).type != KEYEV_NONE) {
+            if (ev.type != KEYEV_DOWN) continue;
+            if (ev.key == KEY_EXIT) quit = true;
+            else if (ev.key == KEY_UP && octave < 7) octave++;
+            else if (ev.key == KEY_DOWN && octave > 1) octave--;
+            else if (ev.key == KEY_F6) cfg.wave = (cfg.wave + 1) % WAVES;
+            else if (ev.key == INFO_KEY) {
+                audio_silence();
+                info_app(L("Piano " APPS_VERSION, "Piano " APPS_VERSION),
+                    PIANO_COLOR);
+                drawn_semi = -2;
+            }
+        }
+        if (quit) break;
+
+        int now = held_note();
+        if (now != semi || octave != drawn_octave || cfg.wave != drawn_wave) {
+            if (now < 0) audio_silence();
+            else if (audio_is_open())
+                audio_play(midi_freq(12 * (octave + 1) + now), cfg.wave,
+                    cfg.duty, cfg.volume);
+            semi = now;
+            if (now >= 0) last = 12 * (octave + 1) + now;
+        }
+        if (semi != drawn_semi || octave != drawn_octave
+            || cfg.wave != drawn_wave) {
+            piano_draw(octave, semi, last);
+            drawn_semi = semi;
+            drawn_octave = octave;
+            drawn_wave = cfg.wave;
+        }
+        sleep_us(10000);
+    }
+    audio_silence();
+}
+
+//---
+//  Sweep
+//---
+
+enum { END_STOP, END_REPEAT, END_BOUNCE, ENDS };
+
+static struct {
+    double from, to, seconds;
+    int log, end;
+} sw = { 100, 10000, 5, 1, END_REPEAT };
+
+static char const *end_name(int e)
+{
+    if (e == END_STOP) return L("stop", "parar");
+    if (e == END_REPEAT) return L("repeat", "repetir");
+    return L("go back", "voltar");
+}
+
+static double sweep_freq(double p)
+{
+    if (sw.log) return sw.from * pow(sw.to / sw.from, p);
+    return sw.from + (sw.to - sw.from) * p;
+}
+
+static void sweep_results(eform_t *f, int y)
+{
+    char a[32];
+    double from = field_value(&f->fields[0]), to = field_value(&f->fields[1]);
+    double t = field_value(&f->fields[2]);
+    if (from >= FREQ_MIN && to >= FREQ_MIN && from <= FREQ_MAX
+        && to <= FREQ_MAX && t > 0) {
+        if (f->fields[3].choice)
+            result(y, L("Rate", "Ritmo"), C_BLACK, L("%s octaves/s",
+                "%s oitavas/s"), fmt_num(a, fabs(log(to / from) / log(2)) / t, 2));
+        else result(y, L("Rate", "Ritmo"), C_BLACK, "%s/s",
+            fmt_hz(a, fabs(to - from) / t));
+    }
+    else result(y, L("Range", "Intervalo"), C_DARK, "20 Hz - 20 kHz");
+    result_note(y + 2 * RESULT_STEP, L("EXIT: back", "EXIT: voltar"));
+}
+
+static void sweep_edit(void)
+{
+    static field_t fields[5];
+    static char const *scales[2], *ends[ENDS];
+    memset(fields, 0, sizeof fields);
+    scales[0] = L("linear", "linear");
+    scales[1] = L("logarithmic", "logaritmica");
+    for (int e = 0; e < ENDS; e++) ends[e] = end_name(e);
+
+    fields[0] = (field_t){ .kind = F_NUM, .label = L("From", "De"), .unit = "Hz" };
+    fields[1] = (field_t){ .kind = F_NUM, .label = L("To", "Ate"), .unit = "Hz" };
+    fields[2] = (field_t){ .kind = F_NUM, .label = L("Time", "Tempo"), .unit = "s" };
+    fields[3] = (field_t){ .kind = F_CHOICE, .label = L("Scale", "Escala"),
+        .options = scales, .option_count = 2, .choice = sw.log };
+    fields[4] = (field_t){ .kind = F_CHOICE, .label = L("At the end", "No fim"),
+        .options = ends, .option_count = ENDS, .choice = sw.end };
+    field_set(&fields[0], sw.from);
+    field_set(&fields[1], sw.to);
+    field_set(&fields[2], sw.seconds);
+
+    eform_t f = { .title = L("Sweep settings", "Definicoes do varrimento"),
+        .color = SWEEP_COLOR, .fields = fields, .count = 5, .cols = 1,
+        .label_w = 110, .results = sweep_results };
+    eform_run(&f);
+
+    double from = field_value(&fields[0]), to = field_value(&fields[1]);
+    double t = field_value(&fields[2]);
+    if (from >= FREQ_MIN && from <= FREQ_MAX) sw.from = from;
+    if (to >= FREQ_MIN && to <= FREQ_MAX) sw.to = to;
+    if (t >= 0.1 && t <= 3600) sw.seconds = t;
+    sw.log = fields[3].choice;
+    sw.end = fields[4].choice;
+}
+
+/* Elapsed RTC ticks (128 per second), across midnight */
+static uint32_t ticks_since(uint32_t start)
+{
+    uint32_t now = rtc_ticks();
+    return now >= start ? now - start : now + 128u * 86400 - start;
+}
+
+static void sweep_draw(double p, double f)
+{
+    char a[32], b[32], line[96];
+    dclear(C_WHITE);
+#if GINT_HW_FX
+    big_text(DWIDTH / 2, 10, C_BLACK, fmt_hz(a, f), 1);
+    info_title(L("Sweep", "Varrimento"), SWEEP_COLOR);
+    drect_border(0, 27, DWIDTH - 1, 33, C_WHITE, 1, C_BLACK);
+    drect(1, 28, 1 + (int)(p * (DWIDTH - 3)), 32, C_DARK);
+    sprintf(line, "%s > %s", fmt_short_hz(a, sw.from), fmt_short_hz(b, sw.to));
+    dtext(1, 36, C_DARK, line);
+    dtext_opt(DWIDTH - 1, 36, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
+        sw.log ? "log" : "lin");
+    draw_status(1, 46, L("EXE: start", "EXE: iniciar"));
+    fkey_button(1, L("SET", "DEF"));
+#else
+    big_text(DWIDTH / 2, 30, C_BLACK, fmt_hz(a, f), 3);
+    info_title(L("Sweep", "Varrimento"), SWEEP_COLOR);
+    dtext_opt(DWIDTH / 2, 86, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
+        fmt_note(a, f, false));
+
+    int x1 = 20, x2 = DWIDTH - 21, y = 108;
+    drect_border(x1, y, x2, y + 14, C_WHITE, 1, C_DARK);
+    drect(x1 + 1, y + 1, x1 + 1 + (int)(p * (x2 - x1 - 2)), y + 13,
+        C_RGB(31, 24, 14));
+    int mx = x1 + 1 + (int)(p * (x2 - x1 - 2));
+    drect(mx - 1, y - 3, mx + 1, y + 17, SWEEP_COLOR);
+    dtext(x1, y + 20, C_DARK, fmt_hz(a, sw.from));
+    dtext_opt(x2, y + 20, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
+        fmt_hz(b, sw.to));
+    sprintf(line, L("%s s, %s, then %s", "%s s, %s, depois %s"),
+        fmt_num(a, sw.seconds, 2), sw.log ? L("logarithmic", "logaritmico")
+        : L("linear", "linear"), end_name(sw.end));
+    dtext_opt(DWIDTH / 2, y + 20, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP, line);
+
+    draw_status(10, 160, L("Stopped.  EXE: start", "Parado.  EXE: iniciar"));
+    sprintf(line, L("Wave: %s", "Onda: %s"), wave_name(cfg.wave));
+    dtext_opt(DWIDTH - 10, 160, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP, line);
+    dtext(10, 180, C_DARK, L("F1: settings    F6: waveform    EXIT: back",
+        "F1: definicoes    F6: forma de onda    EXIT: voltar"));
+    fkey_button(1, L("SET", "DEFIN."));
+#endif
+    fkey_button(6, FK(L("WAVE", "ONDA"), "WAV"));
+    dupdate();
+}
+
+static void sweep_run(void)
+{
+    bool running = false;
+    uint32_t start = 0;
+    double p = 0;
+    message = NULL;
+
+    while (1) {
+        if (running) {
+            double t = ticks_since(start) / 128.0 / sw.seconds;
+            if (sw.end == END_STOP && t >= 1) {
+                p = 1;
+                running = false;
+                audio_silence();
+            }
+            else if (sw.end == END_BOUNCE) {
+                t = fmod(t, 2);
+                p = t > 1 ? 2 - t : t;
+            }
+            else p = fmod(t, 1);
+            if (running) audio_play(sweep_freq(p), cfg.wave, cfg.duty,
+                cfg.volume);
+        }
+        sweep_draw(p, sweep_freq(p));
+
+        int key = running ? getkey_for(20000) : getkey().key;
+        if (!key) continue;
+        message = NULL;
+
+        if (key == KEY_EXIT) break;
+        if (key == INFO_KEY) {
+            info_app(L("Sweep " APPS_VERSION, "Varrimento " APPS_VERSION),
+                SWEEP_COLOR);
+            if (running) start = rtc_ticks() - (uint32_t)(p * sw.seconds * 128);
+        }
+        else if (key == KEY_EXE) {
+            if (running) {
+                running = false;
+                audio_silence();
+            }
+            else if (port_ready()) {
+                running = true;
+                p = 0;
+                start = rtc_ticks();
+            }
+        }
+        else if (key == KEY_F1) {
+            running = false;
+            audio_silence();
+            sweep_edit();
+            p = 0;
+        }
+        else if (key == KEY_F6) cfg.wave = (cfg.wave + 1) % WAVES;
+    }
+    audio_silence();
+}
+
+//---
+//  Output and wiring
+//---
+
+static void output_draw(void)
+{
+    dclear(C_WHITE);
+    info_title(FK(L("Output and wiring", "Saida e ligacoes"),
+        L("Output", "Saida")), OUT_COLOR);
+#if GINT_HW_FX
+    dtext(1, 10, C_BLACK, cfg.method == OUT_UART ? L("> UART 115200 bd",
+        "> UART 115200 bd") : L("> TX pin (SCSPTR)", "> Pino TX (SCSPTR)"));
+    dtext(1, 19, C_DARK, L("Tip TX  Ring RX", "Ponta TX  Anel RX"));
+    dtext(1, 28, C_DARK, L("Sleeve GND (0 V)", "Manga GND (0 V)"));
+    dtext(1, 37, C_DARK, L("TX-1k-headphones", "TX-1k-auscultad."));
+    draw_status(1, 47, L("F6: test 440 Hz", "F6: teste 440 Hz"));
+    fkey_button_color(1, "URT", cfg.method == OUT_UART ? OUT_COLOR : C_BLACK);
+    fkey_button_color(2, L("PIN", "PIN"), cfg.method == OUT_PIN ? OUT_COLOR
+        : C_BLACK);
+    fkey_button(6, L("TST", "TST"));
+#else
+    static char const *const names_en[] = { "UART stream", "TX pin" };
+    static char const *const names_pt[] = { "Fluxo UART", "Pino TX" };
+    static char const *const desc_en[] = {
+        "Bytes at 115200 baud, each bit one sample",
+        "The pin set high and low: exact square waves" };
+    static char const *const desc_pt[] = {
+        "Bytes a 115200 baud, cada bit uma amostra",
+        "O pino ligado e desligado: ondas quadradas exatas" };
+    for (int m = 0; m < OUTS; m++) {
+        int y = 22 + 28 * m;
+        bool sel = m == (int)cfg.method;
+        if (sel) drect(0, y - 2, DWIDTH - 1, y + 24, C_RGB(28, 29, 31));
+        dcircle(16, y + 6, 5, C_WHITE, sel ? OUT_COLOR : C_DARK);
+        if (sel) dcircle(16, y + 6, 2, OUT_COLOR, C_NONE);
+        dprint(28, y, sel ? OUT_COLOR : C_BLACK, "F%d  %s", m + 1,
+            L(names_en[m], names_pt[m]));
+        dtext(48, y + 12, C_DARK, L(desc_en[m], desc_pt[m]));
+    }
+
+    /* The 2.5 mm plug, tip to the right */
+    int y = 86, metal = C_RGB(26, 26, 27);
+    drect(20, y, 60, y + 16, C_RGB(18, 18, 20));                  /* body */
+    drect(61, y + 3, 190, y + 13, metal);                         /* sleeve */
+    drect(191, y + 3, 195, y + 13, C_BLACK);
+    drect(196, y + 3, 250, y + 13, metal);                        /* ring */
+    drect(251, y + 3, 255, y + 13, C_BLACK);
+    drect(256, y + 3, 326, y + 13, metal);                        /* tip */
+    dline(327, y + 4, 332, y + 8, C_DARK);
+    dline(327, y + 12, 332, y + 8, C_DARK);
+    dtext_opt(125, y + 20, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
+        L("Sleeve: GND", "Manga: GND"));
+    dtext_opt(223, y + 20, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
+        L("Ring: RX", "Anel: RX"));
+    dtext_opt(291, y + 20, OUT_COLOR, C_NONE, DTEXT_CENTER, DTEXT_TOP,
+        L("Tip: TX", "Ponta: TX"));
+
+    etext(10, 130, C_BLACK, DTEXT_LEFT, false, L("Tip (TX) -- 1 k" S_OHM
+        " -- headphones or amplifier", "Ponta (TX) -- 1 k" S_OHM
+        " -- auscultadores ou amplif."));
+    etext(10, 144, C_BLACK, DTEXT_LEFT, false, L("Sleeve (GND) -- the other "
+        "wire", "Manga (GND) -- o outro fio"));
+    etext(10, 158, C_DARK, DTEXT_LEFT, false, L("3.3 V logic: never a speaker "
+        "straight on it.", "Logica de 3,3 V: nunca um altifalante direto."));
+    etext(10, 172, C_DARK, DTEXT_LEFT, false, L("Silent? Some cables swap the "
+        "tip and the ring.", "Sem som? Alguns cabos trocam ponta e anel."));
+    draw_status(10, 189, L("F6: test tone (440 Hz)", "F6: tom de teste (440 Hz)"));
+    fkey_button_color(1, "UART", cfg.method == OUT_UART ? OUT_COLOR : C_BLACK);
+    fkey_button_color(2, L("PIN", "PINO"), cfg.method == OUT_PIN ? OUT_COLOR
+        : C_BLACK);
+    fkey_button(6, L("TEST", "TESTE"));
+#endif
+    dupdate();
+}
+
+static void output_run(void)
+{
+    message = NULL;
+    while (1) {
+        output_draw();
+        int key = getkey().key;
+        message = NULL;
+        out_t m = cfg.method;
+
+        if (key == KEY_EXIT) break;
+        if (key == INFO_KEY)
+            info_app(L("Output " APPS_VERSION, "Saida " APPS_VERSION), OUT_COLOR);
+        else if (key == KEY_F1 || key == KEY_F2) m = key - KEY_F1;
+        else if (key == KEY_UP || key == KEY_DOWN) m = !m;
+        else if (key == KEY_F6) {
+            if (audio_playing()) audio_silence();
+            else if (port_ready())
+                audio_play(440, cfg.wave, cfg.duty, cfg.volume);
+        }
+
+        if (m != cfg.method) {
+            bool was = audio_playing();
+            cfg.method = m;
+            if (audio_is_open()) audio_open(m);
+            if (was) audio_play(440, cfg.wave, cfg.duty, cfg.volume);
+        }
+    }
+    audio_silence();
+}
+
+//---
+//  Main menu
+//---
+
+static menu_item_t const items[] = {
+    { "Tone generator", "Gerador de tons",
+      "Four waveforms, from 20 Hz to 20 kHz",
+      "Quatro formas de onda, de 20 Hz a 20 kHz", tone_run, COLOR },
+    { "Piano", "Piano", "Hold the number keys to play notes",
+      "Mantenha as teclas numericas para tocar", piano_run, PIANO_COLOR },
+    { "Sweep", "Varrimento", "Glide from one frequency to another",
+      "Deslize de uma frequencia para outra", sweep_run, SWEEP_COLOR },
+    { "Output and wiring", "Saida e ligacoes",
+      "UART or pin, and how to wire the 3-pin jack",
+      "UART ou pino, e como ligar a ficha de 3 pinos", output_run, OUT_COLOR },
+};
+
+static menu_t const menu = { "Tone", "Som", "Tone generator " APPS_VERSION,
+    "Gerador de tons " APPS_VERSION, COLOR, items, 4 };
+
+int main(void)
+{
+    lang_init();
+    usb_screen_init();
+    screen_init();
+
+    menu_run(&menu);
+    audio_close();
+    return 1;
+}

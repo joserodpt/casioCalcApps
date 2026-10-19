@@ -5,14 +5,15 @@
 **Useful add-ins for the Casio fx-CG50 / fx-CG10 / fx-CG20 (Prizm) graphing calculators,
 with black and white versions of most of them for the fx-9860G family**
 
-A DC circuit simulator, toolkits for electronics, chemistry, physics, logic and
-networking, number converters, a timer and a firmware dumper, all with colour
-interfaces and in English and Portuguese.
+DC and AC circuit simulators, toolkits for electronics, chemistry, physics,
+logic and networking, number converters, a timer, a tone generator for the
+link port and a firmware dumper, all with colour interfaces and in English
+and Portuguese.
 
 ![Calculator](https://img.shields.io/badge/calculator-fx--CG50%20%7C%20CG10%20%7C%20CG20%20%7C%20fx--9860G-1f6feb)
 ![Language](https://img.shields.io/badge/language-C-555555)
 ![Built with](https://img.shields.io/badge/built%20with-fxSDK%20%2B%20gint-8a2be2)
-![Apps](https://img.shields.io/badge/apps-10-2ea44f)
+![Apps](https://img.shields.io/badge/apps-12-2ea44f)
 
 <img src="apps/electronics/screenshots/demo.gif" width="32%" alt="Electronics demo">
 <img src="apps/base-n/screenshots/demo.gif" width="32%" alt="Base-N demo">
@@ -26,6 +27,7 @@ interfaces and in English and Portuguese.
 |:---:|---|---|:---:|:---:|
 | <img src="apps/electronics/assets-cg/icon-sel.png" width="46"> | [**Electronics**](apps/electronics) | Resistor colour and SMD codes, series/parallel, voltage divider, RC/RL/LC filters, 555 timer, LED resistor | [Electronics.g3a](dist/g3a/Electronics.g3a) | [Electronics.g1a](dist/g1a/Electronics.g1a) |
 | <img src="apps/circuit/assets-cg/icon-sel.png" width="46"> | [**Circuit**](apps/circuit) | DC circuit simulator: wires, batteries, resistors, lamps, switches, diodes, LEDs, meters, potentiometers and fuses, with V, A/mA and W for each part | [Circuit.g3a](dist/g3a/Circuit.g3a) | – |
+| <img src="apps/ac-circuit/assets-cg/icon-sel.png" width="46"> | [**AC Circuit**](apps/ac-circuit) | AC circuit simulator: R, C, L, sources, lamps, switches and meters, with V and I phasors, power factor, waveforms and frequency response | [ACCircuit.g3a](dist/g3a/ACCircuit.g3a) | – |
 | <img src="apps/chemistry/assets-cg/icon-sel.png" width="46"> | [**Chemistry**](apps/chemistry) | Periodic table, molar mass from a formula, moles, concentration, ideal gas law, unit converter | [Chemistry.g3a](dist/g3a/Chemistry.g3a) | [Chemistry.g1a](dist/g1a/Chemistry.g1a) |
 | <img src="apps/physics/assets-cg/icon-sel.png" width="46"> | [**Physics**](apps/physics) | Kinematics (SUVAT), dynamics, energy and power, waves and optics, physical constants, unit converter | [Physics.g3a](dist/g3a/Physics.g3a) | [Physics.g1a](dist/g1a/Physics.g1a) |
 | <img src="apps/logic/assets-cg/icon-sel.png" width="46"> | [**Logic**](apps/logic) | Boolean expression → truth table, coloured Karnaugh map and simplified sum of products | [Logic.g3a](dist/g3a/Logic.g3a) | – |
@@ -33,6 +35,7 @@ interfaces and in English and Portuguese.
 | <img src="apps/net-tools/assets-cg/icon-sel.png" width="46"> | [**Net Tools**](apps/net-tools) | IPv4 subnet calculator: netmask, network, broadcast, host range, address class, bit grid | [NetTools.g3a](dist/g3a/NetTools.g3a) | [NetTools.g1a](dist/g1a/NetTools.g1a) |
 | <img src="apps/ascii-table/assets-cg/icon-sel.png" width="46"> | [**ASCII**](apps/ascii-table) | ASCII table as a list or a 16×8 grid, and a UTF-8 / UTF-16 encoder for any code point | [ASCII.g3a](dist/g3a/ASCII.g3a) | [ASCII.g1a](dist/g1a/ASCII.g1a) |
 | <img src="apps/timer/assets-cg/icon-sel.png" width="46"> | [**Timer**](apps/timer) | Stopwatch with laps and a Pomodoro timer, driven by the real-time clock | [Timer.g3a](dist/g3a/Timer.g3a) | [Timer.g1a](dist/g1a/Timer.g1a) |
+| <img src="apps/tone-generator/assets-cg/icon-sel.png" width="46"> | [**Tone**](apps/tone-generator) | Tone generator on the 3-pin link port: square, sine, triangle and sawtooth from 20 Hz to 20 kHz, a piano and frequency sweeps | [Tone.g3a](dist/g3a/Tone.g3a) | [Tone.g1a](dist/g1a/Tone.g1a) |
 | <img src="apps/firmware-dump/assets-cg/icon-sel.png" width="46"> | [**FirmDump**](apps/firmware-dump) | Dumps the OS, the full ROM or any memory region to storage or over USB, read-only | [FirmDump.g3a](dist/g3a/FirmDump.g3a) | – |
 
 Every app has its own README with the full key reference. Press **OPTN** in any
@@ -40,11 +43,11 @@ app for its About screen.
 
 ### Black and white versions
 
-Electronics, Chemistry, Physics, Base-N, Net Tools, ASCII and Timer also come
+Electronics, Chemistry, Physics, Base-N, Net Tools, ASCII, Timer and Tone also come
 as `.g1a` add-ins for the fx-9860G II, fx-9750G II and Graph 35+E II (128×64
 screen, four shades of grey). They have their own layouts with the same
 tools; what had to be shortened is listed in each app's README. They run in
-English. Circuit, Logic and FirmDump need the colour screen.
+English. Circuit, AC Circuit, Logic and FirmDump need the colour screen.
 
 | | | |
 |:---:|:---:|:---:|
@@ -83,6 +86,21 @@ Click an app to see it in action.
 | <img src="apps/circuit/screenshots/led.png" width="396"><br>LED with its resistor and an ammeter | <img src="apps/circuit/screenshots/dimmer.png" width="396"><br>Dimmer: potentiometer, fuse, voltmeter |
 | <img src="apps/circuit/screenshots/fuse-blown.png" width="396"><br>Short across the lamp: the fuse blows | <img src="apps/circuit/screenshots/lamp-overload.png" width="396"><br>Smaller resistor: lamp overloaded |
 | <img src="apps/circuit/screenshots/divider.png" width="396"><br>Voltage divider, point voltage | <img src="apps/circuit/screenshots/drawn.png" width="396"><br>A circuit drawn with the wire tool |
+
+</details>
+
+<details>
+<summary><b>AC Circuit</b>: phasors, power factor, frequency response</summary>
+<br>
+
+<img src="apps/ac-circuit/screenshots/demo.gif" width="600" alt="AC Circuit demo">
+
+| | |
+|:---:|:---:|
+| <img src="apps/ac-circuit/screenshots/lowpass.png" width="396"><br>RC low-pass, the source's readings | <img src="apps/ac-circuit/screenshots/phasors.png" width="396"><br>Phasors of the capacitor's voltage |
+| <img src="apps/ac-circuit/screenshots/waveforms.png" width="396"><br>Waveforms over two periods | <img src="apps/ac-circuit/screenshots/bode.png" width="396"><br>Frequency response of the low-pass |
+| <img src="apps/ac-circuit/screenshots/rlc-resonance.png" width="396"><br>Series RLC at resonance: the lamp at full power | <img src="apps/ac-circuit/screenshots/pf-corrected.png" width="396"><br>RL load with its power factor corrected |
+| <img src="apps/ac-circuit/screenshots/tank-bode.png" width="396"><br>LC tank peaking at 5.03 kHz | <img src="apps/ac-circuit/screenshots/edit-capacitor.png" width="396"><br>Editing a capacitor, with its reactance |
 
 </details>
 
@@ -180,6 +198,20 @@ Click an app to see it in action.
 </details>
 
 <details>
+<summary><b>Tone</b>: tone generator, piano and sweeps on the link port</summary>
+<br>
+
+<img src="apps/tone-generator/screenshots/demo.gif" width="600" alt="Tone demo">
+
+| | |
+|:---:|:---:|
+| <img src="apps/tone-generator/screenshots/square.png" width="396"><br>440 Hz square wave | <img src="apps/tone-generator/screenshots/sine.png" width="396"><br>Sine, a semitone at a time |
+| <img src="apps/tone-generator/screenshots/piano.png" width="396"><br>Piano on the number and F keys | <img src="apps/tone-generator/screenshots/sweep.png" width="396"><br>Logarithmic sweep |
+| <img src="apps/tone-generator/screenshots/output.png" width="396"><br>Output method and wiring | <img src="apps/tone-generator/screenshots/fx-sine.png" width="256"><br>fx-9860G version |
+
+</details>
+
+<details>
 <summary><b>FirmDump</b>: firmware and memory dumper</summary>
 <br>
 
@@ -193,7 +225,8 @@ Click an app to see it in action.
 </details>
 
 > The screenshots come from the [emuCasioCalc](https://github.com/joserodpt/emuCasioCalc)
-> emulator, which has no Casio OS, so FirmDump only shows blank memory there.
+> emulator, which has no Casio OS, so FirmDump only shows blank memory there
+> and Tone makes no sound (it has no serial port to play on).
 
 ## Installing on the calculator
 
