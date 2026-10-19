@@ -7,8 +7,14 @@
 #include "info.h"
 #include "i18n.h"
 
+#if GINT_HW_FX
+#define FORM_Y      10
+#define FORM_STEP   9
+#define FORM_SHOWN  3       /* fields shown at once; the list scrolls */
+#else
 #define FORM_Y      24
 #define FORM_STEP   20
+#endif
 
 static int form_cols(form_t const *f)
 {
@@ -24,6 +30,50 @@ static char const *form_title(form_t const *f)
 {
     return lang_current == L_PT ? f->title_pt : f->title_en;
 }
+
+#if GINT_HW_FX
+
+/* fx-9860G: one column of fields (FORM_SHOWN at once), results below */
+static void form_draw(form_t *f)
+{
+    int shown = f->count < FORM_SHOWN ? f->count : FORM_SHOWN;
+    int top = f->sel < shown ? 0 : f->sel - shown + 1;
+
+    dclear(C_WHITE);
+    info_title(form_title(f), f->color);
+
+    int fx = 0, uw = 0;
+    for (int i = 0; i < f->count; i++) {
+        int w;
+        dsize(L(f->fields[i].label_en, f->fields[i].label_pt), NULL, &w,
+            NULL);
+        if (w + 4 > fx) fx = w + 4;
+        if (f->fields[i].unit) {
+            dsize(f->fields[i].unit, NULL, &w, NULL);
+            if (w + 2 > uw) uw = w + 2;
+        }
+    }
+
+    for (int k = 0; k < shown; k++) {
+        int i = top + k, y = FORM_Y + k * FORM_STEP;
+        bool sel = i == f->sel;
+        dtext(1, y + 1, sel ? C_BLACK : C_DARK,
+            L(f->fields[i].label_en, f->fields[i].label_pt));
+        numfield_draw(&f->fields[i].f, fx, y, DWIDTH - fx - uw - 1, sel,
+            f->color);
+        if (f->fields[i].unit)
+            dtext(DWIDTH - uw + 1, y + 1, C_DARK, f->fields[i].unit);
+    }
+    /* More fields above or below: a mark at the right of the list */
+    if (top > 0) dtext(DWIDTH - 4, FORM_Y - 1, C_DARK, "^");
+
+    int ry = FORM_Y + shown * FORM_STEP + 1;
+    dline(0, ry - 1, DWIDTH - 1, ry - 1, C_LIGHT);
+    f->results(f, ry + 1);
+    dupdate();
+}
+
+#else
 
 static void form_draw(form_t *f)
 {
@@ -59,6 +109,8 @@ static void form_draw(form_t *f)
     f->results(f, ry);
     dupdate();
 }
+
+#endif /* GINT_HW_FX */
 
 void form_run(form_t *f)
 {
@@ -100,6 +152,13 @@ void form_result(int y, int val_x, char const *label, int color,
     va_start(ap, fmt);
     vsnprintf(buf, sizeof buf, fmt, ap);
     va_end(ap);
+#if GINT_HW_FX
+    /* The label at the left, the value against the right edge */
+    (void)val_x;
+    dtext(1, y, C_DARK, label);
+    dtext_opt(DWIDTH - 1, y, color, C_NONE, DTEXT_RIGHT, DTEXT_TOP, buf);
+#else
     dtext(10, y, C_DARK, label);
     dtext(val_x, y, color, buf);
+#endif
 }

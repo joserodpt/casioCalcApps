@@ -1,4 +1,13 @@
-ASCII and UTF-8 reference for the Casio FX CG 50 (works with the CG10 and 20 too). Made with fxSDK and gint.
+ASCII and UTF-8 reference for the Casio FX CG 50 (works with the CG10 and 20 too), with a black and white version for the fx-9860G II. Made with fxSDK and gint.
+
+## Download
+
+| Calculator | File |
+|---|---|
+| fx-CG50, fx-CG10, fx-CG20 (colour) | [ASCII.g3a](../../dist/g3a/ASCII.g3a) |
+| fx-9860G II, fx-9750G II, Graph 35+E II (black and white) | [ASCII.g1a](../../dist/g1a/ASCII.g1a) |
+
+Copy the file to the root of the calculator's storage over USB (USB Flash mode, F1), then eject it; the app appears in the MENU.
 
 Three views, switched with F1–F3:
 
@@ -19,5 +28,26 @@ Three views, switched with F1–F3:
 | DEL / AC | UTF-8: delete a hex digit / clear |
 | OPTN | Info screen |
 | EXIT | Quit |
+
+## fx-9860G (128×64)
+
+`ASCII.g1a` is the black-and-white version, with the same three views and
+keys, laid out for the 21×5-character screen (greys instead of colours):
+
+- **F-keys** are abbreviated: F1 **LST**, F2 **GRD**, F3 **UTF**.
+- **LIST** shows 4 rows with decimal, hex, binary and the character; the line
+  below gives the selected code's octal (`0o101`) and its name / C escape,
+  shortened to what fits. ◀ ▶ page by 4 rows.
+- **GRID** shows 4 of the 8 rows at a time and scrolls with the selection;
+  control codes are grey cells. The line below gives the character, decimal,
+  hex, octal and C escape (no long name).
+- **UTF-8** has two pages, flipped with **F6** (BIT / ENC) or ◀ ▶:
+  the encodings (UTF-8, UTF-16, UTF-32, HTML entities, decimal on the top
+  line), and the bits page with the Unicode block (some names abbreviated)
+  and the UTF-8 bytes in binary, two per line, markers in light grey.
+- The UTF-16 "surrogate pair" note is left out; the About screen has no QR
+  code.
+
+Screenshots: `screenshots/fx-*.png` (from `screenshots/fx-demo.script`).
 
 © José Rodrigues 2026

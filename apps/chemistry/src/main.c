@@ -30,6 +30,82 @@ static void units_run(void) { units_screen(2, COLOR); }
 //  Periodic grid (shared by the molar-mass and browser screens)
 //---
 
+#if GINT_HW_FX
+
+/* fx-9860G: the table fills the screen without a title bar. Cells are 7x5
+   pixels (6x4 drawn), so 18 columns take 126 pixels and the 9 rows (with a
+   2-pixel gap before the f-block) end at y=46. The text goes in the empty
+   space above the transition metals (x 16..83, two lines) and on two lines
+   below the table. Categories are grey shades and patterns */
+#define GRID_X   1
+#define GRID_Y   1
+#define CELL_W   7
+#define CELL_H   5
+#define FBLOCK_GAP 2
+#define GAP_X    16             /* empty area above groups 3-12 */
+#define GAP_W    68
+#define LINE1_Y  49             /* text lines below the table */
+#define LINE2_Y  57
+
+static void grid_cell_xy(int row, int col, int *x, int *y)
+{
+    *x = GRID_X + col * CELL_W;
+    *y = GRID_Y + row * CELL_H + (row >= 7 ? FBLOCK_GAP : 0);
+}
+
+/* A 6x4 cell (or a sample of it) in the pattern of category cat */
+static void draw_cell(int x, int y, int cat)
+{
+    int x2 = x + CELL_W - 2, y2 = y + CELL_H - 2;
+    switch (cat) {
+    case 2: drect(x, y, x2, y2, C_BLACK); break;           /* alkali */
+    case 3: drect(x, y, x2, y2, C_DARK); break;            /* alk. earth */
+    case 6: drect(x, y, x2, y2, C_LIGHT); break;           /* transition */
+    case 7: drect_border(x, y, x2, y2, C_LIGHT, 1, C_BLACK); break;
+    case 0: drect_border(x, y, x2, y2, C_WHITE, 1, C_BLACK); break;
+    case 5:                                                /* halogen */
+        drect_border(x, y, x2, y2, C_WHITE, 1, C_BLACK);
+        drect(x + 2, y + 1, x2 - 2, y2 - 1, C_BLACK);
+        break;
+    case 1: drect_border(x, y, x2, y2, C_WHITE, 1, C_DARK); break;
+    default:                    /* metalloid (black), f-block (dark) dots */
+        for (int py = y; py <= y2; py++)
+        for (int px = x; px <= x2; px++)
+            dpixel(px, py, (px + py) & 1 ? C_WHITE
+                : cat == 4 ? C_BLACK : C_DARK);
+        break;
+    }
+}
+
+static void draw_grid(int cursor_z)
+{
+    for (int z = 1; z <= ELEMENT_COUNT; z++) {
+        int row, col, x, y;
+        element_grid(z, &row, &col);
+        grid_cell_xy(row, col, &x, &y);
+        draw_cell(x, y, element_category(z));
+    }
+    /* The cursor: a thick black frame over the cell and its margins */
+    int row, col, x, y;
+    element_grid(cursor_z, &row, &col);
+    grid_cell_xy(row, col, &x, &y);
+    drect_border(x - 1, y - 1, x + CELL_W - 1, y + CELL_H - 1, C_WHITE, 2,
+        C_BLACK);
+}
+
+/* Short category names, to fit next to the table */
+static char const *category_short(int z)
+{
+    static char const * const names[] = { "Nonmetal", "Noble gas",
+        "Alkali", "Alk. earth", "Metalloid", "Halogen", "Transition",
+        "Post-trans." };
+    int cat = element_category(z);
+    if (cat < 8) return names[cat];
+    return z >= 89 ? "Actinide" : "Lanthanide";
+}
+
+#else
+
 #define GRID_X   6
 #define GRID_Y   18
 #define CELL_W   21
@@ -58,6 +134,8 @@ static void draw_grid(int cursor_z)
             DTEXT_CENTER, DTEXT_TOP, periodic_table[z - 1].symbol);
     }
 }
+
+#endif /* GINT_HW_FX */
 
 /* Move the cursor within the grid; returns the new atomic number */
 static int grid_move(int z, int key)
@@ -93,7 +171,9 @@ static void molar_screen(void)
 
     while (1) {
         dclear(C_WHITE);
+#if !GINT_HW_FX
         info_title(L("Molar mass", "Massa molar"), COLOR);
+#endif
         draw_grid(z);
 
         /* Build the formula string and total mass */
@@ -108,6 +188,33 @@ static void molar_screen(void)
             mass += e->weight * parts[i].count;
         }
 
+#if GINT_HW_FX
+        /* The highlighted element above the transition metals, then the
+           formula (its end, if it is too long) and its molar mass */
+        element_t const *cur = &periodic_table[z - 1];
+        char mb[32];
+        dprint(GAP_X, 1, C_BLACK, "%d %s", cur->z, cur->symbol);
+        dtext(GAP_X, 9, C_DARK, fmt_g(mb, cur->weight, 6));
+
+        char const *fp = formula;
+        int w;
+        dsize(fp, NULL, &w, NULL);
+        if (w > DWIDTH - 2) {
+            while (*fp && (dsize(fp, NULL, &w, NULL), w > DWIDTH - 9)) fp++;
+            dtext(1, LINE1_Y, C_DARK, "<");
+            dtext(8, LINE1_Y, C_BLACK, fp);
+        }
+        else dtext(1, LINE1_Y, np ? C_BLACK : C_DARK,
+            np ? formula : L("EXE add element", "EXE junta elemento"));
+        if (np) {
+            char b[40];
+            sprintf(b, "M = %s g/mol", fmt_g(mb, mass, 7));
+            dtext_opt(DWIDTH - 1, LINE2_Y, C_BLACK, C_NONE, DTEXT_RIGHT,
+                DTEXT_TOP, b);
+        }
+        else dtext(1, LINE2_Y, C_DARK, L("0-9 count  DEL undo",
+            "0-9 qtd  DEL anula"));
+#else
         int y = 160;
         element_t const *cur = &periodic_table[z - 1];
         dprint(10, y, C_DARK, "%d", cur->z);
@@ -129,6 +236,7 @@ static void molar_screen(void)
             "EXE junta  0-9 qtd  DEL anula  AC limpa"));
 
         fkey_button(1, "+/-");
+#endif
         dupdate();
 
         int key = getkey().key;
@@ -165,6 +273,20 @@ static void periodic_screen(void)
     int z = 1;
     while (1) {
         dclear(C_WHITE);
+#if GINT_HW_FX
+        /* Number, symbol and category (with a sample of its pattern) above
+           the transition metals; name and weight below the table */
+        draw_grid(z);
+        element_t const *e = &periodic_table[z - 1];
+        char b[32], w[40];
+        dprint(GAP_X, 1, C_BLACK, "%d %s", e->z, e->symbol);
+        draw_cell(GAP_X + GAP_W - CELL_W + 1, 2, element_category(z));
+        dtext(GAP_X, 9, C_DARK, category_short(z));
+        dtext(1, LINE1_Y, C_BLACK, e->name);
+        sprintf(w, "%s g/mol", fmt_g(b, e->weight, 6));
+        dtext_opt(DWIDTH - 1, LINE2_Y, C_BLACK, C_NONE, DTEXT_RIGHT,
+            DTEXT_TOP, w);
+#else
         info_title(L("Periodic table", "Tabela periodica"), COLOR);
         draw_grid(z);
 
@@ -185,6 +307,7 @@ static void periodic_screen(void)
         dtext_opt(DWIDTH - 10, y + 15, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
             "g/mol");
         dtext(66, y + 30, C_DARK, category_name(cat));
+#endif
         dupdate();
 
         int key = getkey().key;
@@ -198,6 +321,32 @@ static void periodic_screen(void)
 //---
 //  Mole calculator
 //---
+
+#if GINT_HW_FX
+
+/* fx-9860G: four 8-pixel lines below the two fields */
+static void mole_results(form_t *f, int y)
+{
+    char b[32];
+    double n = fv(f, 0), M = fv(f, 1);
+    if (isnan(n)) {
+        dtext(1, y, C_DARK, L("Enter n (mol)", "Introduza n"));
+        dtext(1, y + FORM_LINE, C_DARK, L("and M for the mass",
+            "e M para a massa"));
+        return;
+    }
+
+    form_result(y, 0, L("N", "N"), C_BLACK, "%s", fmt_g(b, n * NA, 7));
+    if (isnan(M)) form_result(y + FORM_LINE, 0, "m", C_DARK, "%s",
+        L("need M", "falta M"));
+    else form_result(y + FORM_LINE, 0, "m", C_BLACK, "%s g",
+        fmt_g(b, n * M, 7));
+    form_result(y + 2 * FORM_LINE, 0, L("V (STP)", "V (PTN)"), C_BLACK,
+        "%s L", fmt_g(b, n * VM_STP, 7));
+    dtext(1, y + 3 * FORM_LINE, C_DARK, "N=nNa m=nM V=n22.4");
+}
+
+#else
 
 static void mole_results(form_t *f, int y)
 {
@@ -219,6 +368,8 @@ static void mole_results(form_t *f, int y)
     dtext(10, y + 54, C_DARK, "N = n Na,  m = n M,  V = n 22.4");
 }
 
+#endif /* GINT_HW_FX */
+
 static void mole_screen(void)
 {
     static form_t f = {
@@ -226,7 +377,11 @@ static void mole_screen(void)
         .color = COLOR, .count = 2,
         .fields = {
             { "n", "n", "mol" },
+#if GINT_HW_FX
+            { "M", "M", "g/mol" },
+#else
             { "M (molar mass)", "M (massa molar)", "g/mol" },
+#endif
         },
         .results = mole_results,
     };
@@ -250,8 +405,13 @@ static void conc_results(form_t *f, int y)
     else if (unknown == 2 && !isnan(c) && !isnan(n) && c != 0)
         sprintf(a, "V = %s L", fmt_g(b, n / c, 7));
     else { strcpy(a, L("Leave one field empty", "Deixe um campo vazio")); }
+#if GINT_HW_FX
+    dtext(1, y, C_BLACK, a);
+    dtext(1, y + FORM_LINE, C_DARK, "c = n / V");
+#else
     dtext(10, y, COLOR, a);
     dtext(10, y + 20, C_DARK, "c = n / V");
+#endif
 }
 
 static void conc_screen(void)
@@ -288,8 +448,13 @@ static void gas_results(form_t *f, int y)
     else if (unknown == 3 && !isnan(P) && !isnan(V) && !isnan(n) && n != 0)
         sprintf(a, "T = %s K", fmt_g(b, P * V / (R_GAS * n), 7));
     else strcpy(a, L("Leave one field empty", "Deixe um campo vazio"));
+#if GINT_HW_FX
+    dtext(1, y, C_BLACK, a);
+    dtext(1, y + FORM_LINE, C_DARK, "PV = nRT  R = 8.314");
+#else
     dtext(10, y, COLOR, a);
     dtext(10, y + 20, C_DARK, "P V = n R T   (R = 8.314)");
+#endif
 }
 
 static void gas_screen(void)
@@ -329,8 +494,14 @@ static menu_item_t const tools[] = {
 };
 
 static menu_t const menu = {
+#if GINT_HW_FX
+    /* Short enough for the 21-character About line */
+    "Chemistry", "Quimica", "Units & chem. " APPS_VERSION,
+    "Unid. e quimica " APPS_VERSION, COLOR,
+#else
     "Chemistry", "Quimica", "Units & chemistry " APPS_VERSION,
     "Unidades e quimica " APPS_VERSION, COLOR,
+#endif
     tools, (int)(sizeof tools / sizeof *tools),
 };
 
@@ -338,6 +509,7 @@ int main(void)
 {
     lang_init();
     usb_screen_init();
+    screen_init();
     menu_run(&menu);
     return 1;
 }

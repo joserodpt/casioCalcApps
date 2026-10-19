@@ -38,17 +38,25 @@ set(COMMON_ASSETS_cg
   ${CASIO_COMMON_DIR}/assets-cg/font_big.png
   ${CASIO_COMMON_DIR}/assets-cg/qr_repo.png
 )
+set(COMMON_ASSETS_fx
+  ${CASIO_COMMON_DIR}/assets-fx/font_big.png
+)
 
-# casio_app(<NAME> [NAME_PT <name>] SOURCES ... [ASSETS ...] [ASSETS_fx ...]
-#           [ASSETS_cg ...])
+# casio_app(<NAME> [FX] [NAME_PT <name>] SOURCES ... [ASSETS ...]
+#           [ASSETS_fx ...] [ASSETS_cg ...])
 # Builds <NAME>.g3a (fx-CG) or <NAME>.g1a (fx-9860G) with the common helpers.
+# FX marks the apps that have a 128x64 version: only they build a .g1a.
 # NAME_PT is the menu name shown when the calculator is set to Portuguese.
 function(casio_app NAME)
-  cmake_parse_arguments(APP "" "NAME_PT" "SOURCES;ASSETS;ASSETS_fx;ASSETS_cg"
+  cmake_parse_arguments(APP "FX" "NAME_PT" "SOURCES;ASSETS;ASSETS_fx;ASSETS_cg"
     ${ARGN})
 
+  if("${FXSDK_PLATFORM_LONG}" STREQUAL fx9860G AND NOT APP_FX)
+    message(FATAL_ERROR "${NAME} has no fx-9860G (128x64) version yet")
+  endif()
+
   fxconv_declare_assets(${APP_ASSETS} ${APP_ASSETS_fx} ${APP_ASSETS_cg}
-    ${COMMON_ASSETS_cg} WITH_METADATA)
+    ${COMMON_ASSETS_cg} ${COMMON_ASSETS_fx} WITH_METADATA)
 
   add_library(casio_common STATIC ${COMMON_SOURCES})
   target_include_directories(casio_common PUBLIC ${CASIO_COMMON_DIR}/include)

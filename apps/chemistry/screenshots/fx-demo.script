@@ -1,0 +1,136 @@
+# Chemistry (fx-9860G, 128x64): menu, unit converter, molar mass, mole,
+# concentration, ideal gas and the periodic table
+wait 2s
+shot fx-menu.png
+# Unit converter (starts on Volume): 2.5 dm3
+1
+wait 1s
+2
+wait 300
+DP
+wait 300
+5
+wait 1s
+shot fx-units.png
+EXIT
+wait 1s
+# Molar mass: build CO2 (C, then O with count 2)
+2
+wait 1s
+shot fx-molar-empty.png
+EXE
+wait 500
+RIGHT
+wait 300
+RIGHT
+wait 500
+EXE
+wait 500
+2
+wait 1s
+shot fx-molar.png
+EXIT
+wait 1s
+# Mole calculator: 2 mol of CO2 (M = 44.01 g/mol)
+3
+wait 1s
+2
+wait 300
+EXE
+wait 300
+4
+4
+DP
+0
+1
+wait 1s
+shot fx-mole.png
+EXIT
+wait 1s
+# Concentration: c empty, n = 0.5 mol, V = 2 L
+4
+wait 1s
+EXE
+wait 300
+0
+DP
+5
+EXE
+wait 300
+2
+wait 1s
+shot fx-conc.png
+EXIT
+wait 1s
+# Ideal gas law at STP: P = 101.325 kPa, V empty, n = 1 mol, T = 273.15 K
+5
+wait 1s
+1
+0
+1
+DP
+3
+2
+5
+wait 300
+EXE
+wait 300
+EXE
+wait 300
+1
+wait 300
+EXE
+wait 300
+2
+7
+3
+DP
+1
+5
+wait 1s
+shot fx-gas.png
+EXIT
+wait 1s
+# Periodic table: walk to iron, then down to the lanthanides
+6
+wait 1s
+shot fx-periodic.png
+DOWN
+wait 300
+DOWN
+wait 300
+DOWN
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+wait 700
+shot fx-periodic-fe.png
+DOWN
+wait 300
+DOWN
+wait 300
+DOWN
+wait 300
+DOWN
+wait 300
+wait 700
+shot fx-periodic-sm.png
+EXIT
+wait 1s
+OPTN
+wait 1s
+shot fx-about.png
+EXIT
+wait 500

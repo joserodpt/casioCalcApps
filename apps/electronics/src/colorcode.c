@@ -32,6 +32,7 @@ static char const *cname(int c)
     return lang_current == L_PT ? color_names_pt[c] : color_names[c];
 }
 
+#if !GINT_HW_FX
 static int band_rgb(int c)
 {
     switch (c) {
@@ -50,6 +51,7 @@ static int band_rgb(int c)
         default:     return C_NONE;
     }
 }
+#endif
 
 /* Tolerance in %, temperature coefficient in ppm/K; 0 = not allowed */
 static double const tolerance[COLOR_COUNT] = {
@@ -63,6 +65,7 @@ static int const tempco[COLOR_COUNT] = {
 
 typedef enum { ROLE_DIGIT, ROLE_MULT, ROLE_TOL, ROLE_TEMPCO } role_t;
 
+#if !GINT_HW_FX
 static char const * const role_names[] = {
     "Digit", "Multiplier", "Tolerance", "Tempco" };
 
@@ -73,6 +76,7 @@ static char const *rname(int r)
 {
     return lang_current == L_PT ? role_names_pt[r] : role_names[r];
 }
+#endif
 
 /* Colours each role can take, in up/down order */
 static signed char const list_digit[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -191,6 +195,8 @@ static void cc_cycle(cc_t *s, int dir)
 //---
 //  Drawing
 //---
+
+#if !GINT_HW_FX
 
 #define BODY_X0   70
 #define BODY_X1   326
@@ -341,6 +347,134 @@ static void draw(cc_t const *s)
     efkey(6, "E96", C_BLACK);
 }
 
+#else /* GINT_HW_FX */
+
+/* fx-9860G: four greys cannot show the colours, so the bands are 3-letter
+   names on a resistor body; the selected band is white on black */
+
+static char const * const color_codes[COLOR_COUNT] = {
+    "blk", "brn", "red", "orn", "yel", "grn", "blu", "vio", "gry", "wht",
+    "gld", "slv", "---" };
+
+static char const * const color_codes_pt[COLOR_COUNT] = {
+    "pre", "cas", "vrm", "lar", "ama", "vrd", "azu", "vio", "cin", "bra",
+    "our", "pra", "---" };
+
+#define CELL_W    19        /* 3 characters and a margin */
+#define BAND_Y    10        /* top of the body */
+
+/* Left edge of band i, value bands together and the others apart */
+static int band_x(cc_t const *s, int i)
+{
+    int values = digit_count(s) + 1;
+    int x = 0, left = 0;
+    for (int k = 0; k < s->count; k++) {
+        if (k == i) left = x;
+        x += CELL_W + (k == values - 1 ? 3 : 1);
+    }
+    /* Without the gap after the last band */
+    int w = x - (s->count == values ? 3 : 1);
+    return (DWIDTH - w) / 2 + left;
+}
+
+static void draw_resistor(cc_t const *s)
+{
+    int x0 = band_x(s, 0) - 2;
+    int x1 = band_x(s, s->count - 1) + CELL_W + 1;
+
+    /* Leads, then the body */
+    dline(0, BAND_Y + 4, DWIDTH - 1, BAND_Y + 4, C_DARK);
+    dline(0, BAND_Y + 5, DWIDTH - 1, BAND_Y + 5, C_DARK);
+    drect_border(x0, BAND_Y, x1, BAND_Y + 9, C_LIGHT, 1, C_BLACK);
+    dpixel(x0, BAND_Y, C_WHITE);
+    dpixel(x0, BAND_Y + 9, C_WHITE);
+    dpixel(x1, BAND_Y, C_WHITE);
+    dpixel(x1, BAND_Y + 9, C_WHITE);
+
+    for (int i = 0; i < s->count; i++) {
+        int x = band_x(s, i);
+        bool sel = i == s->sel;
+        int c = s->band[i];
+        drect(x, BAND_Y + 1, x + CELL_W - 1, BAND_Y + 8,
+            sel ? C_BLACK : C_WHITE);
+        dtext(x + 1, BAND_Y + 2, sel ? C_WHITE : C_BLACK,
+            lang_current == L_PT ? color_codes_pt[c] : color_codes[c]);
+    }
+}
+
+/* "E12 4.7kΩ (exact)" */
+static void line_nearest(int y, int series, double v)
+{
+    char a[32], b[16];
+    double e = eseries_nearest(series, v, false);
+    eprint(1, y, C_DARK, DTEXT_LEFT, "E%d", series);
+    if (isnan(e)) { etext(22, y, C_BLACK, DTEXT_LEFT, false, "-"); return; }
+    fmt_si(a, e, S_OHM, 3);
+    etext(22, y, C_BLACK, DTEXT_LEFT, false, a);
+    etext(DWIDTH - 1, y, C_DARK, DTEXT_RIGHT, false, fmt_dev(b, e, v));
+}
+
+static void draw_info(cc_t const *s)
+{
+    char a[32], b[32], text[64], what[32];
+    double v = cc_value(s);
+    double tol = cc_tolerance(s);
+    int y = BAND_Y + 11;
+
+    /* Value and tolerance */
+    fmt_si(a, v, S_OHM, 3);
+    snprintf(text, sizeof text, "%s " S_PM "%s%%", a, fmt_num(b, tol, 2));
+    etext(1, y, C_BLACK, DTEXT_LEFT, false, text);
+    int left = 1 + etext_width(text, false) + 5;
+
+    /* The selected band, at the right if there is room: "Red " S_TIMES "100" */
+    role_t r = role_of(s, s->sel);
+    int c = s->band[s->sel];
+    if (r == ROLE_DIGIT) snprintf(what, sizeof what, "%d", c);
+    else if (r == ROLE_MULT) {
+        fmt_si(a, pow(10, mult_exp(c)), "", 3);
+        char *sp = strchr(a, ' ');
+        if (sp) memmove(sp, sp + 1, strlen(sp));
+        snprintf(what, sizeof what, S_TIMES "%s", a);
+    }
+    else if (r == ROLE_TOL) snprintf(what, sizeof what, S_PM "%s%%",
+        fmt_num(a, tolerance[c], 2));
+    else snprintf(what, sizeof what, "%dppm", tempco[c]);
+    snprintf(text, sizeof text, "%s %s", cname(c), what);
+    if (left + etext_width(text, false) > DWIDTH - 1) strcpy(text, what);
+    if (left + etext_width(text, false) <= DWIDTH - 1)
+        etext(DWIDTH - 1, y, C_DARK, DTEXT_RIGHT, false, text);
+
+    y += 2;
+    dline(0, y + 6, DWIDTH - 1, y + 6, C_LIGHT);
+    y += 8;
+    line_nearest(y, 12, v);
+    line_nearest(y + RESULT_STEP, 24, v);
+    /* After a value was typed: what it was, instead of E96 */
+    if (s->note[0]) etext(1, y + 2 * RESULT_STEP, C_BLACK, DTEXT_LEFT, false,
+        s->note);
+    else line_nearest(y + 2 * RESULT_STEP, 96, v);
+}
+
+static void draw(cc_t const *s)
+{
+    char label[8];
+
+    dclear(C_WHITE);
+    info_title(L("Colour code", "Codigo de cores"), COLOR);
+    draw_resistor(s);
+    draw_info(s);
+
+    sprintf(label, "%dB", s->count);
+    efkey(1, label, C_BLACK);
+    efkey(2, L("VAL","VAL"), C_BLACK);
+    efkey(4, "E12", C_BLACK);
+    efkey(5, "E24", C_BLACK);
+    efkey(6, "E96", C_BLACK);
+}
+
+#endif /* GINT_HW_FX */
+
 //---
 //  Value entry
 //---
@@ -349,10 +483,18 @@ static void set_from_value(cc_t *s, double v)
 {
     char a[32], b[32];
     double shown = cc_set_value(s, v);
+#if GINT_HW_FX
+    (void)b;
+#endif
 
     if (fabs(shown - v) > v * 1e-9)
+#if GINT_HW_FX
+        snprintf(s->note, sizeof s->note, L("Typed %s","Pedido %s"),
+            fmt_si(a, v, S_OHM, 4));
+#else
         snprintf(s->note, sizeof s->note, L("%s shown as %s","%s mostrado %s"), fmt_si(a, v,
             S_OHM, 4), fmt_si(b, shown, S_OHM, 4));
+#endif
     else s->note[0] = '\0';
 }
 
@@ -366,6 +508,16 @@ static void prompt_value(cc_t *s)
 
     while (1) {
         draw(&live);
+#if GINT_HW_FX
+        /* Over the E-series lines; the bands and value stay in view */
+        drect(0, 29, DWIDTH - 1, 55, C_WHITE);
+        dline(0, 29, DWIDTH - 1, 29, C_BLACK);
+        dtext(1, 34, C_BLACK, L("Value","Valor"));
+        field_box(&f, 32, 33, 82, true, C_BLACK);
+        etext(116, 34, C_DARK, DTEXT_LEFT, false, S_OHM);
+        dtext(1, 45, C_DARK, L("EXE ok   EXIT cancel","EXE ok   EXIT anula"));
+        field_fkeys(&f, C_BLACK);
+#else
         drect(0, 172, DWIDTH - 1, 223, C_WHITE);
         dline(0, 172, DWIDTH - 1, 172, COLOR);
         dtext(10, 180, COLOR, L("Value","Valor"));
@@ -374,6 +526,7 @@ static void prompt_value(cc_t *s)
         dtext(250, 180, C_DARK, L("EXE: keep","EXE: manter"));
         dtext(250, 192, C_DARK, L("EXIT: cancel","EXIT: cancelar"));
         field_fkeys(&f, COLOR);
+#endif
         dupdate();
 
         int key = getkey().key;

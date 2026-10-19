@@ -1,10 +1,20 @@
 #include <gint/display.h>
+#include <gint/config.h>
 #include <gint/usb.h>
 #include <gint/usb-ff-bulk.h>
 #include <gint/defs/timeout.h>
 #include <gint/cpu.h>
 
 #include "usb_screen.h"
+
+#if GINT_HW_FX
+
+/* Only the fx-CG's RGB565 frames are sent for now */
+void usb_screen_init(void)
+{
+}
+
+#else
 
 /* How long one frame may hold the app up, per step (the pixels, then the
    commit), before the rest is left to finish in the background */
@@ -92,3 +102,5 @@ void usb_screen_init(void)
     if (rc < 0 && rc != USB_OPEN_ALREADY_OPEN) return;
     dupdate_set_hook(GINT_CALL(send_frame));
 }
+
+#endif /* GINT_HW_FX */

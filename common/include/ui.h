@@ -6,6 +6,7 @@
 #define ELEC_UI
 
 #include <gint/display.h>
+#include <gint/config.h>
 #include <stdbool.h>
 
 /* Symbols missing from the fonts, drawn by etext() as small bitmaps */
@@ -95,6 +96,13 @@ void result(int y, char const *label, int color, char const *fmt, ...);
 /* result_note(): Extra information at the right of a result line */
 void result_note(int y, char const *fmt, ...);
 
+/* Spacing of result lines. On the fx-9860G, an eform shows 2 fields and
+   its results start below them, with room for 3 lines (the F-keys take
+   the bottom row) */
+#if GINT_HW_FX
+#define RESULT_STEP 8
+#else
 #define RESULT_STEP 14
+#endif
 
 #endif /* ELEC_UI */

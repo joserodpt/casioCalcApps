@@ -23,6 +23,20 @@ typedef struct {
 } glyph_t;
 
 static glyph_t const glyphs[] = {
+#if GINT_HW_FX
+    /* fx-9860G: sized for its 5x7 font (the big ones below are shared) */
+    { CH_OHM, false, 0, {
+        ".###.", "#...#", "#...#", "#...#", ".#.#.", "##.##", NULL } },
+    { CH_MU, false, 2, {
+        "#..#", "#..#", "#..#", "#.##", "##.#", "#...", NULL } },
+    { CH_PM, false, 0, {
+        "..#..", "..#..", "#####", "..#..", "..#..", ".....", "#####",
+        NULL } },
+    { CH_TIMES, false, 2, {
+        "#...#", ".#.#.", "..#..", ".#.#.", "#...#", NULL } },
+    { CH_PI, false, 2, {
+        "#####", ".#.#.", ".#.#.", ".#.#.", ".#..#", NULL } },
+#else
     { CH_OHM, false, 0, {
         "..####..", ".##..##.", "##....##", "##....##", "##....##",
         ".##..##.", "..#..#..", "###..###", "###..###", NULL } },
@@ -37,6 +51,7 @@ static glyph_t const glyphs[] = {
     { CH_PI, false, 2, {
         "#######", ".##.##.", ".##.##.", ".##.##.", ".##.##.", ".##.##.",
         ".##..##", NULL } },
+#endif
     { CH_OHM, true, 1, {
         "...####...", "..######..", ".###..###.", "##......##",
         "##......##", "##......##", "##......##", ".##....##.",
@@ -209,6 +224,15 @@ char *fmt_dev(char *buf, double actual, double target)
 
 void efkey(int position, char const *text, int color)
 {
+#if GINT_HW_FX
+    /* Same keys as fkey_button() on the fx-9860G, with symbols */
+    int x = 1 + 21 * (position - 1), y = DHEIGHT - 8, w = 20;
+    bool sel = color != C_BLACK;
+    if (sel) drect_border(x, y, x + w - 1, y + 7, C_WHITE, 1, C_BLACK);
+    else drect(x, y, x + w - 1, y + 7, C_BLACK);
+    etext(x + w / 2, y + 1, sel ? C_BLACK : C_WHITE, DTEXT_CENTER, false,
+        text);
+#else
     int x = 4 + 65 * (position - 1);
     int y = 207;
     int w = 63;
@@ -217,6 +241,7 @@ void efkey(int position, char const *text, int color)
     dline(x + 1, y + 14, x + w - 2, y + 14, color);
     drect(x, y + 1, x + w - 1, y + 13, color);
     etext(x + w / 2, y + 3, C_WHITE, DTEXT_CENTER, false, text);
+#endif
 }
 
 //---
@@ -363,31 +388,49 @@ bool field_key(field_t *f, int key)
     return false;
 }
 
+/* Box geometry: height, text inset, text top, cursor height */
+#if GINT_HW_FX
+#define BOX_H  8
+#define BOX_IN 2
+#define BOX_TY 1
+#define CUR_H  6
+#else
+#define BOX_H  14
+#define BOX_IN 5
+#define BOX_TY 3
+#define CUR_H  8
+#endif
+
 void field_box(field_t const *f, int x, int y, int w, bool selected,
     int color)
 {
+#if GINT_HW_FX
+    color = C_BLACK;            /* one ink: the grey is for unselected */
+#endif
     int border = selected ? color : C_LIGHT;
     int fg = f->disabled ? C_LIGHT : C_BLACK;
 
-    drect_border(x, y, x + w - 1, y + 14, C_WHITE, selected ? 2 : 1, border);
+    drect_border(x, y, x + w - 1, y + BOX_H, C_WHITE,
+        selected && !GINT_HW_FX ? 2 : 1, border);
 
     if (f->kind == F_CHOICE) {
         char const *opt = f->options[f->choice];
-        etext(x + w / 2, y + 3, fg, DTEXT_CENTER, false, opt);
+        etext(x + w / 2, y + BOX_TY, fg, DTEXT_CENTER, false, opt);
         if (selected) {
-            dtext(x + 5, y + 3, color, "<");
-            dtext_opt(x + w - 5, y + 3, color, C_NONE, DTEXT_RIGHT,
+            dtext(x + BOX_IN, y + BOX_TY, color, "<");
+            dtext_opt(x + w - BOX_IN, y + BOX_TY, color, C_NONE, DTEXT_RIGHT,
                 DTEXT_TOP, ">");
         }
         return;
     }
 
     if (f->kind == F_NUM && f->text[0] && isnan(field_value(f)))
-        fg = C_RED;
-    etext(x + 5, y + 3, fg, DTEXT_LEFT, false, f->text);
+        fg = GINT_HW_FX ? C_DARK : C_RED;
+    etext(x + BOX_IN, y + BOX_TY, fg, DTEXT_LEFT, false, f->text);
     if (selected) {
-        int cx = x + 5 + etext_width(f->text, false) + (f->text[0] ? 2 : 0);
-        drect(cx, y + 3, cx + 1, y + 11, color);
+        int cx = x + BOX_IN + etext_width(f->text, false)
+            + (f->text[0] ? 2 : 0);
+        drect(cx, y + BOX_TY, cx + 1 - GINT_HW_FX, y + BOX_TY + CUR_H, color);
     }
 }
 
@@ -404,6 +447,70 @@ void field_fkeys(field_t const *f, int color)
 //---
 //  Forms
 //---
+
+#if GINT_HW_FX
+
+/* fx-9860G: one column; EFORM_SHOWN fields at once (the list scrolls),
+   the results below them, the F-keys at the bottom */
+#define FORM_Y       10
+#define FORM_STEP    9
+#define EFORM_SHOWN  2
+
+static int form_rows(eform_t const *f)
+{
+    return f->count;
+}
+
+static void form_draw(eform_t *f)
+{
+    int shown = f->count < EFORM_SHOWN ? f->count : EFORM_SHOWN;
+    int top = f->sel < shown ? 0 : f->sel - shown + 1;
+
+    dclear(C_WHITE);
+    info_title(f->title, f->color);
+
+    /* Labels as wide as the widest, units as wide as the widest */
+    int lw = 0, uw = 0;
+    for (int i = 0; i < f->count; i++) {
+        int w;
+        dsize(f->fields[i].label, NULL, &w, NULL);
+        if (w + 3 > lw) lw = w + 3;
+        if (f->fields[i].kind == F_NUM && f->fields[i].unit) {
+            w = etext_width(f->fields[i].unit, false);
+            if (w + 2 > uw) uw = w + 2;
+        }
+    }
+
+    for (int k = 0; k < shown; k++) {
+        int i = top + k, y = FORM_Y + k * FORM_STEP;
+        field_t const *fd = &f->fields[i];
+        bool sel = i == f->sel;
+        int bw = DWIDTH - lw - (fd->kind == F_NUM ? uw : 0) - 1;
+
+        dtext(1, y + 1, fd->disabled ? C_LIGHT : sel ? C_BLACK : C_DARK,
+            fd->label);
+        field_box(fd, lw, y, bw, sel, f->color);
+        if (fd->kind == F_NUM && fd->unit)
+            etext(lw + bw + 2, y + 1, fd->disabled ? C_LIGHT : C_DARK,
+                DTEXT_LEFT, false, fd->unit);
+    }
+    /* When fields are out of view, "n/N" takes the place of "OPTN" in the
+       title bar (OPTN still opens the info screen) */
+    if (top > 0 || top + shown < f->count) {
+        drect(DWIDTH - 27, 0, DWIDTH - 1, 8, C_BLACK);
+        dprint_opt(DWIDTH - 2, 1, C_LIGHT, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
+            "%d/%d", f->sel + 1, f->count);
+    }
+
+    int ry = FORM_Y + shown * FORM_STEP + 1;
+    dline(0, ry - 1, DWIDTH - 1, ry - 1, C_LIGHT);
+    f->results(f, ry + 1);
+
+    field_fkeys(&f->fields[f->sel], f->color);
+    dupdate();
+}
+
+#else
 
 #define FORM_Y      21
 #define FORM_STEP   17
@@ -445,6 +552,8 @@ static void form_draw(eform_t *f)
     field_fkeys(&f->fields[f->sel], f->color);
     dupdate();
 }
+
+#endif /* GINT_HW_FX */
 
 /* Next enabled field in direction dir (wraps around) */
 static void form_move(eform_t *f, int dir)
@@ -498,10 +607,16 @@ void result(int y, char const *label, int color, char const *fmt, ...)
     vsnprintf(buf, sizeof buf, fmt, args);
     va_end(args);
 
+#if GINT_HW_FX
+    /* The label at the left, the value against the right edge */
+    etext(1, y, C_DARK, DTEXT_LEFT, false, label);
+    etext(DWIDTH - 1, y, color, DTEXT_RIGHT, false, buf);
+#else
     /* Values line up at x = 100 unless the label is longer */
     int x = 10 + etext_width(label, false) + 8;
     etext(10, y, C_DARK, DTEXT_LEFT, false, label);
     etext(x > 100 ? x : 100, y, color, DTEXT_LEFT, false, buf);
+#endif
 }
 
 void result_note(int y, char const *fmt, ...)
@@ -512,5 +627,5 @@ void result_note(int y, char const *fmt, ...)
     vsnprintf(buf, sizeof buf, fmt, args);
     va_end(args);
 
-    etext(DWIDTH - 10, y, C_DARK, DTEXT_RIGHT, false, buf);
+    etext(DWIDTH - (GINT_HW_FX ? 1 : 10), y, C_DARK, DTEXT_RIGHT, false, buf);
 }

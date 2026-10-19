@@ -1,5 +1,13 @@
 Firmware / memory dumper for the Casio FX CG 50 (works with the CG10 and 20 too). Made with fxSDK and gint.
 
+## Download
+
+| Calculator | File |
+|---|---|
+| fx-CG50, fx-CG10, fx-CG20 (colour) | [FirmDump.g3a](../../dist/g3a/FirmDump.g3a) |
+
+Copy the file to the root of the calculator's storage over USB (USB Flash mode, F1), then eject it; the app appears in the MENU. This app needs the colour screen, so there is no black and white version.
+
 Reads a region of the calculator's memory and saves it to storage as
 `\\fls0\DUMP\<name>NN.bin`, split into 1 MB parts, for analysis on a PC. The
 flash ROM is memory-mapped at `0x80000000` (P1, cached) on the SH7305; the

@@ -149,6 +149,227 @@ static char *value_text(state_t const *s, int mode, int group,
 //  Rendering
 //---
 
+#if GINT_HW_FX
+// fx-9860G (128x64): no room for the bit grid, so every base gets one block
+// of text: the value being typed first (large when it fits), then the three
+// conversions. Long values switch to a 3x5 font and binary wraps every six
+// nibbles; the layout picks the largest fonts that fit between the title
+// bar and the F-keys. The word size and sign mode show on F5 and F6.
+
+#define FX_RIGHT    124     // right edge of every value (cursor at 126..127)
+#define FX_LEFT     14      // values start after a 3x5 base label
+#define FX_TOP      11
+#define FX_BOTTOM   55      // first row left free above the F-keys
+#define FX_GAP      2       // between blocks
+#define FX_SEP      4       // gap, line and gap below the input block
+#define FX_MAX_LINES 4
+
+enum { FONT_BIG, FONT_STD, FONT_MINI };
+
+// 3x5 glyphs: five rows of three bits, one octal digit per row, top row
+// first. Hex digits, '-', and the other letters of the base names
+static char const mini_chars[] = "0123456789ABCDEF-HXOTIN";
+static uint16_t const mini_glyphs[] = {
+    075557, 026227, 071747, 071717, 055711, 074717, 074757, 071111,
+    075757, 075717, 025755, 065656, 034443, 065556, 074647, 074644,
+    000700, 055755, 055255, 025552, 072222, 072227, 065555,
+};
+
+static void mini_char(int x, int y, char c, int color)
+{
+    char const *p = strchr(mini_chars, c);
+    if (!c || !p) return;
+    int g = mini_glyphs[p - mini_chars];
+
+    for (int r = 0; r < 5; r++)
+    for (int col = 0; col < 3; col++) {
+        if ((g >> (3 * (4 - r) + 2 - col)) & 1)
+            dpixel(x + col, y + r, color);
+    }
+}
+
+static int advance(int font, char c)
+{
+    if (font == FONT_MINI) return c == ' ' ? 2 : 4;
+    return c == ' ' ? 3 : 6;
+}
+
+static int run_width(int font, char const *text, int len)
+{
+    int w = -1;
+    for (int i = 0; i < len; i++) w += advance(font, text[i]);
+    return w;
+}
+
+// Draw len characters of text in a small font, ending at x = right
+static void run_draw(int font, int right, int y, char const *text, int len,
+    int color)
+{
+    int x = right - run_width(font, text, len);
+    for (int i = 0; i < len; i++) {
+        if (text[i] != ' ') {
+            if (font == FONT_MINI) {
+                mini_char(x, y, text[i], color);
+            } else {
+                char ch[2] = { text[i], '\0' };
+                dtext(x, y, color, ch);
+            }
+        }
+        x += advance(font, text[i]);
+    }
+}
+
+typedef struct {
+    int mode;
+    int font;
+    char const *text;
+    int lines;
+    char const *start[FX_MAX_LINES];    // top line first
+    int len[FX_MAX_LINES];
+    int height;
+    char buf[BUF_SIZE];
+} block_t;
+
+static int line_height(int font)
+{
+    return font == FONT_BIG ? 14 : font == FONT_STD ? 7 : 5;
+}
+
+// Lay text out in a small font, breaking at group spaces so that every line
+// fits in width; lines are filled from the right (the low digits)
+static bool block_wrap(block_t *b, int font, int width)
+{
+    char const *t = b->text;
+    int end = strlen(t), n = 0;
+    char const *start[FX_MAX_LINES];
+    int len[FX_MAX_LINES];
+
+    while (end > 0) {
+        int best = -1;
+        for (int p = end - 1; p >= 0; p--) {
+            if (run_width(font, t + p, end - p) > width) break;
+            if (p == 0 || t[p - 1] == ' ') best = p;
+        }
+        if (best < 0 || n == FX_MAX_LINES) return false;
+        start[n] = t + best;
+        len[n++] = end - best;
+        end = best - 1;     // skip the group space
+    }
+
+    b->font = font;
+    b->lines = n;
+    for (int i = 0; i < n; i++) {
+        b->start[i] = start[n - 1 - i];
+        b->len[i] = len[n - 1 - i];
+    }
+    b->height = n * (line_height(font) + 1) - 1;
+    return true;
+}
+
+// The value typed: large or in the normal font on one line (both without
+// group spaces, as on the fx-CG), else wrapped in the 3x5 font. Returns
+// false when it does not fit in the given font
+static bool block_input(block_t *b, state_t const *s, int font)
+{
+    b->mode = s->mode;
+    if (font == FONT_MINI) {
+        b->text = value_text(s, s->mode, bases[s->mode].group, b->buf);
+        return block_wrap(b, FONT_MINI, FX_RIGHT - FX_LEFT + 1);
+    }
+
+    int w;
+    b->text = value_text(s, s->mode, 0, b->buf);
+    dsize(b->text, font == FONT_BIG ? &font_big : NULL, &w, NULL);
+    b->font = font;
+    b->lines = 1;
+    b->start[0] = b->text;
+    b->len[0] = strlen(b->text);
+    b->height = line_height(font);
+    return w <= FX_RIGHT - FX_LEFT + 1;
+}
+
+// A conversion: the normal font on one line, else wrapped in the 3x5 font
+static void block_row(block_t *b, state_t const *s, int mode)
+{
+    b->mode = mode;
+    b->text = value_text(s, mode, bases[mode].group, b->buf);
+    if (!block_wrap(b, FONT_STD, FX_RIGHT - FX_LEFT + 1) || b->lines > 1)
+        block_wrap(b, FONT_MINI, FX_RIGHT - FX_LEFT + 1);
+}
+
+static void block_draw(block_t const *b, int y, bool active)
+{
+    // 3x5 base label beside the first line, white on black for the input
+    int ly = (b->font == FONT_MINI) ? y : y + 1;
+    if (active) drect(0, ly - 1, 12, ly + 5, C_BLACK);
+    for (int i = 0; i < 3; i++)
+        mini_char(1 + 4 * i, ly, bases[b->mode].name[i],
+            active ? C_WHITE : C_DARK);
+
+    for (int i = 0; i < b->lines; i++) {
+        if (b->font == FONT_BIG) {
+            font_t const *old = dfont(&font_big);
+            dtext_opt(FX_RIGHT, y, C_BLACK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
+                b->text);
+            dfont(old);
+        } else {
+            run_draw(b->font, FX_RIGHT, y, b->start[i], b->len[i], C_BLACK);
+        }
+        if (i < b->lines - 1) y += line_height(b->font) + 1;
+    }
+
+    // Cursor after the last digit typed
+    if (active)
+        drect(FX_RIGHT + 2, y, FX_RIGHT + 3, y + line_height(b->font) - 1,
+            bases[b->mode].color);
+}
+
+static void draw(state_t const *s)
+{
+    base_t const *b = &bases[s->mode];
+    block_t input, rows[MODE_COUNT - 1];
+    char width_label[8];
+    int n = 0, rows_h = 0;
+
+    dclear(C_WHITE);
+    info_title(L("Base-N Converter", "Conversor Base-N"), b->color);
+
+    for (int m = 0; m < MODE_COUNT; m++) {
+        if (m == s->mode) continue;
+        block_row(&rows[n], s, m);
+        rows_h += rows[n++].height + FX_GAP;
+    }
+    rows_h -= FX_GAP;
+
+    // Largest input font that leaves room for the conversions
+    for (int font = FONT_BIG; font <= FONT_MINI; font++) {
+        if (block_input(&input, s, font)
+            && input.height + FX_SEP + rows_h <= FX_BOTTOM - FX_TOP) break;
+    }
+
+    int y = FX_TOP;
+    block_draw(&input, y, true);
+    y += input.height + 1;
+    dline(0, y, DWIDTH - 1, y, C_LIGHT);
+    y += FX_SEP - 1;
+    for (int i = 0; i < n; i++) {
+        block_draw(&rows[i], y, false);
+        y += rows[i].height + FX_GAP;
+    }
+
+    for (int i = 0; i < MODE_COUNT; i++) {
+        if (i == s->mode) fkey_button_color(i + 1, bases[i].name, b->color);
+        else fkey_button(i + 1, bases[i].name);
+    }
+    snprintf(width_label, sizeof width_label, "%db", width_of(s));
+    fkey_button(5, width_label);
+    if (s->is_signed) fkey_button_color(6, L("SGN", "C/S"), b->color);
+    else fkey_button(6, L("UNS", "S/S"));
+
+    dupdate();
+}
+#else
+
 #define BIG_RIGHT   376     // right edge of the large value
 #define ROWS_Y      76
 #define ROW_STEP    14
@@ -269,6 +490,8 @@ static void draw(state_t const *s)
     dupdate();
 }
 
+#endif /* GINT_HW_FX */
+
 //---
 //  Main loop
 //---
@@ -280,6 +503,7 @@ int main(void)
 
     lang_init();
     usb_screen_init();
+    screen_init();
 
     while (1) {
         draw(&s);

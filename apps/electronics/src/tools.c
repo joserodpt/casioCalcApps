@@ -8,6 +8,7 @@
 #include "eseries.h"
 #include "tools.h"
 #include "i18n.h"
+#include "color.h"
 
 #define PI 3.14159265358979323846
 
@@ -27,6 +28,27 @@ static void result_e(int y, char const *label, double v, int series)
     if (!isnan(e)) result_note(y, "E%d %s %s", series,
         fmt_si(b, e, S_OHM, 3), fmt_dev(c, e, v));
 }
+
+#if GINT_HW_FX
+/* fx-9860G: an eform shows 3 result lines of 8 px (21 characters each).
+   si() is fmt_si() without the space ("4.7k" + unit) */
+static char *si(char *buf, double v, char const *unit, int sig)
+{
+    fmt_si(buf, v, unit, sig);
+    char *sp = strchr(buf, ' ');
+    if (sp) memmove(sp, sp + 1, strlen(sp));
+    return buf;
+}
+
+/* Label at the left, value at x, note against the right edge */
+static void fx_line(int y, char const *label, int x, char const *value,
+    char const *note)
+{
+    etext(1, y, C_DARK, DTEXT_LEFT, false, label);
+    etext(x, y, C_BLACK, DTEXT_LEFT, false, value);
+    if (note) etext(DWIDTH - 1, y, C_DARK, DTEXT_RIGHT, false, note);
+}
+#endif
 
 //---
 //  SMD codes
@@ -124,6 +146,82 @@ static void smd_results(eform_t *f, int y)
         eseries_nearest(96, v, false));
 }
 
+#if GINT_HW_FX
+static void smd_results_fx(eform_t *f, int y)
+{
+    char a[32], b[32], code[8];
+    bool exact, ok;
+
+    if (f->sel == 0) {
+        char const *t = f->fields[0].text;
+        double v = smd_decode(t);
+        if (isnan(v)) {
+            result(y, L("Value","Valor"), C_BLACK, L("invalid","invalido"));
+            etext(1, y + 2 * RESULT_STEP, C_DARK, DTEXT_LEFT, false,
+                L(". types R (4R7)", ". escreve R (4R7)"));
+            return;
+        }
+        int n = strlen(t);
+        result(y, L("Value","Valor"), C_BLACK, "%s", fmt_si(a, v, S_OHM, 4));
+        result(y + RESULT_STEP, L("Type","Tipo"), C_BLACK, "%s",
+            v == 0 ? L("0" S_OHM " jumper","ponte 0" S_OHM) : strchr(t, 'R')
+            ? L("R = point","R = virgula") : n == 4 ? L("4-digit, 1%","4 dig., 1%")
+            : L("3-digit, 5%","3 dig., 5%"));
+        if (v > 0) {
+            char line[48];
+            snprintf(line, sizeof line, "E24 %s  E96 %s",
+                si(a, eseries_nearest(24, v, false), "", 3),
+                si(b, eseries_nearest(96, v, false), "", 3));
+            etext(1, y + 2 * RESULT_STEP, C_DARK, DTEXT_LEFT, false, line);
+        }
+        return;
+    }
+
+    if (f->sel == 1 || f->sel == 2) {
+        int n = atoi(f->fields[1].text);
+        int m = e96_value(n);
+        if (!m) {
+            result(y, L("Value","Valor"), C_BLACK, L("code 01 to 96","codigo 01 a 96"));
+            return;
+        }
+        double v = m * pow(10, eia96_letter_exp[f->fields[2].choice]);
+        result(y, L("Value","Valor"), C_BLACK, "%s", fmt_si(a, v, S_OHM, 4));
+        result(y + RESULT_STEP, L("Code","Codigo"), C_BLACK, "%02d%c", n,
+            "ZYXABCDEF"[f->fields[2].choice]);
+        result(y + 2 * RESULT_STEP, L("Type","Tipo"), C_BLACK,
+            L("EIA-96, 1%%","EIA-96, 1%%"));
+        return;
+    }
+
+    double v = val(f, 3);
+    if (isnan(v) || v < 0) {
+        result(y, L("Code","Codigo"), C_BLACK, L("enter a value","falta valor"));
+        return;
+    }
+    static char const * const labels[3] = { "3-digit", "4-digit", "EIA-96" };
+    for (int k = 0; k < 3; k++) {
+        double near;
+        if (k < 2) {
+            ok = smd_encode(code, v, k + 2, &exact);
+            near = smd_decode(code);
+        }
+        else {
+            ok = eia96_encode(code, v, &exact);
+            near = eseries_nearest(96, v, false);
+        }
+        if (!ok) {
+            fx_line(y + k * RESULT_STEP, labels[k], 46, "-",
+                L("impossible", "impossivel"));
+            continue;
+        }
+        char note[32];
+        snprintf(note, sizeof note, "=%s", si(a, near, S_OHM, 3));
+        fx_line(y + k * RESULT_STEP, labels[k], 46, code,
+            exact ? NULL : note);
+    }
+}
+#endif
+
 void smd_run(void)
 {
     static eform_t f = {
@@ -132,6 +230,10 @@ void smd_run(void)
     };
     f.title = L("SMD codes", "Codigos SMD");
     smd_fields[2].options = eia_letters;
+#if GINT_HW_FX
+    f.color = C_BLACK;
+    f.results = smd_results_fx;
+#endif
     eform_run(&f);
 }
 
@@ -178,6 +280,44 @@ static void rnet_results(eform_t *f, int y)
         L("Empty fields are ignored","Campos vazios sao ignorados"));
 }
 
+#if GINT_HW_FX
+static void rnet_results_fx(eform_t *f, int y)
+{
+    double series = 0, conductance = 0;
+    int n = 0;
+    bool zero = false;
+    char a[32], b[32], note[40];
+
+    for (int i = 0; i < f->count; i++) {
+        double r = val(f, i);
+        if (isnan(r) || r < 0) continue;
+        n++;
+        series += r;
+        if (r == 0) zero = true;
+        else conductance += 1 / r;
+    }
+    if (!n) {
+        result(y, "Total", C_BLACK, L("enter some R","introduza R"));
+        etext(1, y + 2 * RESULT_STEP, C_DARK, DTEXT_LEFT, false,
+            L("Empty fields ignored", "Vazios ignorados"));
+        return;
+    }
+    double parallel = zero ? 0 : 1 / conductance;
+    double tot[2] = { series, parallel };
+    for (int k = 0; k < 2; k++) {
+        double e = eseries_nearest(24, tot[k], false);
+        snprintf(note, sizeof note, "E24 %s", si(b, e, S_OHM, 3));
+        fx_line(y + k * RESULT_STEP, k ? "Par" : "Ser", 22,
+            fmt_si(a, tot[k], S_OHM, 4), isnan(e) ? NULL : note);
+    }
+    char count[16];
+    snprintf(count, sizeof count, "n = %d", n);
+    if (zero) note[0] = '\0';
+    else snprintf(note, sizeof note, "G %s", fmt_si(b, conductance, "S", 4));
+    fx_line(y + 2 * RESULT_STEP, count, 0, "", note);
+}
+#endif
+
 void rnet_run(void)
 {
     static eform_t f = {
@@ -186,6 +326,10 @@ void rnet_run(void)
         .results = rnet_results,
     };
     f.title = L("Series / parallel", "Serie / paralelo");
+#if GINT_HW_FX
+    f.color = C_BLACK;
+    f.results = rnet_results_fx;
+#endif
     eform_run(&f);
 }
 
@@ -238,6 +382,49 @@ static void div_results(eform_t *f, int y)
     }
 }
 
+#if GINT_HW_FX
+static void div_results_fx(eform_t *f, int y)
+{
+    char a[32], b[32], line[48];
+    double vin = val(f, 0), r1 = val(f, 1), r2 = val(f, 2), vt = val(f, 3);
+
+    /* On the target field, R2 for the target; otherwise Vout */
+    if (f->sel == 3) {
+        if (isnan(vt) || isnan(vin) || isnan(r1) || vt <= 0 || vt >= vin) {
+            result(y, "R2", C_BLACK, L("0 < Vt < Vin","0 < Vt < Vin"));
+            return;
+        }
+        double r2t = r1 * vt / (vin - vt);
+        result(y, L("R2 for Vt","R2 p/ Vt"), C_BLACK, "%s",
+            fmt_si(a, r2t, S_OHM, 4));
+        for (int k = 0; k < 2; k++) {
+            int series = k ? 24 : 12;
+            double e = eseries_nearest(series, r2t, false);
+            char label[8];
+            sprintf(label, "E%d", series);
+            snprintf(line, sizeof line, "Vo %s", si(b, vin * e / (r1 + e),
+                "V", 4));
+            fx_line(y + (k + 1) * RESULT_STEP, label, 22,
+                si(a, e, S_OHM, 3), line);
+        }
+        return;
+    }
+
+    if (!(!isnan(vin) && r1 >= 0 && r2 >= 0 && r1 + r2 > 0)) {
+        result(y, "Vout", C_BLACK, "-");
+        return;
+    }
+    double i = vin / (r1 + r2);
+    snprintf(line, sizeof line, "x%s", fmt_num(b, r2 / (r1 + r2), 4));
+    fx_line(y, "Vout", 28, fmt_si(a, vin * r2 / (r1 + r2), "V", 4), line);
+    result(y + RESULT_STEP, L("Current","Corrente"), C_BLACK, "%s",
+        fmt_si(a, i, "A", 4));
+    snprintf(line, sizeof line, "P1 %s  P2 %s", si(a, i * i * r1, "W", 3),
+        si(b, i * i * r2, "W", 3));
+    etext(1, y + 2 * RESULT_STEP, C_BLACK, DTEXT_LEFT, false, line);
+}
+#endif
+
 void divider_run(void)
 {
     static eform_t f = {
@@ -245,6 +432,13 @@ void divider_run(void)
         .count = 4, .cols = 1, .label_w = 108, .results = div_results,
     };
     f.title = L("Voltage divider", "Divisor de tensao");
+#if GINT_HW_FX
+    f.color = C_BLACK;
+    f.results = div_results_fx;
+    div_fields[1].label = "R1";
+    div_fields[2].label = "R2";
+    div_fields[3].label = "Vt";
+#endif
     eform_run(&f);
 }
 
@@ -289,6 +483,37 @@ static void filt_results(eform_t *f, int y)
         "-3 dB point; 63% of the step after one tau");
 }
 
+#if GINT_HW_FX
+static void filt_results_fx(eform_t *f, int y)
+{
+    char a[32], b[32];
+    double r = val(f, 0), c = val(f, 1), l = val(f, 2);
+    bool hr = r > 0, hc = c > 0, hl = l > 0;
+
+    /* fc and tau of RC and RL, f0 and Z0 of LC; Q when there is room */
+    if (hr && hc) {
+        snprintf(b, sizeof b, "t %s", si(a, r * c, "s", 3));
+        fx_line(y, "RC", 16, si(a, 1 / (2 * PI * r * c), "Hz", 4), b);
+    }
+    else fx_line(y, "RC", 16, "-", NULL);
+    y += RESULT_STEP;
+
+    if (hr && hl) {
+        snprintf(b, sizeof b, "t %s", si(a, l / r, "s", 3));
+        fx_line(y, "RL", 16, si(a, r / (2 * PI * l), "Hz", 4), b);
+    }
+    else fx_line(y, "RL", 16, "-", NULL);
+    y += RESULT_STEP;
+
+    if (hc && hl) {
+        if (hr) snprintf(b, sizeof b, "Q %s", fmt_num(a, sqrt(l / c) / r, 3));
+        else snprintf(b, sizeof b, "Z %s", si(a, sqrt(l / c), S_OHM, 3));
+        fx_line(y, "LC", 16, si(a, 1 / (2 * PI * sqrt(l * c)), "Hz", 4), b);
+    }
+    else fx_line(y, "LC", 16, "-", NULL);
+}
+#endif
+
 void filter_run(void)
 {
     static eform_t f = {
@@ -297,6 +522,10 @@ void filter_run(void)
         .results = filt_results,
     };
     f.title = L("RC / RL filters", "Filtros RC / RL");
+#if GINT_HW_FX
+    f.color = C_BLACK;
+    f.results = filt_results_fx;
+#endif
     eform_run(&f);
 }
 
@@ -357,6 +586,39 @@ static void t555_results(eform_t *f, int y)
         "f = 1 / (ln2 (R1 + 2 R2) C)");
 }
 
+#if GINT_HW_FX
+static void t555_results_fx(eform_t *f, int y)
+{
+    char a[32], b[32], line[48];
+    double r1 = val(f, 1), r2 = val(f, 2), c = val(f, 3);
+
+    if (f->fields[0].choice == 1) {
+        if (!(r1 > 0 && c > 0)) {
+            result(y, L("Pulse","Pulso"), C_BLACK, L("needs R, C","precisa R, C"));
+            return;
+        }
+        result(y, L("Pulse","Pulso"), C_BLACK, "%s",
+            fmt_si(a, 1.1 * r1 * c, "s", 4));
+        etext(1, y + RESULT_STEP, C_DARK, DTEXT_LEFT, false, "t = 1.1 R C");
+        return;
+    }
+
+    if (!(r1 > 0 && r2 > 0 && c > 0)) {
+        result(y, "f", C_BLACK, L("needs R1, R2, C","precisa R1, R2, C"));
+        return;
+    }
+    double th = log(2) * (r1 + r2) * c;
+    double tl = log(2) * r2 * c;
+    snprintf(line, sizeof line, L("duty %s%%","ciclo %s%%"),
+        fmt_num(b, 100 * th / (th + tl), 1));
+    fx_line(y, "f", 10, fmt_si(a, 1 / (th + tl), "Hz", 4), line);
+    result(y + RESULT_STEP, L("Period","Periodo"), C_BLACK, "%s",
+        fmt_si(a, th + tl, "s", 4));
+    result(y + 2 * RESULT_STEP, L("Hi/lo","Alto/bx"), C_BLACK, "%s / %s",
+        si(a, th, "s", 3), si(b, tl, "s", 3));
+}
+#endif
+
 void timer555_run(void)
 {
     static eform_t f = {
@@ -365,6 +627,10 @@ void timer555_run(void)
         .changed = t555_changed,
     };
     f.title = L("555 timer", "Temporizador 555");
+#if GINT_HW_FX
+    f.color = C_BLACK;
+    f.results = t555_results_fx;
+#endif
     eform_run(&f);
 }
 
@@ -444,6 +710,43 @@ static void led_results(eform_t *f, int y)
         "R = (Vs - n Vf) / I, rounded up");
 }
 
+#if GINT_HW_FX
+static void led_results_fx(eform_t *f, int y)
+{
+    char a[32], b[32], c[32], note[48];
+    double vs = val(f, 1), vf = val(f, 2), i = val(f, 3);
+    double n = round(val(f, 4));
+
+    if (isnan(n) || n < 1) n = 1;
+    if (!(vs > 0 && vf > 0 && i > 0)) {
+        result(y, "R", C_BLACK, L("needs Vs, Vf, I","precisa Vs, Vf, I"));
+        return;
+    }
+    double vr = vs - n * vf;
+    if (vr <= 0) {
+        result(y, "R", C_BLACK, L("Vs below %s","Vs abaixo %s"),
+            fmt_si(a, n * vf, "V", 3));
+        return;
+    }
+
+    double r = vr / i;
+    snprintf(note, sizeof note, "%s %s", si(b, vr * i, "W", 3),
+        rating(vr * i));
+    fx_line(y, "R", 10, fmt_si(a, r, S_OHM, 4), note);
+    for (int k = 0; k < 2; k++) {
+        int series = k ? 24 : 12;
+        double e = eseries_nearest(series, r, true);
+        double ie = vr / e;
+        char label[8];
+        sprintf(label, "E%d", series);
+        snprintf(note, sizeof note, "%s %s", si(b, ie, "A", 3),
+            si(c, vr * ie, "W", 2));
+        fx_line(y + (k + 1) * RESULT_STEP, label, 22, si(a, e, S_OHM, 3),
+            note);
+    }
+}
+#endif
+
 void led_run(void)
 {
     static eform_t f = {
@@ -452,5 +755,13 @@ void led_run(void)
         .changed = led_changed,
     };
     f.title = L("LED resistor", "Resistencia LED");
+#if GINT_HW_FX
+    f.color = C_BLACK;
+    f.results = led_results_fx;
+    led_fields[1].label = "Vs";
+    led_fields[2].label = "Vf";
+    led_fields[3].label = "I";
+    led_fields[4].label = "LEDs";
+#endif
     eform_run(&f);
 }

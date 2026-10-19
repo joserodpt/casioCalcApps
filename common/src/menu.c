@@ -6,6 +6,30 @@
 #include "i18n.h"
 #include "keys.h"
 
+#if GINT_HW_FX
+
+/* fx-9860G: one 9-pixel row per tool, up to 6 at once, scrolling */
+#define ROWS 6
+
+static void menu_draw(menu_t const *m, int sel)
+{
+    int top = sel < ROWS ? 0 : sel - ROWS + 1;
+
+    dclear(C_WHITE);
+    info_title(L(m->app, m->app_pt), m->color);
+    for (int k = 0; k < ROWS && top + k < m->count; k++) {
+        int i = top + k, y = 10 + 9 * k;
+        menu_item_t const *it = &m->items[i];
+        bool s = i == sel;
+        if (s) drect(0, y - 1, DWIDTH - 1, y + 7, C_BLACK);
+        dprint(2, y, s ? C_WHITE : C_DARK, "%d", i + 1);
+        dtext(10, y, s ? C_WHITE : C_BLACK, L(it->name_en, it->name_pt));
+    }
+    dupdate();
+}
+
+#else
+
 /* Up to 6 items get roomy 30-pixel rows; 7 need tighter 26-pixel ones */
 typedef struct { int top, step, highlight, pad, box; } layout_t;
 static layout_t const roomy = { 22, 30, 27, 4, 20 };
@@ -39,6 +63,8 @@ static void menu_draw(menu_t const *m, int sel)
     }
     dupdate();
 }
+
+#endif /* GINT_HW_FX */
 
 void menu_run(menu_t const *m)
 {

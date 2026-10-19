@@ -1,5 +1,13 @@
 Truth table and Karnaugh map for the Casio FX CG 50 (works with the CG10 and 20 too). Made with fxSDK and gint.
 
+## Download
+
+| Calculator | File |
+|---|---|
+| fx-CG50, fx-CG10, fx-CG20 (colour) | [Logic.g3a](../../dist/g3a/Logic.g3a) |
+
+Copy the file to the root of the calculator's storage over USB (USB Flash mode, F1), then eject it; the app appears in the MENU. This app needs the colour screen, so there is no black and white version.
+
 Enter a Boolean expression of up to four variables (A, B, C, D) and get its
 truth table, a coloured Karnaugh map with the groupings outlined, and the
 simplified sum-of-products (via prime-implicant cover). You can also tick

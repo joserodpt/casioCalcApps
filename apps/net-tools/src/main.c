@@ -12,6 +12,7 @@
 #include "version.h"
 #include "i18n.h"
 #include "usb_screen.h"
+#include "color.h"
 
 #define COLOR   C_RGB(3, 14, 20)
 #define HOSTC   C_RGB(28, 29, 31)   /* background of host bits */
@@ -24,6 +25,7 @@ typedef struct {
     int field[FIELD_COUNT];
     int sel;
     int typed;          /* digits typed into the selected field */
+    int page;           /* fx-9860G: results page shown (0..FX_PAGES-1) */
 } state_t;
 
 //---
@@ -97,6 +99,29 @@ static char const *address_type(uint32_t a)
     return L("Public", "Publico");
 }
 
+/* First and last host, and the number of usable hosts: /31 links use
+   both addresses (RFC 3021), /32 is a single host */
+static uint64_t host_range(uint32_t ip, int prefix, uint32_t *first,
+    uint32_t *last)
+{
+    uint32_t mask = netmask(prefix);
+    uint32_t net = ip & mask;
+    uint32_t bcast = net | ~mask;
+
+    if (prefix == 32) {
+        *first = *last = ip;
+        return 1;
+    }
+    if (prefix == 31) {
+        *first = net;
+        *last = bcast;
+        return 2;
+    }
+    *first = net + 1;
+    *last = bcast - 1;
+    return ((uint64_t)1 << (32 - prefix)) - 2;
+}
+
 //---
 //  Editing
 //---
@@ -159,7 +184,141 @@ static void step_subnet(state_t *s, int dir)
 }
 
 //---
-//  Rendering
+//  Rendering (fx-9860G, 128x64): the address on one line, then one of
+//  four pages of four rows, chosen with F6
+//---
+
+#if GINT_HW_FX
+
+#define TITLE     L("Subnet calc", "Calc. sub-rede")
+#define FX_PAGES  4
+#define INPUT_Y   11
+#define ROWS_Y    20
+#define ROW_STEP  9
+#define VALUE_X   34
+#define BITS_X    27
+
+/* Address being typed; the selected field is shown inverted (grey until
+   a digit is typed, as it will be replaced) */
+static void draw_input(state_t const *s)
+{
+    int x = 2;
+
+    for (int f = 0; f < FIELD_COUNT; f++) {
+        char text[4];
+        int w;
+        sprintf(text, "%d", s->field[f]);
+        dsize(text, NULL, &w, NULL);
+
+        if (f == s->sel) {
+            drect(x - 1, INPUT_Y - 1, x + w, INPUT_Y + 7,
+                s->typed ? C_BLACK : C_LIGHT);
+            dtext(x, INPUT_Y, s->typed ? C_WHITE : C_BLACK, text);
+        }
+        else dtext(x, INPUT_Y, C_BLACK, text);
+        x += w + 2;
+
+        if (f < 3) dtext(x, INPUT_Y, C_DARK, ".");
+        else if (f == 3) dtext(x, INPUT_Y, C_DARK, "/");
+        x += f < 3 ? 4 : 7;
+    }
+}
+
+static void row(int i, char const *label, char const *value)
+{
+    int y = ROWS_Y + i * ROW_STEP;
+    int w;
+    dsize(value, NULL, &w, NULL);
+    dtext(2, y, C_DARK, label);
+    /* A long value (such as "Partilhado CGNAT") moves left to fit */
+    dtext(w > DWIDTH - VALUE_X ? DWIDTH - w : VALUE_X, y, C_BLACK, value);
+}
+
+/* Half (16 bits) of a value in binary; network bits are shaded */
+static void draw_bits(int i, char const *label, uint32_t v, int half,
+    int prefix)
+{
+    int y = ROWS_Y + i * ROW_STEP;
+    if (label) dtext(2, y, C_DARK, label);
+
+    for (int k = 0; k < 16; k++) {
+        int col = 16 * half + k;    /* most significant bit first */
+        int x = BITS_X + 6 * k + (k >= 8 ? 4 : 0);
+        bool network = col < prefix;
+        if (network) drect(x - 1, y - 1, x + 4, y + 7, C_LIGHT);
+        dtext(x, y, C_BLACK, (v >> (31 - col)) & 1 ? "1" : "0");
+    }
+}
+
+static void draw_results(state_t const *s)
+{
+    char a[20], text[24];
+    uint32_t ip = address(s);
+    int prefix = s->field[FIELD_PREFIX];
+    uint32_t mask = netmask(prefix);
+    uint32_t net = ip & mask;
+    uint32_t first, last;
+    uint64_t usable = host_range(ip, prefix, &first, &last);
+
+    switch (s->page) {
+    case 0:
+        row(0, L("Net", "Rede"), ip_text(a, net));
+        row(1, L("Mask", "Masc"), ip_text(a, mask));
+        row(2, "Bcast", prefix < 31 ? ip_text(a, net | ~mask)
+            : L("none", "nenhum"));
+        row(3, "Hosts", u64_text(a, usable));
+        break;
+    case 1:
+        row(0, prefix == 32 ? "Host" : L("First", "1o"), ip_text(a, first));
+        if (prefix < 32) row(1, L("Last", "Ult."), ip_text(a, last));
+        row(2, "Total", u64_text(a, (uint64_t)1 << (32 - prefix)));
+        row(3, L("Wild", "Cur."), ip_text(a, ~mask));
+        break;
+    case 2:
+        sprintf(text, "0x%08X", (unsigned)mask);
+        row(0, "Hex", text);
+        sprintf(text, "%c", address_class(ip));
+        row(1, L("Class", "Cls."), text);
+        row(2, L("Type", "Tipo"), address_type(ip));
+        break;
+    default:
+        draw_bits(0, "IP", ip, 0, prefix);
+        draw_bits(1, NULL, ip, 1, prefix);
+        draw_bits(2, L("Mask", "Masc"), mask, 0, prefix);
+        draw_bits(3, NULL, mask, 1, prefix);
+        break;
+    }
+}
+
+static void draw(state_t const *s)
+{
+    char label[4];
+
+    dclear(C_WHITE);
+    info_title(TITLE, COLOR);
+    draw_input(s);
+    draw_results(s);
+
+    fkey_button(1, L("PRV", "ANT"));
+    fkey_button(2, L("NXT", "SEG"));
+    int prefixes[3] = { 16, 24, 30 };
+    for (int i = 0; i < 3; i++) {
+        sprintf(label, "/%d", prefixes[i]);
+        if (s->field[FIELD_PREFIX] == prefixes[i])
+            fkey_button_color(i + 3, label, COLOR);
+        else fkey_button(i + 3, label);
+    }
+    sprintf(label, "PG%d", s->page + 1);
+    fkey_button(6, label);
+    dupdate();
+}
+
+#else
+
+#define TITLE     L("IP subnet calculator", "Calc. de sub-rede")
+
+//---
+//  Rendering (fx-CG, 396x224)
 //---
 
 #define INPUT_Y   22
@@ -233,20 +392,11 @@ static void draw_results(state_t const *s)
     row(3, L("Network", "Rede"), text, COLOR);
     row(4, "Broadcast", prefix < 31 ? ip_text(a, bcast) : L("none", "nenhum"), COLOR);
 
-    /* /31 links use both addresses (RFC 3021), /32 is a single host */
-    uint64_t usable;
-    if (prefix == 32) {
-        usable = 1;
-        row(5, "Host", ip_text(a, ip), C_BLACK);
-    }
-    else if (prefix == 31) {
-        usable = 2;
-        sprintf(text, "%s - %s", ip_text(a, net), ip_text(b, bcast));
-        row(5, "Hosts", text, C_BLACK);
-    }
+    uint32_t first, last;
+    uint64_t usable = host_range(ip, prefix, &first, &last);
+    if (prefix == 32) row(5, "Host", ip_text(a, ip), C_BLACK);
     else {
-        usable = total - 2;
-        sprintf(text, "%s - %s", ip_text(a, net + 1), ip_text(b, bcast - 1));
+        sprintf(text, "%s - %s", ip_text(a, first), ip_text(b, last));
         row(5, "Hosts", text, C_BLACK);
     }
 
@@ -309,7 +459,7 @@ static void draw_grid(state_t const *s)
 static void draw(state_t const *s)
 {
     dclear(C_WHITE);
-    info_title(L("IP subnet calculator", "Calc. de sub-rede"), COLOR);
+    info_title(TITLE, COLOR);
 
     draw_input(s);
     dline(6, ROWS_Y - 5, DWIDTH - 7, ROWS_Y - 5, C_LIGHT);
@@ -330,6 +480,8 @@ static void draw(state_t const *s)
     dupdate();
 }
 
+#endif /* GINT_HW_FX */
+
 //---
 //  Main loop
 //---
@@ -340,6 +492,7 @@ int main(void)
 
     lang_init();
     usb_screen_init();
+    screen_init();
 
     while (1) {
         draw(&s);
@@ -384,10 +537,17 @@ int main(void)
         case KEY_F2:
             step_subnet(&s, +1);
             break;
+#if GINT_HW_FX
+        case KEY_F3: set_prefix(&s, 16); break;
+        case KEY_F4: set_prefix(&s, 24); break;
+        case KEY_F5: set_prefix(&s, 30); break;
+        case KEY_F6: s.page = (s.page + 1) % FX_PAGES; break;
+#else
         case KEY_F3: set_prefix(&s, 8); break;
         case KEY_F4: set_prefix(&s, 16); break;
         case KEY_F5: set_prefix(&s, 24); break;
         case KEY_F6: set_prefix(&s, 30); break;
+#endif
         default:
             if (d >= 0) type_digit(&s, d);
             break;

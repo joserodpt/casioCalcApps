@@ -1,0 +1,111 @@
+# Electronics on the fx-9860G (128x64): menu, colour code (bands by name,
+# value entry, 3 and 6 bands), SMD codes, series / parallel, divider with a
+# target, filters, 555 timer, LED resistor
+wait 2s
+shot fx-menu.png
+# Colour code: 4-band 4.7 kΩ, multiplier band selected
+EXE
+wait 1s
+RIGHT
+wait 300
+RIGHT
+wait 800
+shot fx-colorcode.png
+# Value to bands: 6 bands, then type 4.75k
+F1
+wait 300
+F1
+wait 500
+F2
+wait 500
+AC
+wait 300
+4
+DP
+7
+5
+F5
+wait 800
+shot fx-colorcode-value.png
+EXE
+wait 800
+shot fx-colorcode-6band.png
+# 3 bands cannot show 4.75k: rounded, with the typed value
+F1
+wait 300
+F2
+wait 300
+AC
+4
+DP
+7
+5
+F5
+wait 300
+EXE
+wait 800
+shot fx-colorcode-3band.png
+EXIT
+wait 1s
+# SMD codes: decode 472, then encode 1.234k
+2
+wait 1s
+shot fx-smd.png
+DOWN
+DOWN
+DOWN
+wait 300
+AC
+1
+DP
+2
+3
+4
+F5
+wait 800
+shot fx-smd-encode.png
+EXIT
+wait 1s
+# Series / parallel: 1k, 2.2k, 4.7k
+3
+wait 1500
+shot fx-rnet.png
+EXIT
+wait 1s
+# Voltage divider: 12 V, then R2 for a 3.3 V target
+4
+wait 1s
+shot fx-divider.png
+DOWN
+DOWN
+DOWN
+wait 800
+shot fx-divider-target.png
+EXIT
+wait 1s
+# RC / RL filters
+5
+wait 1500
+shot fx-filters.png
+EXIT
+wait 1s
+# 555 timer astable, then monostable
+6
+wait 1s
+shot fx-timer555.png
+RIGHT
+wait 800
+shot fx-timer555-mono.png
+EXIT
+wait 1s
+# LED resistor: blue LED from 5 V
+7
+wait 1s
+RIGHT
+RIGHT
+RIGHT
+RIGHT
+wait 1s
+shot fx-led.png
+EXIT
+wait 1s

@@ -108,6 +108,28 @@ void units_screen(int cat, int color)
         category_t const *c = &categories[cat];
         dclear(C_WHITE);
         info_title(L(c->name, c->name_pt), color);
+        double x = numfield_value(&val);
+
+#if GINT_HW_FX
+        /* The value, then 5 units at a time (the input one inverted);
+           LEFT/RIGHT change the category, as the "<>" in the title says */
+        dtext_opt(DWIDTH - 30, 1, C_WHITE, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
+            "<>");
+        numfield_draw(&val, 0, 10, 84, true, color);
+        dtext(87, 11, C_BLACK, c->units[from].name);
+        int top = from < 5 ? 0 : from - 4;
+        for (int k = 0; k < 5 && top + k < c->count; k++) {
+            int i = top + k, y = 21 + k * 8;
+            bool sel = i == from;
+            if (sel) drect(0, y - 1, DWIDTH - 1, y + 6, C_BLACK);
+            dtext(2, y, sel ? C_WHITE : C_DARK, c->units[i].name);
+            char b[32];
+            if (isnan(x)) strcpy(b, "-");
+            else fmt_g(b, unit_convert(c, from, i, x), 7);
+            dtext_opt(DWIDTH - 2, y, sel ? C_WHITE : C_BLACK, C_NONE,
+                DTEXT_RIGHT, DTEXT_TOP, b);
+        }
+#else
 
         dtext(10, 20, C_DARK, L("Value", "Valor"));
         numfield_draw(&val, 70, 17, 150, true, color);
@@ -116,7 +138,6 @@ void units_screen(int cat, int color)
         dtext_opt(DWIDTH / 2, 209, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
             L("<> category   ^v input unit", "<> categoria   ^v unidade"));
 
-        double x = numfield_value(&val);
         for (int i = 0; i < c->count; i++) {
             int y = 42 + i * 14;
             bool sel = i == from;
@@ -127,6 +148,7 @@ void units_screen(int cat, int color)
             else fmt_g(b, unit_convert(c, from, i, x), 7);
             dtext(120, y, sel ? color : C_BLACK, b);
         }
+#endif
         dupdate();
 
         int key = getkey().key;

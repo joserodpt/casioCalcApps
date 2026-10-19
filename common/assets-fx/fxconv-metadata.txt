@@ -1,0 +1,7 @@
+font_big.png:
+  type: font
+  name: font_big
+  charset: print
+  grid.size: 10x14
+  height: 14
+  char-spacing: 1

@@ -1,0 +1,64 @@
+# NetTools (fx-9860G, 128x64): IP subnet calculator tour
+wait 2s
+shot fx-main.png
+# F6 cycles the result pages: range, info, bits
+F6
+wait 1s
+shot fx-range.png
+F6
+wait 1s
+shot fx-info.png
+F6
+wait 1s
+shot fx-bits.png
+F6
+wait 800
+# Clear and type 10.20.30.40/22
+AC
+wait 800
+1
+wait 300
+0
+wait 300
+DP
+wait 500
+2
+wait 300
+0
+wait 300
+DP
+wait 500
+3
+wait 300
+0
+wait 500
+4
+wait 300
+0
+wait 500
+2
+wait 300
+2
+wait 1500
+shot fx-custom.png
+# Step to the next /22 subnet
+F2
+wait 1200
+F2
+wait 1500
+shot fx-next.png
+# Narrow down to a /30 point-to-point link (F5 on the fx-9860G)
+F5
+wait 1500
+shot fx-slash30.png
+# Prefix +1 -> /31 (RFC 3021), host range page
+UP
+wait 800
+F6
+wait 1500
+shot fx-slash31.png
+OPTN
+wait 1500
+shot fx-about.png
+EXIT
+wait 1s

@@ -5,6 +5,7 @@
 #include "version.h"
 #include "i18n.h"
 #include "usb_screen.h"
+#include "color.h"
 
 #define COLOR   C_RGB(20, 9, 3)
 
@@ -47,6 +48,7 @@ int main(void)
 {
     lang_init();
     usb_screen_init();
+    screen_init();
     menu_run(&menu);
     return 1;
 }

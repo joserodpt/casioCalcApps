@@ -1,4 +1,13 @@
-This is an electronics toolkit for the Casio FX CG 50 (works with the CG10 and 20 too). Made with fxSDK and gint.
+This is an electronics toolkit for the Casio FX CG 50 (works with the CG10 and 20 too), with a black and white version for the fx-9860G II. Made with fxSDK and gint.
+
+## Download
+
+| Calculator | File |
+|---|---|
+| fx-CG50, fx-CG10, fx-CG20 (colour) | [Electronics.g3a](../../dist/g3a/Electronics.g3a) |
+| fx-9860G II, fx-9750G II, Graph 35+E II (black and white) | [Electronics.g1a](../../dist/g1a/Electronics.g1a) |
+
+Copy the file to the root of the calculator's storage over USB (USB Flash mode, F1), then eject it; the app appears in the MENU.
 
 Pick a tool from the menu with ▲/▼ and EXE, or its number key:
 
@@ -37,5 +46,27 @@ Results update as you type.
 | DEL / AC | Delete a character / clear the field |
 
 OPTN opens the info screen and EXIT goes back (to the menu, then out of the add-in).
+
+## fx-9860G (128x64)
+`Electronics.g1a` has the same seven tools and keys on the black-and-white
+fx-9860G. What differs on the small screen:
+
+- Colour code: four greys cannot show the colours, so each band is a
+  3-letter name (`yel vio red gld`) on a drawn resistor body, the selected
+  band in white on black. Below are the value and tolerance, the selected
+  band's colour and meaning (`Red ×100`), and the nearest E12, E24 and E96
+  values. The range and the 6-band tempco line are left out (select the
+  tempco band to see it). F1 shows `4B` for 4 bands. A value that the bands
+  cannot show exactly is shown as `Typed 4.75 kΩ` in place of the E96 line.
+- Forms show two fields at a time (they scroll, with an `n/N` mark) and
+  three short result lines; labels are shortened (`Vt` for the target Vout,
+  `Vs` / `Vf` / `I` in LED resistor). The voltage divider shows R2 for the
+  target only while the target field is selected. Left out: the help lines
+  and formulas, the LED power, the deviations of the E24/E96 values in SMD
+  codes, and the LC Z0 when R is set (the RLC Q is shown in its place).
+- The info screen is text only (no QR code), and all text is in English.
+
+![fx-9860G, colour code](screenshots/fx-colorcode.png)
+![fx-9860G, voltage divider](screenshots/fx-divider.png)
 
 © José Rodrigues 2026

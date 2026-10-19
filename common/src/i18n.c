@@ -1,9 +1,20 @@
 #include <gint/gint.h>
+#include <gint/config.h>
 #include <string.h>
 
 #include "i18n.h"
 
 int lang_current = L_EN;
+
+#if GINT_HW_FX
+
+/* The fx-9860G OS has other syscalls (and no LocalizeMessage1 as on the
+   fx-CG): its apps stay in English */
+void lang_init(void)
+{
+}
+
+#else
 
 /* A syscall stub: jump to the OS's syscall entry with the number in r0.
    (Same trick the syscall test apps use.) The symbol is weak so a test app
@@ -45,3 +56,5 @@ void lang_init(void)
 {
     gint_world_switch(GINT_CALL(detect));
 }
+
+#endif /* GINT_HW_FX */

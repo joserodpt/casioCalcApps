@@ -12,8 +12,13 @@ static void draw(void)
 {
     dclear(C_WHITE);
     info_title(L("Hello", "Ola"), COLOR);
+#if GINT_HW_FX
+    dtext(2, 14, C_BLACK, L("Hello from Hello!", "Ola do Hello!"));
+    dtext(2, 24, C_DARK, L("Press EXIT to quit.", "Prima EXIT para sair."));
+#else
     dtext(6, 36, C_BLACK, L("Hello from Hello!", "Ola do Hello!"));
     dtext(6, 64, C_BLACK, L("Press EXIT to quit.", "Prima EXIT para sair."));
+#endif
     dupdate();
 }
 
@@ -21,6 +26,7 @@ int main(void)
 {
     lang_init();
     usb_screen_init();
+    screen_init();
 
     while(1) {
         draw();

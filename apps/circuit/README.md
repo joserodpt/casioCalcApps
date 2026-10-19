@@ -1,5 +1,13 @@
 DC circuit simulator for the Casio FX CG 50 (works with the CG10 and 20 too). Made with fxSDK and gint.
 
+## Download
+
+| Calculator | File |
+|---|---|
+| fx-CG50, fx-CG10, fx-CG20 (colour) | [Circuit.g3a](../../dist/g3a/Circuit.g3a) |
+
+Copy the file to the root of the calculator's storage over USB (USB Flash mode, F1), then eject it; the app appears in the MENU. This app needs the colour screen, so there is no black and white version.
+
 Build a circuit on a 12 × 5 grid and read the voltage (V), current (A, mA,
 µA) and power (W, mW) of every part. The circuit is solved again after every
 change. Moving dots show the direction and size of the current, and lamps

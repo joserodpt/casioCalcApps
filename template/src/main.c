@@ -12,9 +12,15 @@ static void draw(void)
 {
     dclear(C_WHITE);
     info_title("__APP_NAME__", COLOR);
+#if GINT_HW_FX
+    dtext(2, 14, C_BLACK, L("Hello from __APP_NAME__!",
+        "Ola do __APP_NAME__!"));
+    dtext(2, 24, C_DARK, L("Press EXIT to quit.", "Prima EXIT para sair."));
+#else
     dtext(6, 36, C_BLACK, L("Hello from __APP_NAME__!",
         "Ola do __APP_NAME__!"));
     dtext(6, 64, C_BLACK, L("Press EXIT to quit.", "Prima EXIT para sair."));
+#endif
     dupdate();
 }
 
@@ -22,6 +28,7 @@ int main(void)
 {
     lang_init();
     usb_screen_init();
+    screen_init();
 
     while(1) {
         draw();

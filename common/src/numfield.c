@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "numfield.h"
+#include "color.h"
 #include "keys.h"
 
 double numfield_value(numfield_t const *f)
@@ -66,6 +67,18 @@ bool numfield_key(numfield_t *f, int key)
 void numfield_draw(numfield_t const *f, int x, int y, int w, bool sel,
     int color)
 {
+#if GINT_HW_FX
+    /* 9 pixels tall; the selected box is black-bordered with a cursor */
+    (void)color;
+    drect_border(x, y, x + w - 1, y + 8, C_WHITE, 1,
+        sel ? C_BLACK : C_LIGHT);
+    dtext(x + 2, y + 1, C_BLACK, f->text);
+    if (sel) {
+        int tw;
+        dsize(f->text, NULL, &tw, NULL);
+        drect(x + 2 + tw + 1, y + 1, x + 2 + tw + 1, y + 7, C_BLACK);
+    }
+#else
     drect_border(x, y, x + w - 1, y + 16, C_WHITE, sel ? 2 : 1,
         sel ? color : C_LIGHT);
     dtext(x + 5, y + 3, C_BLACK, f->text);
@@ -75,4 +88,5 @@ void numfield_draw(numfield_t const *f, int x, int y, int w, bool sel,
         int cx = x + 5 + tw + 1;
         drect(cx, y + 3, cx + 1, y + 13, color);
     }
+#endif
 }

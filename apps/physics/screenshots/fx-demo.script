@@ -1,0 +1,149 @@
+# Physics (fx-9860G, 128x64): tool menu
+wait 1500
+shot fx-menu.png
+# Unit converter: 100 m in every length unit
+1
+wait 800
+1
+0
+0
+wait 1200
+shot fx-units.png
+EXIT
+wait 700
+# Kinematics: u = 0, v = 9.8, a = 3 -> solves s and t
+2
+wait 800
+DOWN
+wait 300
+0
+EXE
+9
+DP
+8
+EXE
+3
+wait 1200
+shot fx-kinematics.png
+# s = 10, u = 1, a = -1: v and t have no real solution
+UP
+UP
+UP
+1
+0
+EXE
+AC
+1
+EXE
+AC
+EXE
+AC
+NEG
+1
+wait 1200
+shot fx-kinematics-noreal.png
+EXIT
+wait 700
+# Dynamics: m = 70, a = 2, v = 5 (g defaults to 9.80665)
+3
+wait 800
+7
+0
+EXE
+2
+EXE
+5
+wait 1200
+shot fx-dynamics.png
+EXIT
+wait 700
+# Energy & power: m = 2, v = 5, h = 10, F = 50, d = 4, t = 2
+4
+wait 800
+2
+EXE
+5
+EXE
+1
+0
+EXE
+5
+0
+EXE
+4
+EXE
+2
+wait 1200
+shot fx-energy.png
+EXIT
+wait 700
+# Waves & optics: f = 440, lambda = 0.78, Snell 1 -> 1.5 at 30 deg
+5
+wait 800
+4
+4
+0
+EXE
+0
+DP
+7
+8
+EXE
+1
+EXE
+3
+0
+EXE
+1
+DP
+5
+wait 1200
+shot fx-waves.png
+# Glass to air at 60 deg: total internal reflection
+UP
+UP
+AC
+1
+DP
+5
+EXE
+AC
+6
+0
+EXE
+AC
+1
+wait 1200
+shot fx-waves-tir.png
+EXIT
+wait 700
+# Constants: scroll to the reduced Planck constant, then the end of the list
+6
+wait 800
+DOWN
+wait 300
+DOWN
+wait 300
+DOWN
+wait 300
+DOWN
+wait 1200
+shot fx-constants.png
+UP
+wait 300
+UP
+wait 300
+UP
+wait 300
+UP
+wait 300
+UP
+wait 300
+UP
+wait 1200
+shot fx-constants-end.png
+OPTN
+wait 1200
+shot fx-about.png
+EXIT
+wait 800

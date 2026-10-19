@@ -26,6 +26,35 @@
 
 static double fv(form_t *f, int i) { return form_value(f, i); }
 
+#if GINT_HW_FX
+/* fx-9860G (128x64): results get 3 lines of FORM_LINE (8 px) below the
+   fields. A result line has its label at the left and "value unit" against
+   the right edge, with fewer digits if both would not fit in 128 px */
+static int fx_width(char const *s)
+{
+    int w;
+    dsize(s, NULL, &w, NULL);
+    return w;
+}
+
+static void fx_value(char *buf, double v, char const *unit, int room)
+{
+    char num[32];
+    for (int sig = 6; sig >= 3; sig--) {
+        sprintf(buf, "%s%s%s", fmt_g(num, v, sig), *unit ? " " : "", unit);
+        if (fx_width(buf) <= room) return;
+    }
+}
+
+static void fx_res(int y, char const *label, int color, double v,
+    char const *unit)
+{
+    char buf[48];
+    fx_value(buf, v, unit, DWIDTH - 1 - fx_width(label) - 6);
+    form_result(y, 0, label, color, "%s", buf);
+}
+#endif
+
 static void units_run(void) { units_screen(0, COLOR); }
 
 //---
@@ -92,11 +121,32 @@ static void suvat_results(form_t *f, int y)
         if (k[i]) given++;
     }
     if (given < 3) {
+#if GINT_HW_FX
+        dtext(1, y, C_DARK, L("Enter any 3 values",
+            "Introduza 3 valores"));
+#else
         dtext(10, y, C_DARK, L("Enter any 3 values",
             "Introduza 3 valores"));
+#endif
         return;
     }
     suvat_solve(x, k);
+
+#if GINT_HW_FX
+    /* At most 2 solved values (3 are given): one line each */
+    int n = 0;
+    for (int i = 0; i < 5; i++) {
+        if (fv(f, i) == fv(f, i)) continue;
+        if (k[i]) fx_res(y + n * FORM_LINE, names[i], C_BLACK, x[i],
+            units_[i]);
+        else form_result(y + n * FORM_LINE, 0, names[i], C_BLACK, "%s",
+            L("no real solution", "sem solucao real"));
+        n++;
+    }
+    if (n == 0) dtext(1, y, C_DARK, L("All values known",
+        "Todos conhecidos"));
+    return;
+#endif
 
     char b[48], num[32];
     int line = 0;
@@ -121,7 +171,12 @@ static void suvat_results(form_t *f, int y)
 static void kinematics_screen(void)
 {
     static form_t f = {
+#if GINT_HW_FX
+        /* The fx title bar cuts titles at 100 px */
+        .title_en = "Kinematics", .title_pt = "Cinematica",
+#else
         .title_en = "Kinematics (SUVAT)", .title_pt = "Cinematica (SUVAT)",
+#endif
         .color = COLOR, .count = 5, .cols = 1,
         .fields = {
             { "s", "s", "m" }, { "u", "u", "m/s" }, { "v", "v", "m/s" },
@@ -141,6 +196,20 @@ static void dyn_results(form_t *f, int y)
     double m = fv(f, 0), a = fv(f, 1), v = fv(f, 2), g = fv(f, 3);
     char b[32];
     if (isnan(g)) g = G0;
+
+#if GINT_HW_FX
+    /* No formula footer; g (default 9.80665) is the 4th field */
+    (void)b;
+    if (!isnan(m) && !isnan(a)) fx_res(y, "F = m a", C_BLACK, m * a, "N");
+    else form_result(y, 0, "F = m a", C_DARK, "%s",
+        L("need m, a", "falta m, a"));
+    y += FORM_LINE;
+    if (!isnan(m)) fx_res(y, "W = m g", C_BLACK, m * g, "N");
+    y += FORM_LINE;
+    if (!isnan(m) && !isnan(v)) fx_res(y, "p = m v", C_BLACK, m * v,
+        "kg m/s");
+    return;
+#endif
 
     if (!isnan(m) && !isnan(a)) res(y, "F = m a", COLOR, "%s N",
         fmt_g(b, m * a, 6));
@@ -180,6 +249,37 @@ static void energy_results(form_t *f, int y)
     char b[32];
     if (isnan(g)) g = G0;
 
+#if GINT_HW_FX
+    /* Only the results that can be computed, packed; when all four can,
+       W and P share the last line */
+    (void)b;
+    double wk = !isnan(F) && !isnan(d) ? F * d : NAN;
+    bool ke = !isnan(m) && !isnan(v), pe = !isnan(m) && !isnan(h),
+        w = !isnan(wk), p = w && !isnan(t) && t != 0;
+    if (ke) { fx_res(y, "KE", C_BLACK, 0.5 * m * v * v, "J");
+        y += FORM_LINE; }
+    if (pe) { fx_res(y, "PE", C_BLACK, m * g * h, "J"); y += FORM_LINE; }
+    if (ke && pe && w && p) {
+        char wb[32], pb[32];
+        /* Fewer digits until both fit, then without the units */
+        for (int k = 0; k < 8; k++) {
+            char n1[32], n2[32];
+            int sig = 6 - k % 4;
+            bool u = k < 4;
+            sprintf(wb, u ? "W %s J" : "W %s", fmt_g(n1, wk, sig));
+            sprintf(pb, u ? "P %s W" : "P %s", fmt_g(n2, wk / t, sig));
+            if (fx_width(wb) + fx_width(pb) + 8 <= DWIDTH - 1) break;
+        }
+        dtext(1, y, C_BLACK, wb);
+        dtext_opt(DWIDTH - 1, y, C_BLACK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
+            pb);
+        return;
+    }
+    if (w) { fx_res(y, "W = F d", C_BLACK, wk, "J"); y += FORM_LINE; }
+    if (p) fx_res(y, "P = W / t", C_BLACK, wk / t, "W");
+    return;
+#endif
+
     if (!isnan(m) && !isnan(v)) res(y, "KE = 1/2 m v2", COLOR, "%s J",
         fmt_g(b, 0.5 * m * v * v, 6));
     y += 16;
@@ -218,6 +318,24 @@ static void wave_results(form_t *f, int y)
     double fr = fv(f, 0), lam = fv(f, 1), n1 = fv(f, 2), th1 = fv(f, 3),
         n2 = fv(f, 4);
     char b[32];
+
+#if GINT_HW_FX
+    /* No Snell header: the refraction angle is the 3rd line */
+    (void)b;
+    if (!isnan(fr) && !isnan(lam)) fx_res(y, "v = f lambda", C_BLACK,
+        fr * lam, "m/s");
+    y += FORM_LINE;
+    if (!isnan(fr) && fr != 0) fx_res(y, "T = 1/f", C_BLACK, 1 / fr, "s");
+    y += FORM_LINE;
+    if (!isnan(n1) && !isnan(th1) && !isnan(n2) && n2 != 0) {
+        double s2 = n1 * sin(th1 * DEG) / n2;
+        if (fabs(s2) <= 1) fx_res(y, "Snell O2", C_BLACK,
+            asin(s2) / DEG, "deg");
+        else form_result(y, 0, "O2", C_BLACK, "%s",
+            L("total int. refl.", "reflexao total"));
+    }
+    return;
+#endif
 
     if (!isnan(fr) && !isnan(lam)) res(y, "v = f lambda", COLOR, "%s m/s",
         fmt_g(b, fr * lam, 6));
@@ -278,6 +396,59 @@ static constant_t const constants[] = {
 #define CONST_COUNT (int)(sizeof constants / sizeof *constants)
 #define CONST_ROWS  11
 
+#if GINT_HW_FX
+/* fx-9860G: short names (up to 15 characters) for the 128-px list */
+static char const * const const_short[][2] = {
+    { "Speed of light", "Veloc. da luz" },
+    { "Gravity (std)", "Gravidade" },
+    { "Gravitational", "Gravitacional" },
+    { "Planck", "Planck" },
+    { "Reduced Planck", "Planck reduzida" },
+    { "Elem. charge", "Carga elementar" },
+    { "Electron mass", "Massa eletrao" },
+    { "Proton mass", "Massa protao" },
+    { "Avogadro", "Avogadro" },
+    { "Boltzmann", "Boltzmann" },
+    { "Gas constant", "Const. gases" },
+    { "Permittivity", "Permitividade" },
+    { "Permeability", "Permeabilidade" },
+    { "Coulomb", "Coulomb" },
+    { "Stefan-Boltzm.", "Stefan-Boltzm." },
+    { "Atomic mass u.", "Massa atomica" },
+};
+#define FX_CONST_ROWS 5
+
+/* 5 rows of short name + symbol, then "value unit" of the selected one */
+static void constants_draw_fx(int sel, int top)
+{
+    dclear(C_WHITE);
+    info_title(L("Constants", "Constantes"), COLOR);
+
+    for (int r = 0; r < FX_CONST_ROWS && top + r < CONST_COUNT; r++) {
+        int i = top + r, y = 10 + r * 8;
+        bool s = i == sel;
+        if (s) drect(0, y - 1, DWIDTH - 6, y + 6, C_BLACK);
+        int fg = s ? C_WHITE : C_BLACK;
+        int sw;
+        dsize(constants[i].sym, NULL, &sw, NULL);
+        dtext_opt(DWIDTH - 8, y, s ? C_WHITE : C_DARK, C_NONE, DTEXT_RIGHT,
+            DTEXT_TOP, constants[i].sym);
+        /* The name stops short of the symbol */
+        struct dwindow old = dwindow_set((struct dwindow){ 0, 0,
+            DWIDTH - 8 - sw - 3, DHEIGHT });
+        dtext(1, y, fg, const_short[i][lang_current == L_PT]);
+        dwindow_set(old);
+    }
+    scrollbar_px(9, 9 + FX_CONST_ROWS * 8, 0, CONST_COUNT, top,
+        FX_CONST_ROWS);
+
+    dline(0, 52, DWIDTH - 1, 52, C_LIGHT);
+    dprint_opt(DWIDTH - 1, 55, C_BLACK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
+        "%s %s", constants[sel].value, constants[sel].unit);
+    dupdate();
+}
+#endif
+
 static void constants_screen(void)
 {
     int sel = 0, top = 0;
@@ -286,6 +457,10 @@ static void constants_screen(void)
         info_title(L("Constants", "Constantes"), COLOR);
 
         if (sel < top) top = sel;
+#if GINT_HW_FX
+        if (sel >= top + FX_CONST_ROWS) top = sel - FX_CONST_ROWS + 1;
+        constants_draw_fx(sel, top);
+#else
         if (sel >= top + CONST_ROWS) top = sel - CONST_ROWS + 1;
 
         for (int r = 0; r < CONST_ROWS && top + r < CONST_COUNT; r++) {
@@ -305,6 +480,7 @@ static void constants_screen(void)
         dprint(10, y, COLOR, "%s = %s %s", constants[sel].sym,
             constants[sel].value, constants[sel].unit);
         dupdate();
+#endif
 
         int key = getkey().key;
         if (key == KEY_EXIT) return;
@@ -344,6 +520,7 @@ int main(void)
 {
     lang_init();
     usb_screen_init();
+    screen_init();
     menu_run(&menu);
     return 1;
 }

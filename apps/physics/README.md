@@ -1,4 +1,13 @@
-Physics toolkit for the Casio FX CG 50 (works with the CG10 and 20 too). Made with fxSDK and gint.
+Physics toolkit for the Casio FX CG 50 (works with the CG10 and 20 too), with a black and white version for the fx-9860G II. Made with fxSDK and gint.
+
+## Download
+
+| Calculator | File |
+|---|---|
+| fx-CG50, fx-CG10, fx-CG20 (colour) | [Physics.g3a](../../dist/g3a/Physics.g3a) |
+| fx-9860G II, fx-9750G II, Graph 35+E II (black and white) | [Physics.g1a](../../dist/g1a/Physics.g1a) |
+
+Copy the file to the root of the calculator's storage over USB (USB Flash mode, F1), then eject it; the app appears in the MENU.
 
 Pick a tool from the menu with the number keys or ▲/▼ + EXE:
 
@@ -27,5 +36,29 @@ quantity they can compute from what you entered.
 
 Angles for Snell's law are in degrees. Language (English / Portuguese)
 follows the calculator's system language.
+
+## fx-9860G (128x64)
+
+`Physics.g1a` is the same app on the 128x64 black-and-white fx-9860G (4 grey
+shades). The keys are the same; what differs:
+
+- The fields are in one column and 3 are shown at a time; the list scrolls
+  as ▲/▼/EXE move through it (◀/▶ do nothing on the Energy screen).
+- Results take the 3 lines below the fields: the label at the left, the
+  value and unit against the right edge, with fewer digits when a long value
+  would not fit.
+- Kinematics is titled just "Kinematics".
+- Dynamics drops the formula footer and the "g = ..." line (g is the 4th
+  field, 9.80665 m/s² when empty).
+- Energy & power lists only the results it can compute; when all four can,
+  work and power share the last line (`W 200 J  P 100 W`, without the units
+  if the numbers are long).
+- Waves & optics drops the Snell's law header: the refraction angle is the
+  3rd line, "Snell O2".
+- Constants shows 5 constants at a time with short names and their symbols,
+  and the selected one's value and unit on the bottom line.
+- The fx-9860G add-in is in English only.
+
+![fx-9860G energy](screenshots/fx-energy.png) ![fx-9860G constants](screenshots/fx-constants.png)
 
 © José Rodrigues 2026

@@ -19,6 +19,16 @@
 
 #define FORM_MAX 8
 
+/* Spacing of result lines. On the fx-9860G, results start below the
+   fields (at most 3 shown) and FORM_LINE apart, so a form with 3 or more
+   fields has room for 3 result lines */
+#include <gint/config.h>
+#if GINT_HW_FX
+#define FORM_LINE 8
+#else
+#define FORM_LINE 16
+#endif
+
 typedef struct form form_t;
 struct form {
     char const *title_en, *title_pt;
@@ -45,7 +55,8 @@ double form_value(form_t const *f, int i);
 int form_one_empty(form_t const *f);
 
 /* form_result(): A result line: label at x=10, value (printf-style) at
-   x=val_x */
+   x=val_x. On the fx-9860G the label is at the left and the value against
+   the right edge (val_x is ignored) */
 void form_result(int y, int val_x, char const *label, int color,
     char const *fmt, ...);
 

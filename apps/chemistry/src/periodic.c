@@ -1,6 +1,7 @@
 #include <gint/display.h>
 #include <string.h>
 
+#include "color.h"
 #include "periodic.h"
 
 element_t const *element_by_symbol(char const *sym, int len)

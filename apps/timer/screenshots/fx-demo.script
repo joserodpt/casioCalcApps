@@ -1,0 +1,49 @@
+# Timer (fx-9860G, 128x64): stopwatch with laps, then the Pomodoro mode
+wait 1500
+shot fx-stopwatch.png
+# Start the stopwatch and record four laps
+EXE
+wait 2s
+F3
+wait 1500
+F3
+wait 2500
+F3
+wait 1200
+F3
+wait 800
+EXE
+wait 1200
+shot fx-laps.png
+# Pomodoro mode: change focus and break lengths, then start
+F2
+wait 1500
+shot fx-pomodoro.png
+F5
+wait 800
+F6
+wait 800
+EXE
+wait 3s
+shot fx-pomodoro-running.png
+EXE
+wait 800
+shot fx-pomodoro-paused.png
+# Skip to the break phase (shortest break: 3 min) and let it run out
+F3
+F6
+F6
+wait 1500
+shot fx-break.png
+EXE
+wait 181s
+wait 500
+shot fx-times-up.png
+# About screen
+OPTN
+wait 800
+shot fx-info.png
+EXIT
+wait 500
+EXIT
+wait 1s

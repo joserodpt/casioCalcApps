@@ -2,13 +2,14 @@
 
 # casioPrizmApps
 
-**Useful add-ins for the Casio fx-CG50 / fx-CG10 / fx-CG20 (Prizm) graphing calculators**
+**Useful add-ins for the Casio fx-CG50 / fx-CG10 / fx-CG20 (Prizm) graphing calculators,
+with black and white versions of most of them for the fx-9860G family**
 
 A DC circuit simulator, toolkits for electronics, chemistry, physics, logic and
 networking, number converters, a timer and a firmware dumper, all with colour
 interfaces and in English and Portuguese.
 
-![Calculator](https://img.shields.io/badge/calculator-fx--CG50%20%7C%20CG10%20%7C%20CG20-1f6feb)
+![Calculator](https://img.shields.io/badge/calculator-fx--CG50%20%7C%20CG10%20%7C%20CG20%20%7C%20fx--9860G-1f6feb)
 ![Language](https://img.shields.io/badge/language-C-555555)
 ![Built with](https://img.shields.io/badge/built%20with-fxSDK%20%2B%20gint-8a2be2)
 ![Apps](https://img.shields.io/badge/apps-10-2ea44f)
@@ -21,21 +22,36 @@ interfaces and in English and Portuguese.
 
 ## Apps
 
-| | App | What it does | Download |
-|:---:|---|---|:---:|
-| <img src="apps/electronics/assets-cg/icon-sel.png" width="46"> | [**Electronics**](apps/electronics) | Resistor colour and SMD codes, series/parallel, voltage divider, RC/RL/LC filters, 555 timer, LED resistor | [Electronics.g3a](dist/g3a/Electronics.g3a) |
-| <img src="apps/circuit/assets-cg/icon-sel.png" width="46"> | [**Circuit**](apps/circuit) | DC circuit simulator: wires, batteries, resistors, lamps, switches, diodes, LEDs, meters, potentiometers and fuses, with V, A/mA and W for each part | [Circuit.g3a](dist/g3a/Circuit.g3a) |
-| <img src="apps/chemistry/assets-cg/icon-sel.png" width="46"> | [**Chemistry**](apps/chemistry) | Periodic table, molar mass from a formula, moles, concentration, ideal gas law, unit converter | [Chemistry.g3a](dist/g3a/Chemistry.g3a) |
-| <img src="apps/physics/assets-cg/icon-sel.png" width="46"> | [**Physics**](apps/physics) | Kinematics (SUVAT), dynamics, energy and power, waves and optics, physical constants, unit converter | [Physics.g3a](dist/g3a/Physics.g3a) |
-| <img src="apps/logic/assets-cg/icon-sel.png" width="46"> | [**Logic**](apps/logic) | Boolean expression → truth table, coloured Karnaugh map and simplified sum of products | [Logic.g3a](dist/g3a/Logic.g3a) |
-| <img src="apps/base-n/assets-cg/icon-sel.png" width="46"> | [**Base-N**](apps/base-n) | Programmer's converter: DEC / HEX / OCT / BIN live, 8–64-bit, signed or unsigned, bit grid | [Base-N.g3a](dist/g3a/Base-N.g3a) |
-| <img src="apps/net-tools/assets-cg/icon-sel.png" width="46"> | [**Net Tools**](apps/net-tools) | IPv4 subnet calculator: netmask, network, broadcast, host range, address class, bit grid | [NetTools.g3a](dist/g3a/NetTools.g3a) |
-| <img src="apps/ascii-table/assets-cg/icon-sel.png" width="46"> | [**ASCII**](apps/ascii-table) | ASCII table as a list or a 16×8 grid, and a UTF-8 / UTF-16 encoder for any code point | [ASCII.g3a](dist/g3a/ASCII.g3a) |
-| <img src="apps/timer/assets-cg/icon-sel.png" width="46"> | [**Timer**](apps/timer) | Stopwatch with laps and a Pomodoro timer, driven by the real-time clock | [Timer.g3a](dist/g3a/Timer.g3a) |
-| <img src="apps/firmware-dump/assets-cg/icon-sel.png" width="46"> | [**FirmDump**](apps/firmware-dump) | Dumps the OS, the full ROM or any memory region to storage or over USB, read-only | [FirmDump.g3a](dist/g3a/FirmDump.g3a) |
+| | App | What it does | fx-CG (colour) | fx-9860G (B&W) |
+|:---:|---|---|:---:|:---:|
+| <img src="apps/electronics/assets-cg/icon-sel.png" width="46"> | [**Electronics**](apps/electronics) | Resistor colour and SMD codes, series/parallel, voltage divider, RC/RL/LC filters, 555 timer, LED resistor | [Electronics.g3a](dist/g3a/Electronics.g3a) | [Electronics.g1a](dist/g1a/Electronics.g1a) |
+| <img src="apps/circuit/assets-cg/icon-sel.png" width="46"> | [**Circuit**](apps/circuit) | DC circuit simulator: wires, batteries, resistors, lamps, switches, diodes, LEDs, meters, potentiometers and fuses, with V, A/mA and W for each part | [Circuit.g3a](dist/g3a/Circuit.g3a) | – |
+| <img src="apps/chemistry/assets-cg/icon-sel.png" width="46"> | [**Chemistry**](apps/chemistry) | Periodic table, molar mass from a formula, moles, concentration, ideal gas law, unit converter | [Chemistry.g3a](dist/g3a/Chemistry.g3a) | [Chemistry.g1a](dist/g1a/Chemistry.g1a) |
+| <img src="apps/physics/assets-cg/icon-sel.png" width="46"> | [**Physics**](apps/physics) | Kinematics (SUVAT), dynamics, energy and power, waves and optics, physical constants, unit converter | [Physics.g3a](dist/g3a/Physics.g3a) | [Physics.g1a](dist/g1a/Physics.g1a) |
+| <img src="apps/logic/assets-cg/icon-sel.png" width="46"> | [**Logic**](apps/logic) | Boolean expression → truth table, coloured Karnaugh map and simplified sum of products | [Logic.g3a](dist/g3a/Logic.g3a) | – |
+| <img src="apps/base-n/assets-cg/icon-sel.png" width="46"> | [**Base-N**](apps/base-n) | Programmer's converter: DEC / HEX / OCT / BIN live, 8–64-bit, signed or unsigned, bit grid | [Base-N.g3a](dist/g3a/Base-N.g3a) | [Base-N.g1a](dist/g1a/Base-N.g1a) |
+| <img src="apps/net-tools/assets-cg/icon-sel.png" width="46"> | [**Net Tools**](apps/net-tools) | IPv4 subnet calculator: netmask, network, broadcast, host range, address class, bit grid | [NetTools.g3a](dist/g3a/NetTools.g3a) | [NetTools.g1a](dist/g1a/NetTools.g1a) |
+| <img src="apps/ascii-table/assets-cg/icon-sel.png" width="46"> | [**ASCII**](apps/ascii-table) | ASCII table as a list or a 16×8 grid, and a UTF-8 / UTF-16 encoder for any code point | [ASCII.g3a](dist/g3a/ASCII.g3a) | [ASCII.g1a](dist/g1a/ASCII.g1a) |
+| <img src="apps/timer/assets-cg/icon-sel.png" width="46"> | [**Timer**](apps/timer) | Stopwatch with laps and a Pomodoro timer, driven by the real-time clock | [Timer.g3a](dist/g3a/Timer.g3a) | [Timer.g1a](dist/g1a/Timer.g1a) |
+| <img src="apps/firmware-dump/assets-cg/icon-sel.png" width="46"> | [**FirmDump**](apps/firmware-dump) | Dumps the OS, the full ROM or any memory region to storage or over USB, read-only | [FirmDump.g3a](dist/g3a/FirmDump.g3a) | – |
 
 Every app has its own README with the full key reference. Press **OPTN** in any
 app for its About screen.
+
+### Black and white versions
+
+Electronics, Chemistry, Physics, Base-N, Net Tools, ASCII and Timer also come
+as `.g1a` add-ins for the fx-9860G II, fx-9750G II and Graph 35+E II (128×64
+screen, four shades of grey). They have their own layouts with the same
+tools; what had to be shortened is listed in each app's README. They run in
+English. Circuit, Logic and FirmDump need the colour screen.
+
+| | | |
+|:---:|:---:|:---:|
+| <img src="apps/electronics/screenshots/fx-colorcode.png" width="256"><br>Electronics (colour code) | <img src="apps/electronics/screenshots/fx-divider.png" width="256"><br>Electronics (divider) | <img src="apps/chemistry/screenshots/fx-periodic-fe.png" width="256"><br>Chemistry (periodic table) |
+| <img src="apps/chemistry/screenshots/fx-molar.png" width="256"><br>Chemistry (molar mass) | <img src="apps/physics/screenshots/fx-kinematics.png" width="256"><br>Physics (kinematics) | <img src="apps/physics/screenshots/fx-constants.png" width="256"><br>Physics (constants) |
+| <img src="apps/base-n/screenshots/fx-decimal.png" width="256"><br>Base-N | <img src="apps/net-tools/screenshots/fx-main.png" width="256"><br>Net Tools | <img src="apps/ascii-table/screenshots/fx-utf8-emoji.png" width="256"><br>ASCII (UTF-8) |
+| <img src="apps/ascii-table/screenshots/fx-list.png" width="256"><br>ASCII table | <img src="apps/timer/screenshots/fx-laps.png" width="256"><br>Timer (stopwatch) | <img src="apps/timer/screenshots/fx-pomodoro-running.png" width="256"><br>Timer (Pomodoro) |
 
 ## Screenshots
 
@@ -181,10 +197,12 @@ Click an app to see it in action.
 
 ## Installing on the calculator
 
-1. Download the `.g3a` files you want from the table above (or from [`dist/g3a/`](dist/g3a)).
+1. Download the files you want from the table above: `.g3a` for an fx-CG
+   (from [`dist/g3a/`](dist/g3a)), `.g1a` for an fx-9860G (from [`dist/g1a/`](dist/g1a)).
 2. Connect the calculator to your computer with its USB cable and choose
    **USB Flash** (F1) on the calculator.
-3. Copy the `.g3a` files to the root of the calculator's drive, then eject it.
+3. Copy the files to the root of the calculator's drive, then eject it. (On
+   older fx-9860G models without USB Flash, send `.g1a` files with FA-124.)
 4. The apps appear in the calculator's **MENU**.
 
 ## Building from source
@@ -194,8 +212,7 @@ You need the [fxSDK](https://gitea.planet-casio.com/Lephenixnoir/fxsdk) with
 with [GiteaPC](https://gitea.planet-casio.com/Lephenixnoir/GiteaPC)).
 
 ```sh
-make                            # build all apps -> dist/g3a/*.g3a
-make fx                         # also build the fx-9860G .g1a -> dist/g1a/
+make                            # build all apps -> dist/g3a/*.g3a, dist/g1a/*.g1a
 make app APP=base-n             # build one app
 make send APP=base-n            # build and send to a connected calculator
 make new APP=my-app NAME=MyApp  # create apps/my-app from the template
@@ -210,8 +227,9 @@ The apps are tested on [emuCasioFxCG](https://github.com/joserodpt/emuCasioFxCG)
 an fx-CG50 add-in emulator that runs `.g3a` files on a PC.
 
 ```sh
-./run.sh                 # pick an app, build it and run it in the emulator
-./run.sh base-n          # build apps/base-n and run it
+./run.sh                 # pick cg or fx, then an app; build it and run it
+./run.sh cg base-n       # build apps/base-n and run the colour .g3a
+./run.sh fx base-n       # ... or its black and white .g1a
 scripts/screenshots.sh   # regenerate every app's demo GIF and screenshots
 ```
 
@@ -239,6 +257,16 @@ casioPrizmApps/
 <details>
 <summary><b>Developer notes</b>: shared modules, info screen, icons</summary>
 
+### Black and white (.g1a) versions
+
+An app gets a `.g1a` when its `CMakeLists.txt` says `casio_app(<name> FX ...)`;
+`scripts/build.sh` then builds both. Its 128×64 layout goes in
+`#if GINT_HW_FX` blocks next to the colour one (see `apps/hello` and the
+template), and it calls `screen_init()` at start-up for the greys. The shared
+title bar, F-keys and About screen already have both layouts. Icons are drawn
+by `common/tools/make_icons_fx.py`, and `screenshots/fx-demo.script` makes
+the `fx-*.png` screenshots.
+
 ### Adding code to an app
 
 List new `.c` files under `SOURCES` in the app's `CMakeLists.txt`, and images
@@ -252,6 +280,7 @@ the modules it uses.
 | Header | What it gives |
 | --- | --- |
 | `info.h` | title bar with the info hint, About screen (`info_show`, `info_app`) |
+| `color.h` | colour names on both families (greys on the fx-9860G), `screen_init()` for the grey engine |
 | `i18n.h` | `lang_init()` and `L("English", "Portugues")` |
 | `menu.h` | numbered tool list that toolkit apps open on (`menu_run`) |
 | `form.h` | screen of number fields with live results (`form_run`) |

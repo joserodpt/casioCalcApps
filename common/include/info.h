@@ -7,12 +7,14 @@
 
 #include <gint/display.h>
 #include <gint/keyboard.h>
+#include "color.h"
 
 /* Key that opens the info screen, and the hint shown in the title bar */
 #define INFO_KEY   KEY_OPTN
 #define INFO_HINT  "OPTN for info"
 
-/* Large 10x14 monospace font (charset "print"), from common/assets-cg */
+/* Large 10x14 monospace font (charset "print"), from common/assets-cg and
+   common/assets-fx */
 extern font_t const font_big;
 
 /* info_title(): Title bar with the app name and the info key hint */

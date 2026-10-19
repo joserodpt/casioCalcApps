@@ -8,7 +8,7 @@ include(Fxconv)
 find_package(Gint 2.9 REQUIRED)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../common/common.cmake)
 
-casio_app(Timer NAME_PT "Temporizador"
+casio_app(Timer FX NAME_PT "Temporizador"
   SOURCES
     src/main.c
 )
