@@ -69,34 +69,54 @@ def draw_net_tools(d, c):
 
 
 def draw_ascii_table(d, c):
-    # "Aa" with a code below, suggesting a character table
-    text(d, 32, 20, "Aa", 15)
-    d.rounded_rectangle(box(50, 24, 80, 38), radius=3 * S, fill=WHITE)
-    text(d, 65, 31.5, "41", 9, c)
+    # A character tile and its codes, like one row of the table
+    d.rounded_rectangle(box(14, 9, 42, 39), radius=4 * S, fill=WHITE)
+    text(d, 28, 24.5, "A", 22, c)
+    text(d, 63, 17, "65", 13)
+    text(d, 63, 31.5, "0x41", 11)
 
 
 def draw_timer(d, c):
-    # Stopwatch: a circle with a top button and two hands
+    # Stopwatch: crown and side button, ticks, two hands, inside the panel
     w = 2 * S
-    d.rectangle(box(42, 6, 50, 10), fill=WHITE)
-    d.line(box(46, 10, 46, 14), fill=WHITE, width=w)
-    d.ellipse(box(30, 13, 62, 41), outline=WHITE, width=w)
-    d.line(box(46, 27, 46, 18), fill=WHITE, width=w)
-    d.line(box(46, 27, 54, 31), fill=WHITE, width=w)
+    cx, cy, r = 46, 27, 12
+    d.rounded_rectangle(box(42, 8, 50, 11), radius=S, fill=WHITE)
+    d.line(box(46, 11, 46, 15), fill=WHITE, width=w)
+    d.line(box(55, 15, 58, 12), fill=WHITE, width=w)
+    d.ellipse(box(cx - r, cy - r, cx + r, cy + r), outline=WHITE, width=w)
+    for i in range(12):
+        a = math.radians(i * 30)
+        r1 = r - (4 if i % 3 == 0 else 2.5)
+        d.line(box(cx + r1 * math.sin(a), cy - r1 * math.cos(a),
+                   cx + (r - 1.5) * math.sin(a), cy - (r - 1.5) * math.cos(a)),
+               fill=WHITE, width=S)
+    d.line(box(cx, cy, cx, cy - 8), fill=WHITE, width=w)
+    d.line(box(cx, cy, cx + 6, cy + 3), fill=WHITE, width=w)
+    d.ellipse(box(cx - 1.5, cy - 1.5, cx + 1.5, cy + 1.5), fill=WHITE)
 
 
 def draw_logic(d, c):
-    # Mini Karnaugh map: 2x2 grid, three cells filled, 1px gaps between
-    cells = [(0, 0, False), (1, 0, True), (0, 1, True), (1, 1, True)]
-    gx, gy, s, gap = 33, 9, 12, 1
-    d.rounded_rectangle(box(gx - 1, gy - 1, gx + 2 * s + 1, gy + 2 * s + 1),
-                        radius=2 * S, fill=WHITE)
-    for cx, cy, on in cells:
-        x1 = gx + cx * s + gap
-        y1 = gy + cy * s + gap
-        d.rectangle(box(x1, y1, x1 + s - gap, y1 + s - gap),
-                    fill=WHITE if on else c)
-    text(d, 46, 37, "AB+C", 9)
+    # A 2x2 Karnaugh map (three 1s, one 0) next to an AND gate
+    s, gx, gy = 13, 13, 11
+    for cx, cy, on in ((0, 0, False), (1, 0, True), (0, 1, True),
+                       (1, 1, True)):
+        x1, y1 = gx + cx * (s + 2), gy + cy * (s + 2)
+        if on:
+            d.rounded_rectangle(box(x1, y1, x1 + s, y1 + s), radius=2 * S,
+                                fill=WHITE)
+            text(d, x1 + s / 2, y1 + s / 2, "1", 9, c)
+        else:
+            d.rounded_rectangle(box(x1, y1, x1 + s, y1 + s), radius=2 * S,
+                                outline=WHITE, width=S)
+            text(d, x1 + s / 2, y1 + s / 2, "0", 9)
+    # AND gate: flat back, round front, two inputs, one output
+    w = 2 * S
+    x0, y0, y1 = 56, 15, 33
+    d.line(box(48, 19.5, x0, 19.5), fill=WHITE, width=w)
+    d.line(box(48, 28.5, x0, 28.5), fill=WHITE, width=w)
+    d.chord(box(x0 + 1, y0, x0 + 19, y1), 270, 90, fill=WHITE)
+    d.rectangle(box(x0, y0, x0 + 10, y1), fill=WHITE)
+    d.line(box(x0 + 19, 24, 82, 24), fill=WHITE, width=w)
 
 
 def draw_firmware_dump(d, c):
@@ -133,22 +153,21 @@ def draw_converter(d, c):
 
 
 def draw_physics(d, c):
-    # An atom: nucleus with two elliptical orbits
-    import math as _m
-    cx, cy = 46, 24
-    d.ellipse(box(cx-3, cy-3, cx+3, cy+3), fill=WHITE)   # nucleus
-    # two tilted orbits drawn as point rings
-    for ang in (35, -35):
-        pts = []
-        for i in range(0, 361, 12):
-            t = _m.radians(i)
-            ex, ey = 17*_m.cos(t), 7*_m.sin(t)
-            a = _m.radians(ang)
-            rx = ex*_m.cos(a) - ey*_m.sin(a)
-            ry = ex*_m.sin(a) + ey*_m.cos(a)
-            pts.append(((cx+rx)*S, (cy+ry)*S))
-        d.line(pts, fill=WHITE, width=S)
-    text(d, 46, 37, "F=ma", 8)
+    # An atom: nucleus, three orbits and their electrons
+    cx, cy, rx, ry = 46, 24, 17, 6
+    w = int(1.6 * S)
+    for ang, e in ((0, 0), (60, 140), (-60, 260)):
+        a = math.radians(ang)
+        def at(t):
+            ex, ey = rx * math.cos(t), ry * math.sin(t)
+            return (cx + ex * math.cos(a) - ey * math.sin(a),
+                    cy + ex * math.sin(a) + ey * math.cos(a))
+        pts = [tuple(v * S for v in at(math.radians(i)))
+               for i in range(0, 361, 3)]
+        d.line(pts, fill=WHITE, width=w, joint="curve")
+        x, y = at(math.radians(e))
+        d.ellipse(box(x - 2.2, y - 2.2, x + 2.2, y + 2.2), fill=WHITE)
+    d.ellipse(box(cx - 4, cy - 4, cx + 4, cy + 4), fill=WHITE)
 
 
 # app folder -> (panel colour, pictogram)
