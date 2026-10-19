@@ -10,6 +10,8 @@
 
 extern bopti_image_t const img_qr_repo;
 
+char const *app_name = "";
+
 /* info_title(): Title bar with the app name and the info key hint */
 void info_title(char const *title, int color)
 {

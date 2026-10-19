@@ -27,4 +27,10 @@ void info_screen(char const *name, char const *subtitle, int color,
 #define info_show(name, subtitle, color) \
 	info_screen(name, subtitle, color, __DATE__, __TIME__)
 
+/* Name of the running app, for shared screens (forms, unit converter) that
+   open the info screen; menu_run() sets it */
+extern char const *app_name;
+
+#define info_app(subtitle, color) info_show(app_name, subtitle, color)
+
 #endif /* CASIO_INFO */

@@ -1,16 +1,15 @@
 #include <gint/display.h>
 #include <gint/keyboard.h>
 #include <math.h>
-#include <stdarg.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "utils.h"
 #include "info.h"
 #include "version.h"
 #include "i18n.h"
 #include "fmt.h"
-#include "ui.h"
+#include "form.h"
+#include "menu.h"
 #include "units.h"
 
 #define COLOR   C_RGB(20, 10, 2)    /* warm orange */
@@ -20,140 +19,13 @@
 #define G0      9.80665             /* standard gravity */
 #define DEG     (M_PI / 180.0)
 
-//---
-//  Generic numeric form (up to 8 fields; results callback draws below)
-//---
+/* A result line: label at x=10, value at x=150 */
+#define res(y, label, color, ...) \
+    form_result(y, 150, label, color, __VA_ARGS__)
 
-typedef struct form form_t;
-struct form {
-    char const *title_en, *title_pt;
-    int color;
-    struct {
-        char const *label_en, *label_pt, *unit;
-        numfield_t f;
-    } fields[8];
-    int count;
-    int sel;
-    int cols;                       /* 1 or 2 column layout */
-    void (*results)(form_t *, int y);
-};
+static double fv(form_t *f, int i) { return form_value(f, i); }
 
-static double fv(form_t *f, int i) { return numfield_value(&f->fields[i].f); }
-
-static void form_draw(form_t *f)
-{
-    dclear(C_WHITE);
-    info_title(lang_current == L_PT ? f->title_pt : f->title_en, f->color);
-
-    int rows = (f->count + f->cols - 1) / f->cols;
-    int colw = DWIDTH / f->cols;
-
-    /* Fields start after the widest label (at least x+54) */
-    int fx = 54;
-    for (int i = 0; i < f->count; i++) {
-        int w;
-        dsize(lang_current == L_PT ? f->fields[i].label_pt
-            : f->fields[i].label_en, NULL, &w, NULL);
-        if (10 + w + 8 > fx) fx = 10 + w + 8;
-    }
-
-    for (int i = 0; i < f->count; i++) {
-        int x = (i / rows) * colw;
-        int y = 24 + (i % rows) * 20;
-        bool sel = i == f->sel;
-        char const *lab = lang_current == L_PT ? f->fields[i].label_pt
-            : f->fields[i].label_en;
-        int bw = f->cols == 2 ? colw - 90 : 170;
-        dtext(x + 10, y + 3, sel ? f->color : C_BLACK, lab);
-        numfield_draw(&f->fields[i].f, x + fx, y, bw, sel, f->color);
-        dtext(x + fx + bw + 4, y + 3, C_DARK, f->fields[i].unit);
-    }
-
-    int ry = 24 + rows * 20 + 6;
-    dline(6, ry - 4, DWIDTH - 7, ry - 4, C_LIGHT);
-    f->results(f, ry);
-    dupdate();
-}
-
-static void form_run(form_t *f)
-{
-    while (1) {
-        form_draw(f);
-        int key = getkey().key;
-        int rows = (f->count + f->cols - 1) / f->cols;
-        if (key == KEY_EXIT) return;
-        if (key == INFO_KEY) {
-            info_show("Physics", lang_current == L_PT ? f->title_pt
-                : f->title_en, f->color);
-            continue;
-        }
-        if (key == KEY_UP) f->sel = (f->sel + f->count - 1) % f->count;
-        else if (key == KEY_DOWN || key == KEY_EXE)
-            f->sel = (f->sel + 1) % f->count;
-        else if (key == KEY_LEFT && f->sel - rows >= 0) f->sel -= rows;
-        else if (key == KEY_RIGHT && f->sel + rows < f->count) f->sel += rows;
-        else numfield_key(&f->fields[f->sel].f, key);
-    }
-}
-
-/* A result line: label at x=10, value at x=140 */
-static void res(int y, char const *label, int color, char const *fmt, ...)
-{
-    char buf[48];
-    va_list ap;
-    va_start(ap, fmt);
-    vsnprintf(buf, sizeof buf, fmt, ap);
-    va_end(ap);
-    dtext(10, y, C_DARK, label);
-    dtext(150, y, color, buf);
-}
-
-//---
-//  Unit converter (same as the Chemistry app)
-//---
-
-static void units_screen(void)
-{
-    int cat = 0, from = 1;
-    numfield_t val = { "1" };
-
-    while (1) {
-        category_t const *c = &categories[cat];
-        dclear(C_WHITE);
-        info_title(lang_current == L_PT ? c->name_pt : c->name, COLOR);
-        dtext(10, 20, C_DARK, L("Value", "Valor"));
-        numfield_draw(&val, 70, 17, 150, true, COLOR);
-        dtext(226, 20, COLOR, c->units[from].name);
-        dline(6, 36, DWIDTH - 7, 36, C_LIGHT);
-        dtext_opt(DWIDTH / 2, 209, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
-            L("<> category   ^v input unit", "<> categoria   ^v unidade"));
-
-        double x = numfield_value(&val);
-        for (int i = 0; i < c->count; i++) {
-            int y = 42 + i * 14;
-            bool sel = i == from;
-            if (sel) drect(4, y - 1, DWIDTH - 9, y + 11, C_RGB(28, 29, 31));
-            dtext(14, y, sel ? COLOR : C_BLACK, c->units[i].name);
-            char b[32];
-            if (isnan(x)) strcpy(b, "-");
-            else fmt_g(b, unit_convert(c, from, i, x), 7);
-            dtext(120, y, sel ? COLOR : C_BLACK, b);
-        }
-        dupdate();
-
-        int key = getkey().key;
-        if (key == KEY_EXIT) return;
-        if (key == INFO_KEY) { info_show("Physics",
-            L("Unit converter", "Conversor de unidades"), COLOR); continue; }
-        if (key == KEY_LEFT) { cat = (cat + category_count - 1)
-            % category_count; from = 0; }
-        else if (key == KEY_RIGHT) { cat = (cat + 1) % category_count;
-            from = 0; }
-        else if (key == KEY_UP) from = (from + c->count - 1) % c->count;
-        else if (key == KEY_DOWN) from = (from + 1) % c->count;
-        else numfield_key(&val, key);
-    }
-}
+static void units_run(void) { units_screen(0, COLOR); }
 
 //---
 //  Kinematics: SUVAT by constraint propagation
@@ -435,8 +307,7 @@ static void constants_screen(void)
 
         int key = getkey().key;
         if (key == KEY_EXIT) return;
-        if (key == INFO_KEY) info_show("Physics",
-            L("Constants", "Constantes"), COLOR);
+        if (key == INFO_KEY) info_app(L("Constants", "Constantes"), COLOR);
         else if (key == KEY_UP) sel = (sel + CONST_COUNT - 1) % CONST_COUNT;
         else if (key == KEY_DOWN) sel = (sel + 1) % CONST_COUNT;
     }
@@ -446,69 +317,31 @@ static void constants_screen(void)
 //  Menu
 //---
 
-typedef struct {
-    char const *name_en, *name_pt, *desc_en, *desc_pt;
-    void (*run)(void);
-} tool_t;
-
-static tool_t const tools[] = {
+static menu_item_t const tools[] = {
     { "Unit converter", "Conversor de unidades",
       "Length, time, speed, energy...", "Comprimento, tempo, energia...",
-      units_screen },
+      units_run, COLOR },
     { "Kinematics", "Cinematica", "SUVAT: enter any 3, solve the rest",
-      "SUVAT: 3 valores, resolve o resto", kinematics_screen },
+      "SUVAT: 3 valores, resolve o resto", kinematics_screen, COLOR },
     { "Dynamics", "Dinamica", "F = ma, weight, momentum",
-      "F = ma, peso, quantidade de mov.", dynamics_screen },
+      "F = ma, peso, quantidade de mov.", dynamics_screen, COLOR },
     { "Energy & power", "Energia e potencia", "KE, PE, work, power",
-      "Ec, Ep, trabalho, potencia", energy_screen },
+      "Ec, Ep, trabalho, potencia", energy_screen, COLOR },
     { "Waves & optics", "Ondas e optica", "v = f lambda, Snell's law",
-      "v = f lambda, lei de Snell", waves_screen },
+      "v = f lambda, lei de Snell", waves_screen, COLOR },
     { "Constants", "Constantes", "c, g, G, h, e, NA, R...",
-      "c, g, G, h, e, NA, R...", constants_screen },
+      "c, g, G, h, e, NA, R...", constants_screen, COLOR },
 };
-#define TOOL_COUNT (int)(sizeof tools / sizeof *tools)
 
-static void draw_menu(int sel)
-{
-    dclear(C_WHITE);
-    info_title("Physics", COLOR);
-    for (int i = 0; i < TOOL_COUNT; i++) {
-        int y = 22 + i * 30;
-        if (i == sel) drect(0, y, DWIDTH - 1, y + 27, C_RGB(28, 29, 31));
-        drect(8, y + 4, 28, y + 24, COLOR);
-        dprint_opt(18, y + 9, C_WHITE, C_NONE, DTEXT_CENTER, DTEXT_TOP,
-            "%d", i + 1);
-        dtext(38, y + 3, i == sel ? COLOR : C_BLACK,
-            lang_current == L_PT ? tools[i].name_pt : tools[i].name_en);
-        dtext(38, y + 15, C_DARK,
-            lang_current == L_PT ? tools[i].desc_pt : tools[i].desc_en);
-        if (i == sel) dtext_opt(DWIDTH - 10, y + 9, COLOR, C_NONE,
-            DTEXT_RIGHT, DTEXT_TOP, ">");
-    }
-    dupdate();
-}
+static menu_t const menu = {
+    "Physics", "Physics toolkit " APPS_VERSION,
+    "Ferramentas de fisica " APPS_VERSION, COLOR,
+    tools, (int)(sizeof tools / sizeof *tools),
+};
 
 int main(void)
 {
-    int sel = 0;
     lang_init();
-
-    while (1) {
-        draw_menu(sel);
-        int key = getkey().key;
-        int open = -1;
-        if (key == KEY_EXIT) return 1;
-        else if (key == INFO_KEY)
-            info_show("Physics", L("Physics toolkit " APPS_VERSION,
-                "Ferramentas de fisica " APPS_VERSION), COLOR);
-        else if (key == KEY_UP) sel = (sel + TOOL_COUNT - 1) % TOOL_COUNT;
-        else if (key == KEY_DOWN) sel = (sel + 1) % TOOL_COUNT;
-        else if (key == KEY_EXE || key == KEY_RIGHT) open = sel;
-        else switch (key) {
-            case KEY_1: open = 0; break; case KEY_2: open = 1; break;
-            case KEY_3: open = 2; break; case KEY_4: open = 3; break;
-            case KEY_5: open = 4; break; case KEY_6: open = 5; break;
-        }
-        if (open >= 0 && open < TOOL_COUNT) { sel = open; tools[open].run(); }
-    }
+    menu_run(&menu);
+    return 1;
 }

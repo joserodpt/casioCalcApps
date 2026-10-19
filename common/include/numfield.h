@@ -1,29 +1,22 @@
 //---
-//  ui - Small shared helpers for the Converter screens
+//	numfield - A number being typed (digits, '.', EXP, sign)
 //---
 
-#ifndef CONV_UI
-#define CONV_UI
+#ifndef CASIO_NUMFIELD
+#define CASIO_NUMFIELD
 
-#include <gint/display.h>
 #include <stdbool.h>
 
-/* A number being typed (digits, '.', EXP, sign) */
 typedef struct {
     char text[24];
 } numfield_t;
 
-double numfield_value(numfield_t const *f);   /* NaN if empty/invalid */
-void numfield_set(numfield_t *f, double v);
-bool numfield_key(numfield_t *f, int key);    /* true if the key was used */
+/* numfield_value(): The typed number, NaN if empty or invalid */
+double numfield_value(numfield_t const *f);
+/* numfield_key(): Apply a key (digits . EXP (-) DEL AC); true if used */
+bool numfield_key(numfield_t *f, int key);
+/* numfield_draw(): Input box with a cursor when selected */
 void numfield_draw(numfield_t const *f, int x, int y, int w, bool sel,
     int color);
 
-/* result(): label at x=10, value at x=val_x */
-void conv_result(int y, int val_x, char const *label, int color,
-    char const *value);
-
-/* Colour for an element category index (0..8) */
-int category_color(int cat);
-
-#endif /* CONV_UI */
+#endif /* CASIO_NUMFIELD */

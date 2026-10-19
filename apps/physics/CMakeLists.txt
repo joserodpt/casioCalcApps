@@ -11,7 +11,4 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../common/common.cmake)
 casio_app(Physics NAME_PT "Fisica"
   SOURCES
     src/main.c
-    src/ui.c
-    src/fmt.c
-    src/units.c
 )

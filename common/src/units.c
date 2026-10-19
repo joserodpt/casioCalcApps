@@ -1,4 +1,13 @@
+#include <gint/display.h>
+#include <gint/keyboard.h>
+#include <math.h>
+#include <string.h>
+
 #include "units.h"
+#include "numfield.h"
+#include "fmt.h"
+#include "info.h"
+#include "i18n.h"
 
 #define U(n, f)      { n, f, 0 }
 #define UO(n, f, o)  { n, f, o }
@@ -86,4 +95,52 @@ double unit_convert(category_t const *cat, int from, int to, double x)
     unit_t const *b = &cat->units[to];
     double base = x * a->factor + a->offset;
     return (base - b->offset) / b->factor;
+}
+
+void units_screen(int cat, int color)
+{
+    int from = 1;
+    numfield_t val = { "1" };
+
+    while (1) {
+        category_t const *c = &categories[cat];
+        dclear(C_WHITE);
+        info_title(L(c->name, c->name_pt), color);
+
+        dtext(10, 20, C_DARK, L("Value", "Valor"));
+        numfield_draw(&val, 70, 17, 150, true, color);
+        dtext(226, 20, color, c->units[from].name);
+        dline(6, 36, DWIDTH - 7, 36, C_LIGHT);
+        dtext_opt(DWIDTH / 2, 209, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
+            L("<> category   ^v input unit", "<> categoria   ^v unidade"));
+
+        double x = numfield_value(&val);
+        for (int i = 0; i < c->count; i++) {
+            int y = 42 + i * 14;
+            bool sel = i == from;
+            if (sel) drect(4, y - 1, DWIDTH - 9, y + 11, C_RGB(28, 29, 31));
+            dtext(14, y, sel ? color : C_BLACK, c->units[i].name);
+            char b[32];
+            if (isnan(x)) strcpy(b, "-");
+            else fmt_g(b, unit_convert(c, from, i, x), 7);
+            dtext(120, y, sel ? color : C_BLACK, b);
+        }
+        dupdate();
+
+        int key = getkey().key;
+        if (key == KEY_EXIT) return;
+        if (key == INFO_KEY)
+            info_app(L("Unit converter", "Conversor de unidades"), color);
+        else if (key == KEY_LEFT) {
+            cat = (cat + category_count - 1) % category_count;
+            from = 0;
+        }
+        else if (key == KEY_RIGHT) {
+            cat = (cat + 1) % category_count;
+            from = 0;
+        }
+        else if (key == KEY_UP) from = (from + c->count - 1) % c->count;
+        else if (key == KEY_DOWN) from = (from + 1) % c->count;
+        else numfield_key(&val, key);
+    }
 }

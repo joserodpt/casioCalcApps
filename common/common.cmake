@@ -17,10 +17,18 @@ if(_vmin LESS 10)
 endif()
 set(APPS_VERSION_G3A "${_vmaj}.${_vmin}.0000")
 
+# Shared code, built as a static library: the linker only takes the modules
+# an app actually uses, so adding a module here costs the other apps nothing
 set(COMMON_SOURCES
   ${CASIO_COMMON_DIR}/src/utils.c
   ${CASIO_COMMON_DIR}/src/info.c
   ${CASIO_COMMON_DIR}/src/i18n.c
+  ${CASIO_COMMON_DIR}/src/keys.c
+  ${CASIO_COMMON_DIR}/src/fmt.c
+  ${CASIO_COMMON_DIR}/src/numfield.c
+  ${CASIO_COMMON_DIR}/src/form.c
+  ${CASIO_COMMON_DIR}/src/menu.c
+  ${CASIO_COMMON_DIR}/src/units.c
 )
 
 # Shared assets: big font and the repository QR code for the info screen
@@ -40,12 +48,17 @@ function(casio_app NAME)
   fxconv_declare_assets(${APP_ASSETS} ${APP_ASSETS_fx} ${APP_ASSETS_cg}
     ${COMMON_ASSETS_cg} WITH_METADATA)
 
-  add_executable(${NAME} ${APP_SOURCES} ${COMMON_SOURCES}
+  add_library(casio_common STATIC ${COMMON_SOURCES})
+  target_include_directories(casio_common PUBLIC ${CASIO_COMMON_DIR}/include)
+  target_compile_options(casio_common PRIVATE -Wall -Wextra -Os)
+  target_link_libraries(casio_common PUBLIC Gint::Gint)
+
+  # The assets stay in the executable: info.c (in the library) uses them
+  add_executable(${NAME} ${APP_SOURCES}
     ${APP_ASSETS} ${APP_ASSETS_${FXSDK_PLATFORM}}
     ${COMMON_ASSETS_${FXSDK_PLATFORM}})
-  target_include_directories(${NAME} PRIVATE ${CASIO_COMMON_DIR}/include)
   target_compile_options(${NAME} PRIVATE -Wall -Wextra -Os)
-  target_link_libraries(${NAME} Gint::Gint)
+  target_link_libraries(${NAME} casio_common)
 
   if("${FXSDK_PLATFORM_LONG}" STREQUAL fx9860G)
     generate_g1a(TARGET ${NAME} OUTPUT "${NAME}.g1a"

@@ -74,20 +74,20 @@ void field_fkeys(field_t const *f, int color);
 //  Forms: a list of fields with live results below
 //---
 
-typedef struct form form_t;
-struct form {
+typedef struct eform eform_t;
+struct eform {
     char const *title;
     int color;
     field_t *fields;
     int count;
     int cols;                   /* fields are laid out in columns */
     int label_w;
-    void (*results)(form_t *f, int y);
-    void (*changed)(form_t *f, int index);  /* optional */
+    void (*results)(eform_t *f, int y);
+    void (*changed)(eform_t *f, int index);  /* optional */
     int sel;
 };
 
-void form_run(form_t *f);
+void eform_run(eform_t *f);
 
 /* result(): Result line, label at the left and value at x = 100 (further
    right if the label is longer) */

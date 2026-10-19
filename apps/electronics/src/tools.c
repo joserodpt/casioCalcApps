@@ -13,7 +13,7 @@
 
 #define NUM(lbl, u, t)  { .kind = F_NUM, .label = lbl, .unit = u, .text = t }
 
-static double val(form_t const *f, int i)
+static double val(eform_t const *f, int i)
 {
     return field_value(&f->fields[i]);
 }
@@ -57,7 +57,7 @@ static void smd_code_line(int y, char const *label, char const *code,
     if (!exact) result_note(y, "nearest, %s", fmt_si(a, nearest, S_OHM, 3));
 }
 
-static void smd_results(form_t *f, int y)
+static void smd_results(eform_t *f, int y)
 {
     char a[32], code[8];
     bool exact, ok;
@@ -126,13 +126,13 @@ static void smd_results(form_t *f, int y)
 
 void smd_run(void)
 {
-    static form_t f = {
+    static eform_t f = {
         .color = SMD_COLOR, .fields = smd_fields,
         .count = 4, .cols = 1, .label_w = 70, .results = smd_results,
     };
     f.title = L("SMD codes", "Codigos SMD");
     smd_fields[2].options = eia_letters;
-    form_run(&f);
+    eform_run(&f);
 }
 
 //---
@@ -148,7 +148,7 @@ static field_t rnet_fields[] = {
     NUM("R7", S_OHM, ""), NUM("R8", S_OHM, ""),
 };
 
-static void rnet_results(form_t *f, int y)
+static void rnet_results(eform_t *f, int y)
 {
     double series = 0, conductance = 0;
     int n = 0;
@@ -180,13 +180,13 @@ static void rnet_results(form_t *f, int y)
 
 void rnet_run(void)
 {
-    static form_t f = {
+    static eform_t f = {
         .color = RNET_COLOR,
         .fields = rnet_fields, .count = 8, .cols = 2, .label_w = 30,
         .results = rnet_results,
     };
     f.title = L("Series / parallel", "Serie / paralelo");
-    form_run(&f);
+    eform_run(&f);
 }
 
 //---
@@ -200,7 +200,7 @@ static field_t div_fields[] = {
     NUM("R2 (bottom)", S_OHM, "4.7k"), NUM("Target Vout", "V", "3.3"),
 };
 
-static void div_results(form_t *f, int y)
+static void div_results(eform_t *f, int y)
 {
     char a[32], b[32], c[16];
     double vin = val(f, 0), r1 = val(f, 1), r2 = val(f, 2), vt = val(f, 3);
@@ -240,12 +240,12 @@ static void div_results(form_t *f, int y)
 
 void divider_run(void)
 {
-    static form_t f = {
+    static eform_t f = {
         .color = DIV_COLOR, .fields = div_fields,
         .count = 4, .cols = 1, .label_w = 108, .results = div_results,
     };
     f.title = L("Voltage divider", "Divisor de tensao");
-    form_run(&f);
+    eform_run(&f);
 }
 
 //---
@@ -258,7 +258,7 @@ static field_t filt_fields[] = {
     NUM("R", S_OHM, "1k"), NUM("C", "F", "100n"), NUM("L", "H", "10m"),
 };
 
-static void filt_results(form_t *f, int y)
+static void filt_results(eform_t *f, int y)
 {
     char a[32], b[32];
     double r = val(f, 0), c = val(f, 1), l = val(f, 2);
@@ -291,13 +291,13 @@ static void filt_results(form_t *f, int y)
 
 void filter_run(void)
 {
-    static form_t f = {
+    static eform_t f = {
         .color = FILT_COLOR,
         .fields = filt_fields, .count = 3, .cols = 1, .label_w = 30,
         .results = filt_results,
     };
     f.title = L("RC / RL filters", "Filtros RC / RL");
-    form_run(&f);
+    eform_run(&f);
 }
 
 //---
@@ -314,7 +314,7 @@ static field_t t555_fields[] = {
     NUM("R1", S_OHM, "1k"), NUM("R2", S_OHM, "10k"), NUM("C", "F", "10" S_MU),
 };
 
-static void t555_changed(form_t *f, int index)
+static void t555_changed(eform_t *f, int index)
 {
     (void)index;
     bool mono = f->fields[0].choice == 1;
@@ -322,7 +322,7 @@ static void t555_changed(form_t *f, int index)
     f->fields[2].disabled = mono;
 }
 
-static void t555_results(form_t *f, int y)
+static void t555_results(eform_t *f, int y)
 {
     char a[32], b[32];
     double r1 = val(f, 1), r2 = val(f, 2), c = val(f, 3);
@@ -359,13 +359,13 @@ static void t555_results(form_t *f, int y)
 
 void timer555_run(void)
 {
-    static form_t f = {
+    static eform_t f = {
         .color = T555_COLOR, .fields = t555_fields,
         .count = 4, .cols = 1, .label_w = 50, .results = t555_results,
         .changed = t555_changed,
     };
     f.title = L("555 timer", "Temporizador 555");
-    form_run(&f);
+    eform_run(&f);
 }
 
 //---
@@ -388,7 +388,7 @@ static field_t led_fields[] = {
     NUM("Current", "A", "20m"), NUM("LEDs", "", "1"),
 };
 
-static void led_changed(form_t *f, int index)
+static void led_changed(eform_t *f, int index)
 {
     field_t *type = &f->fields[0];
     if (index == 0 && type->choice != LED_CUSTOM)
@@ -406,7 +406,7 @@ static char const *rating(double p)
     return "> 5 W";
 }
 
-static void led_results(form_t *f, int y)
+static void led_results(eform_t *f, int y)
 {
     char a[32], b[32], c[32];
     double vs = val(f, 1), vf = val(f, 2), i = val(f, 3);
@@ -446,11 +446,11 @@ static void led_results(form_t *f, int y)
 
 void led_run(void)
 {
-    static form_t f = {
+    static eform_t f = {
         .color = LED_COLOR, .fields = led_fields,
         .count = 5, .cols = 1, .label_w = 70, .results = led_results,
         .changed = led_changed,
     };
     f.title = L("LED resistor", "Resistencia LED");
-    form_run(&f);
+    eform_run(&f);
 }

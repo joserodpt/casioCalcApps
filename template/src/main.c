@@ -1,28 +1,31 @@
 #include <gint/display.h>
 #include <gint/keyboard.h>
 
-#include "utils.h"
 #include "info.h"
+#include "version.h"
+#include "i18n.h"
 
-#define VERSION "v1.0"
 #define COLOR   C_BLUE
 
 static void draw(void)
 {
     dclear(C_WHITE);
     info_title("__APP_NAME__", COLOR);
-    row_print(2, 1, "Hello from __APP_NAME__!");
-    row_print(4, 1, "Press EXIT to quit.");
+    dtext(6, 36, C_BLACK, L("Hello from __APP_NAME__!",
+        "Ola do __APP_NAME__!"));
+    dtext(6, 64, C_BLACK, L("Press EXIT to quit.", "Prima EXIT para sair."));
     dupdate();
 }
 
 int main(void)
 {
+    lang_init();
+
     while(1) {
         draw();
 
         int key = getkey().key;
         if(key == KEY_EXIT) return 1;
-        if(key == INFO_KEY) info_show("__APP_NAME__", VERSION, COLOR);
+        if(key == INFO_KEY) info_show("__APP_NAME__", APPS_VERSION, COLOR);
     }
 }

@@ -1,3 +1,4 @@
+#include <gint/display.h>
 #include <string.h>
 
 #include "periodic.h"
@@ -67,6 +68,21 @@ static char const * const cat_names[] = {
     "Halogen", "Transition", "Post-transition", "Lanth/Actinide" };
 
 char const *category_name(int cat) { return cat_names[cat]; }
+
+int category_color(int cat)
+{
+    switch (cat) {
+        case CAT_NONMETAL: return C_RGB(7, 20, 10);     /* green  */
+        case CAT_NOBLE: return C_RGB(20, 12, 24);       /* purple */
+        case CAT_ALKALI: return C_RGB(28, 8, 6);        /* red    */
+        case CAT_ALKEARTH: return C_RGB(28, 16, 4);     /* orange */
+        case CAT_METALLOID: return C_RGB(10, 18, 20);   /* teal   */
+        case CAT_HALOGEN: return C_RGB(10, 16, 28);     /* blue   */
+        case CAT_TRANSITION: return C_RGB(18, 18, 22);  /* grey   */
+        case CAT_POSTTRANS: return C_RGB(14, 20, 24);   /* slate  */
+        default: return C_RGB(24, 14, 22);              /* pink   */
+    }
+}
 
 static bool in_set(int z, int const *set)
 {

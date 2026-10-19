@@ -30,6 +30,8 @@ int element_at_grid(int row, int col);
 /* element_category(): a coarse category index 0..8 for colouring */
 int element_category(int z);
 char const *category_name(int cat);
+/* category_color(): Colour of a category, for the grid cells */
+int category_color(int cat);
 
 //---
 //  Molar mass of a formula like "H2SO4", "Ca(OH)2", "CuSO4(H2O)5"

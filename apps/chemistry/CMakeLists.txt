@@ -11,9 +11,6 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../common/common.cmake)
 casio_app(Chemistry NAME_PT "Quimica"
   SOURCES
     src/main.c
-    src/ui.c
-    src/fmt.c
-    src/units.c
     src/periodic.c
     src/periodic_data.c
 )

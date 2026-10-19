@@ -7,6 +7,6 @@ DIR="$ROOT/apps/$1"
 NAME="${2:-$1}"
 [ -e "$DIR" ] && { echo "apps/$1 already exists"; exit 1; }
 cp -r "$ROOT/template" "$DIR"
-grep -rl "__APP_NAME__" "$DIR" | xargs sed -i "s/__APP_NAME__/$NAME/g"
+grep -rl "__APP_NAME__" "$DIR" | xargs perl -pi -e "s/__APP_NAME__/$NAME/g"
 mkdir -p "$DIR/helpers"
 echo "Created apps/$1 (add-in name: $NAME)"

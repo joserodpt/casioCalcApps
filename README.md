@@ -13,7 +13,7 @@ casioPrizmApps/
 │       ├── assets-cg/  icons + images for fx-CG
 │       ├── assets-fx/  icons + images for fx-9860G
 │       └── CMakeLists.txt
-├── common/             code + assets shared by every app (utils, info screen, big font)
+├── common/             code + assets shared by the apps (info screen, menu, forms...)
 ├── template/           skeleton used by `make new`
 ├── scripts/            build.sh, new-app.sh
 └── dist/               compiled .g3a files for every app
@@ -41,13 +41,29 @@ headless screenshots, which is how the screenshots in each app are produced).
 ./run.sh base-n              # build apps/base-n and run it in the emulator
 ```
 
-Set `EMUCASIO` if your emuCasio checkout is not in `~/VSCode/emuCasio`.
+Set `EMUCASIO` if your emuCasioFxCG checkout is not in `~/VSCode/emuCasioFxCG`.
 
 ## Adding code to an app
 
 List new `.c` files under `SOURCES` in the app's `CMakeLists.txt`, and images
 under `ASSETS_cg` (with an entry in `assets-cg/fxconv-metadata.txt`).
-Shared code goes in `common/src` + `common/include` and is linked into every app.
+Shared code goes in `common/src` + `common/include` (and `COMMON_SOURCES` in
+`common/common.cmake`). It is built as a static library, so an app only links
+the modules it uses.
+
+## Shared modules
+
+| Header | What it gives |
+| --- | --- |
+| `info.h` | title bar with the info hint, About screen (`info_show`, `info_app`) |
+| `i18n.h` | `lang_init()` and `L("English", "Portugues")` |
+| `menu.h` | numbered tool list that toolkit apps open on (`menu_run`) |
+| `form.h` | screen of number fields with live results (`form_run`) |
+| `numfield.h` | one number input box (digits, `.`, EXP, sign) |
+| `units.h` | unit tables, `unit_convert()` and the converter screen |
+| `fmt.h` | `fmt_g()` / `fmt_fixed()`: doubles without printf's `%f` |
+| `keys.h` | `key_digit()` / `key_hex()` (A-F on X,theta,T log ln sin cos tan) |
+| `utils.h` | F-key buttons, scrollbar |
 
 ## Info screen
 

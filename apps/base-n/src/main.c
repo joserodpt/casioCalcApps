@@ -7,6 +7,7 @@
 
 #include "utils.h"
 #include "info.h"
+#include "keys.h"
 #include "version.h"
 #include "i18n.h"
 
@@ -141,30 +142,6 @@ static char *value_text(state_t const *s, int mode, int group,
         return p;
     }
     return format(s->value, bases[mode].base, group, 1, buf);
-}
-
-// Key -> digit value (0-15), or -1 if the key is not a digit
-static int key_digit(int key)
-{
-    switch (key) {
-        case KEY_0: return 0;
-        case KEY_1: return 1;
-        case KEY_2: return 2;
-        case KEY_3: return 3;
-        case KEY_4: return 4;
-        case KEY_5: return 5;
-        case KEY_6: return 6;
-        case KEY_7: return 7;
-        case KEY_8: return 8;
-        case KEY_9: return 9;
-        case KEY_XOT: return 10;
-        case KEY_LOG: return 11;
-        case KEY_LN:  return 12;
-        case KEY_SIN: return 13;
-        case KEY_COS: return 14;
-        case KEY_TAN: return 15;
-        default: return -1;
-    }
 }
 
 //---
@@ -352,7 +329,7 @@ int main(void)
                 delete_digit(&s);
                 break;
             default:
-                if ((d = key_digit(key)) >= 0 && d < bases[s.mode].base)
+                if ((d = key_hex(key)) >= 0 && d < bases[s.mode].base)
                     type_digit(&s, d);
                 break;
         }

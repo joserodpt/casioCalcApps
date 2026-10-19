@@ -4,8 +4,7 @@
 
 #include "fmt.h"
 
-/* Strip trailing zeros (and a trailing '.') from a decimal string */
-static void strip_zeros(char *s)
+void fmt_strip_zeros(char *s)
 {
     if (!strchr(s, '.')) return;
     char *end = s + strlen(s) - 1;
@@ -51,7 +50,7 @@ char *fmt_g(char *buf, double v, int sig)
         if (dec < 0) dec = 0;
         if (dec > 12) dec = 12;
         fmt_fixed(buf, v, dec);
-        strip_zeros(buf);
+        fmt_strip_zeros(buf);
         /* Rounding can push e.g. 9.999 -> 10; that is fine as text */
         return buf;
     }
@@ -63,7 +62,7 @@ char *fmt_g(char *buf, double v, int sig)
 
     char m[24];
     fmt_fixed(m, mant, sig - 1);
-    strip_zeros(m);
+    fmt_strip_zeros(m);
     sprintf(buf, "%se%d", m, exp);
     return buf;
 }

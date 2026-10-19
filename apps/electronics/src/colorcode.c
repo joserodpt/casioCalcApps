@@ -9,6 +9,7 @@
 #include "tools.h"
 #include "info.h"
 #include "i18n.h"
+#include "keys.h"
 
 #define COLOR   C_RGB(20, 9, 3)
 
@@ -403,12 +404,12 @@ void colorcode_run(void)
         dupdate();
 
         int key = getkey().key;
-        int d = -1;
+        int d = key_digit(key);
         switch (key) {
         case KEY_EXIT:
             return;
         case INFO_KEY:
-            info_show("Electronics", L("Colour code","Codigo de cores"), COLOR);
+            info_app(L("Colour code", "Codigo de cores"), COLOR);
             break;
         case KEY_LEFT:
             s.sel = (s.sel + s.count - 1) % s.count;
@@ -436,16 +437,6 @@ void colorcode_run(void)
             v = eseries_nearest(series, cc_value(&s), false);
             if (!isnan(v)) set_from_value(&s, v);
             break; }
-        case KEY_0: d = 0; break;
-        case KEY_1: d = 1; break;
-        case KEY_2: d = 2; break;
-        case KEY_3: d = 3; break;
-        case KEY_4: d = 4; break;
-        case KEY_5: d = 5; break;
-        case KEY_6: d = 6; break;
-        case KEY_7: d = 7; break;
-        case KEY_8: d = 8; break;
-        case KEY_9: d = 9; break;
         }
 
         /* Digit keys pick the colour of digit and multiplier bands */

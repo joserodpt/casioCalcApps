@@ -1,9 +1,10 @@
 //---
-//  units - Unit categories and conversion (affine: base = x*factor + offset)
+//	units - Unit categories, conversion (affine: base = x*factor + offset)
+//	        and the unit converter screen
 //---
 
-#ifndef CONV_UNITS
-#define CONV_UNITS
+#ifndef CASIO_UNITS
+#define CASIO_UNITS
 
 typedef struct {
     char const *name;       /* short unit label, e.g. "cm3" */
@@ -25,4 +26,8 @@ extern int const category_count;
    unit `to`. */
 double unit_convert(category_t const *cat, int from, int to, double x);
 
-#endif /* CONV_UNITS */
+/* units_screen(): Unit converter starting on category `cat` (index in
+   categories[]); returns on EXIT */
+void units_screen(int cat, int color);
+
+#endif /* CASIO_UNITS */

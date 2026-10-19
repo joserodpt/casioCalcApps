@@ -6,6 +6,8 @@
 #include <string.h>
 
 #include "ui.h"
+#include "fmt.h"
+#include "keys.h"
 #include "info.h"
 #include "i18n.h"
 
@@ -140,36 +142,6 @@ static char const prefix_chars[] = { 'p', 'n', CH_MU, 'm', 0, 'k', 'M', 'G' };
 #define PREFIX_NONE 4
 #define PREFIX_COUNT 8
 
-/* v with exactly dec decimals, using integer arithmetic (printf here has
-   no %f, %lld or '*' width); |v| * 10^dec must fit in a long */
-static char *fmt_fixed(char *buf, double v, int dec)
-{
-    long scale = 1;
-    for (int i = 0; i < dec; i++) scale *= 10;
-    double a = fabs(v) * scale;
-    if (a > 2e9) a = 2e9;
-    long n = lround(a);
-    char const *sign = (v < 0 && n) ? "-" : "";
-
-    if (dec > 0) {
-        /* scale + fraction has a leading 1 followed by dec digits */
-        char frac[16];
-        sprintf(frac, "%ld", scale + n % scale);
-        sprintf(buf, "%s%ld.%s", sign, n / scale, frac + 1);
-    }
-    else sprintf(buf, "%s%ld", sign, n);
-    return buf;
-}
-
-/* Remove trailing zeros after the decimal point */
-static void strip_zeros(char *num)
-{
-    if (!strchr(num, '.')) return;
-    char *end = num + strlen(num) - 1;
-    while (*end == '0') *end-- = '\0';
-    if (*end == '.') *end = '\0';
-}
-
 /* Format v as a mantissa in num, return the prefix index */
 static int fmt_eng(char *num, double v, int sig)
 {
@@ -198,7 +170,7 @@ static int fmt_eng(char *num, double v, int sig)
         fmt_fixed(num, m, dec);
         break;
     }
-    strip_zeros(num);
+    fmt_strip_zeros(num);
     return p;
 }
 
@@ -217,7 +189,7 @@ char *fmt_si(char *buf, double v, char const *unit, int sig)
 char *fmt_num(char *buf, double v, int dec)
 {
     fmt_fixed(buf, v, dec);
-    strip_zeros(buf);
+    fmt_strip_zeros(buf);
     return buf;
 }
 
@@ -324,17 +296,6 @@ static void append(field_t *f, char c, int maxlen)
     if (n >= maxlen) return;
     f->text[n] = c;
     f->text[n + 1] = '\0';
-}
-
-static int key_digit(int key)
-{
-    switch (key) {
-        case KEY_0: return 0; case KEY_1: return 1; case KEY_2: return 2;
-        case KEY_3: return 3; case KEY_4: return 4; case KEY_5: return 5;
-        case KEY_6: return 6; case KEY_7: return 7; case KEY_8: return 8;
-        case KEY_9: return 9;
-        default: return -1;
-    }
 }
 
 /* SI prefixes on F1..F6 */
@@ -448,12 +409,12 @@ void field_fkeys(field_t const *f, int color)
 #define FORM_STEP   17
 #define UNIT_W      22
 
-static int form_rows(form_t const *f)
+static int form_rows(eform_t const *f)
 {
     return (f->count + f->cols - 1) / f->cols;
 }
 
-static void form_draw(form_t *f)
+static void form_draw(eform_t *f)
 {
     int rows = form_rows(f);
     int colw = DWIDTH / f->cols;
@@ -486,7 +447,7 @@ static void form_draw(form_t *f)
 }
 
 /* Next enabled field in direction dir (wraps around) */
-static void form_move(form_t *f, int dir)
+static void form_move(eform_t *f, int dir)
 {
     for (int i = 0; i < f->count; i++) {
         f->sel = (f->sel + dir + f->count) % f->count;
@@ -494,7 +455,7 @@ static void form_move(form_t *f, int dir)
     }
 }
 
-void form_run(form_t *f)
+void eform_run(eform_t *f)
 {
     if (f->changed) f->changed(f, -1);
 
@@ -507,7 +468,7 @@ void form_run(form_t *f)
 
         if (key == KEY_EXIT) return;
         if (key == INFO_KEY) {
-            info_show("Electronics", f->title, f->color);
+            info_app(f->title, f->color);
             continue;
         }
         if (key == KEY_UP) { form_move(f, -1); continue; }

@@ -3,10 +3,10 @@
 #   ./run.sh                     ask which app to run
 #   ./run.sh base-n              run apps/base-n
 #   ./run.sh base-n --scale 3    extra options are passed to the emulator
-# Set EMUCASIO if the emuCasio checkout is not in ~/VSCode/emuCasio.
+# Set EMUCASIO if the emulator checkout is not in ~/VSCode/emuCasioFxCG.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-EMU="${EMUCASIO:-$HOME/VSCode/emuCasio}/run.sh"
+EMU="${EMUCASIO:-$HOME/VSCode/emuCasioFxCG}/run.sh"
 
 if [[ ! -x "$EMU" ]]; then
   echo "emuCasio not found at $EMU (set EMUCASIO to its folder)" >&2
