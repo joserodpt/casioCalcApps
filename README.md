@@ -4,14 +4,14 @@
 
 **Useful add-ins for the Casio fx-CG50 / fx-CG10 / fx-CG20 (Prizm) graphing calculators**
 
-Toolkits for electronics, chemistry, physics, logic and networking, plus number
-converters, a timer and a firmware dumper, all with colour interfaces and in
+Toolkits for electronics, chemistry, physics, logic and networking, a circuit
+simulator, number converters, a timer and a firmware dumper, all with colour interfaces and in
 English and Portuguese.
 
 ![Calculator](https://img.shields.io/badge/calculator-fx--CG50%20%7C%20CG10%20%7C%20CG20-1f6feb)
 ![Language](https://img.shields.io/badge/language-C-555555)
 ![Built with](https://img.shields.io/badge/built%20with-fxSDK%20%2B%20gint-8a2be2)
-![Apps](https://img.shields.io/badge/apps-9-2ea44f)
+![Apps](https://img.shields.io/badge/apps-10-2ea44f)
 
 <img src="apps/electronics/screenshots/demo.gif" width="32%" alt="Electronics demo">
 <img src="apps/base-n/screenshots/demo.gif" width="32%" alt="Base-N demo">
@@ -24,6 +24,7 @@ English and Portuguese.
 | | App | What it does | Download |
 |:---:|---|---|:---:|
 | <img src="apps/electronics/assets-cg/icon-sel.png" width="46"> | [**Electronics**](apps/electronics) | Resistor colour and SMD codes, series/parallel, voltage divider, RC/RL/LC filters, 555 timer, LED resistor | [Electronics.g3a](dist/Electronics.g3a) |
+| <img src="apps/circuit/assets-cg/icon-sel.png" width="46"> | [**Circuit**](apps/circuit) | DC circuit simulator: draw wires, batteries, resistors, lamps and switches and read V, A/mA and W for each part | [Circuit.g3a](dist/Circuit.g3a) |
 | <img src="apps/chemistry/assets-cg/icon-sel.png" width="46"> | [**Chemistry**](apps/chemistry) | Periodic table, molar mass from a formula, moles, concentration, ideal gas law, unit converter | [Chemistry.g3a](dist/Chemistry.g3a) |
 | <img src="apps/physics/assets-cg/icon-sel.png" width="46"> | [**Physics**](apps/physics) | Kinematics (SUVAT), dynamics, energy and power, waves and optics, physical constants, unit converter | [Physics.g3a](dist/Physics.g3a) |
 | <img src="apps/logic/assets-cg/icon-sel.png" width="46"> | [**Logic**](apps/logic) | Boolean expression → truth table, coloured Karnaugh map and simplified sum of products | [Logic.g3a](dist/Logic.g3a) |
@@ -51,6 +52,20 @@ Click an app to see it in action.
 | <img src="apps/electronics/screenshots/menu.png" width="396"><br>Tool menu | <img src="apps/electronics/screenshots/colorcode.png" width="396"><br>4.7 kΩ in colour bands |
 | <img src="apps/electronics/screenshots/colorcode-68k.png" width="396"><br>From a value to its bands | <img src="apps/electronics/screenshots/divider.png" width="396"><br>Voltage divider |
 | <img src="apps/electronics/screenshots/timer555.png" width="396"><br>555 timer, astable | <img src="apps/electronics/screenshots/led.png" width="396"><br>LED series resistor |
+
+</details>
+
+<details>
+<summary><b>Circuit</b>: DC circuit simulator with live V, A and W</summary>
+<br>
+
+<img src="apps/circuit/screenshots/demo.gif" width="600" alt="Circuit demo">
+
+| | |
+|:---:|:---:|
+| <img src="apps/circuit/screenshots/series.png" width="396"><br>Series circuit with current flow | <img src="apps/circuit/screenshots/switch-open.png" width="396"><br>Switch open: 9 V across it |
+| <img src="apps/circuit/screenshots/lamp-overload.png" width="396"><br>Smaller resistor: lamp overloaded | <img src="apps/circuit/screenshots/parallel.png" width="396"><br>Two lamps in parallel |
+| <img src="apps/circuit/screenshots/divider.png" width="396"><br>Voltage divider, point voltage | <img src="apps/circuit/screenshots/drawn.png" width="396"><br>A circuit drawn with the wire tool |
 
 </details>
 
@@ -240,6 +255,7 @@ the modules it uses.
 | `form.h` | screen of number fields with live results (`form_run`) |
 | `numfield.h` | one number input box (digits, `.`, EXP, sign) |
 | `units.h` | unit tables, `unit_convert()` and the converter screen |
+| `ui.h` | text with Ω µ ± symbols, `fmt_si()` (4.7 kΩ, 250 mA), number fields with SI-prefix F-keys, forms |
 | `fmt.h` | `fmt_g()` / `fmt_fixed()`: doubles without printf's `%f` |
 | `keys.h` | `key_digit()` / `key_hex()` (A-F on X,theta,T log ln sin cos tan) |
 | `utils.h` | F-key buttons, scrollbar |

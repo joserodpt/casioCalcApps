@@ -170,6 +170,30 @@ def draw_physics(d, c):
     d.ellipse(box(cx - 4, cy - 4, cx + 4, cy + 4), fill=WHITE)
 
 
+def draw_circuit(d, c):
+    # A loop: battery on the left, resistor on top, glowing lamp on the right
+    w = 2 * S
+    x1, y1, x2, y2 = 20, 12, 72, 37
+    d.line(box(x1, y1, x2, y1), fill=WHITE, width=w)
+    d.line(box(x1, y2, x2, y2), fill=WHITE, width=w)
+    d.line(box(x1, y1, x1, y2), fill=WHITE, width=w)
+    d.line(box(x2, y1, x2, y2), fill=WHITE, width=w)
+    # battery: gap in the left wire, long and short plates
+    d.rectangle(box(x1 - 3, 21, x1 + 3, 28), fill=c)
+    d.rectangle(box(x1 - 7, 22, x1 + 7, 23), fill=WHITE)
+    d.rectangle(box(x1 - 4, 26, x1 + 4, 28), fill=WHITE)
+    # resistor on the top wire
+    d.rectangle(box(38, y1 - 4, 54, y1 + 4), fill=(242, 222, 178),
+                outline=WHITE, width=S)
+    # lamp on the right wire, with a glow
+    lx, ly = x2, 24.5
+    d.ellipse(box(lx - 9, ly - 9, lx + 9, ly + 9), fill=(250, 220, 90))
+    d.ellipse(box(lx - 6, ly - 6, lx + 6, ly + 6), fill=(255, 250, 200),
+              outline=WHITE, width=S)
+    d.line(box(lx - 3.5, ly - 3.5, lx + 3.5, ly + 3.5), fill=c, width=S)
+    d.line(box(lx - 3.5, ly + 3.5, lx + 3.5, ly - 3.5), fill=c, width=S)
+
+
 # app folder -> (panel colour, pictogram)
 ICONS = {
     "electronics":   ((168, 76, 26), draw_electronics),
@@ -181,6 +205,7 @@ ICONS = {
     "firmware-dump": ((60, 62, 74), draw_firmware_dump),
     "chemistry":     ((18, 92, 120), draw_converter),
     "physics":       ((150, 70, 14), draw_physics),
+    "circuit":       ((16, 130, 98), draw_circuit),
 }
 
 

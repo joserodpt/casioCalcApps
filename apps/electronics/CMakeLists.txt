@@ -11,7 +11,6 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../common/common.cmake)
 casio_app(Electronics NAME_PT "Eletronica"
   SOURCES
     src/main.c
-    src/ui.c
     src/eseries.c
     src/colorcode.c
     src/tools.c

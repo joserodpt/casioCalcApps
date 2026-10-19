@@ -1,0 +1,134 @@
+# Circuit: the series example, open/close the switch, change the resistor,
+# then the parallel and divider examples and wire drawing
+wait 2s
+shot series.png
+# Battery is under the cursor; go to the switch and open it
+UP
+wait 400
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 800
+EXE
+wait 1500
+shot switch-open.png
+EXE
+wait 1s
+# Resistor: change 6 Ω to 2.2 Ω, the lamp is overloaded
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 800
+EXE
+wait 800
+AC
+wait 300
+2
+wait 300
+DP
+wait 300
+2
+wait 1s
+shot edit.png
+EXIT
+wait 1s
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+DOWN
+wait 1500
+shot lamp-overload.png
+# Examples: parallel lamps, then the voltage divider (cursor between R1, R2)
+VARS
+wait 300
+VARS
+wait 1500
+shot parallel.png
+VARS
+wait 800
+UP
+wait 300
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 250
+LEFT
+wait 1500
+shot divider.png
+# Clear, then draw a loop with the wire tool and add a battery and a lamp
+AC
+wait 400
+AC
+wait 800
+F1
+wait 400
+DOWN
+wait 300
+DOWN
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 300
+UP
+wait 300
+UP
+wait 300
+LEFT
+wait 300
+LEFT
+wait 300
+LEFT
+wait 400
+EXE
+wait 400
+DOWN
+wait 400
+F3
+wait 500
+EXE
+wait 500
+AC
+wait 300
+6
+wait 800
+EXIT
+wait 400
+RIGHT
+wait 300
+RIGHT
+wait 300
+RIGHT
+wait 400
+F4
+wait 2s
+shot drawn.png
