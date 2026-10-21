@@ -37,6 +37,7 @@ and Portuguese.
 | <img src="apps/timer/assets-cg/icon-sel.png" width="46"> | [**Timer**](apps/timer) | Stopwatch with laps and a Pomodoro timer, driven by the real-time clock | [Timer.g3a](dist/g3a/Timer.g3a) | [Timer.g1a](dist/g1a/Timer.g1a) |
 | <img src="apps/tone-generator/assets-cg/icon-sel.png" width="46"> | [**Tone**](apps/tone-generator) | Tone generator on the 3-pin link port: square, sine, triangle and sawtooth from 20 Hz to 20 kHz, a piano, frequency sweeps and 17 melodies | [Tone.g3a](dist/g3a/Tone.g3a) | [Tone.g1a](dist/g1a/Tone.g1a) |
 | <img src="apps/firmware-dump/assets-cg/icon-sel.png" width="46"> | [**FirmDump**](apps/firmware-dump) | Dumps the OS, the full ROM or any memory region to storage or over USB, read-only | [FirmDump.g3a](dist/g3a/FirmDump.g3a) | – |
+| <img src="apps/sys-info/assets-cg/icon-sel.png" width="46"> | [**SysInfo**](apps/sys-info) | Everything the calculator reports: model, product ID, OS version and language, CPU and clocks, memory, battery and power settings, clock, read-only | [SysInfo.g3a](dist/g3a/SysInfo.g3a) | – |
 
 Every app has its own README with the full key reference. Press **OPTN** in any
 app for its About screen.
@@ -47,7 +48,7 @@ Electronics, Chemistry, Physics, Base-N, Net Tools, ASCII, Timer and Tone also c
 as `.g1a` add-ins for the fx-9860G II, fx-9750G II and Graph 35+E II (128×64
 screen, four shades of grey). They have their own layouts with the same
 tools; what had to be shortened is listed in each app's README. They run in
-English. Circuit, AC Circuit, Logic and FirmDump need the colour screen.
+English. Circuit, AC Circuit, Logic, FirmDump and SysInfo need the colour screen.
 
 | | | |
 |:---:|:---:|:---:|

@@ -234,6 +234,13 @@ def draw_ac_circuit(d, c):
 
 
 # app folder -> (panel colour, pictogram)
+def draw_sys_info(d, c):
+    # A white disc with an "i" in it, drawn as shapes (no font needed)
+    d.ellipse(box(31, 7, 60, 36), fill=WHITE)
+    d.ellipse(box(43.5, 11.5, 47.5, 15.5), fill=c)
+    d.rounded_rectangle(box(43.5, 18, 47.5, 31.5), radius=S, fill=c)
+
+
 ICONS = {
     "electronics":   ((168, 76, 26), draw_electronics),
     "hello":         ((46, 150, 70), draw_hello),
@@ -247,6 +254,7 @@ ICONS = {
     "circuit":       ((16, 130, 98), draw_circuit),
     "tone-generator": ((160, 32, 160), draw_tone),
     "ac-circuit":    ((160, 24, 64), draw_ac_circuit),
+    "sys-info":      ((32, 112, 160), draw_sys_info),
 }
 
 
