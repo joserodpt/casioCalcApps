@@ -241,6 +241,15 @@ def draw_sys_info(d, c):
     d.rounded_rectangle(box(43.5, 18, 47.5, 31.5), radius=S, fill=c)
 
 
+def draw_activation(d, c):
+    # A white key: round bow with a hole, shaft and two teeth
+    d.ellipse(box(22, 12, 42, 32), fill=WHITE)
+    d.ellipse(box(28, 18, 36, 26), fill=c)
+    d.rectangle(box(40, 19.5, 70, 24.5), fill=WHITE)
+    d.rectangle(box(58, 24, 62, 31), fill=WHITE)
+    d.rectangle(box(65, 24, 69, 29), fill=WHITE)
+
+
 ICONS = {
     "electronics":   ((168, 76, 26), draw_electronics),
     "hello":         ((46, 150, 70), draw_hello),
@@ -255,6 +264,7 @@ ICONS = {
     "tone-generator": ((160, 32, 160), draw_tone),
     "ac-circuit":    ((160, 24, 64), draw_ac_circuit),
     "sys-info":      ((32, 112, 160), draw_sys_info),
+    "activation":    ((176, 96, 16), draw_activation),
 }
 
 
