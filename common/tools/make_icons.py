@@ -250,6 +250,16 @@ def draw_activation(d, c):
     d.rectangle(box(65, 24, 69, 29), fill=WHITE)
 
 
+def draw_informatics(d, c):
+    # A white microchip with pins, "01" on it
+    d.rounded_rectangle(box(30, 9, 61, 39), radius=2 * S, fill=WHITE)
+    for i in range(4):
+        y = 13 + i * 7
+        d.rectangle(box(25, y, 30, y + 2.5), fill=WHITE)
+        d.rectangle(box(61, y, 66, y + 2.5), fill=WHITE)
+    text(d, 45.5, 24, "01", 13, fill=c)
+
+
 ICONS = {
     "electronics":   ((168, 76, 26), draw_electronics),
     "hello":         ((46, 150, 70), draw_hello),
@@ -265,6 +275,7 @@ ICONS = {
     "ac-circuit":    ((160, 24, 64), draw_ac_circuit),
     "sys-info":      ((32, 112, 160), draw_sys_info),
     "activation":    ((176, 96, 16), draw_activation),
+    "informatics":   ((16, 128, 96), draw_informatics),
 }
 
 

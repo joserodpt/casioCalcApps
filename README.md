@@ -6,7 +6,7 @@
 with black and white versions of most of them for the fx-9860G family**
 
 DC and AC circuit simulators, toolkits for electronics, chemistry, physics,
-logic and networking, number converters, a timer, a tone generator for the
+logic, networking and informatics, number converters, a timer, a tone generator for the
 link port and a firmware dumper, all with colour interfaces and in English
 and Portuguese (SysInfo is English only).
 
@@ -31,6 +31,7 @@ and Portuguese (SysInfo is English only).
 | <img src="apps/chemistry/assets-cg/icon-sel.png" width="46"> | [**Chemistry**](apps/chemistry) | Periodic table, molar mass from a formula, moles, concentration, ideal gas law, unit converter | [Chemistry.g3a](dist/g3a/Chemistry.g3a) | [Chemistry.g1a](dist/g1a/Chemistry.g1a) |
 | <img src="apps/physics/assets-cg/icon-sel.png" width="46"> | [**Physics**](apps/physics) | Kinematics (SUVAT), dynamics, energy and power, waves and optics, physical constants, unit converter | [Physics.g3a](dist/g3a/Physics.g3a) | [Physics.g1a](dist/g1a/Physics.g1a) |
 | <img src="apps/logic/assets-cg/icon-sel.png" width="46"> | [**Logic**](apps/logic) | Boolean expression → truth table, coloured Karnaugh map and simplified sum of products | [Logic.g3a](dist/g3a/Logic.g3a) | – |
+| <img src="apps/informatics/assets-cg/icon-sel.png" width="46"> | [**Informatics**](apps/informatics) | Data size and rate conversions, transfer time, raw media sizes, IEEE 754 floats bit by bit, Unix time, CPU performance and Amdahl's law, integer and float limits | [Informatics.g3a](dist/g3a/Informatics.g3a) | – |
 | <img src="apps/base-n/assets-cg/icon-sel.png" width="46"> | [**Base-N**](apps/base-n) | Programmer's converter: DEC / HEX / OCT / BIN live, 8–64-bit, signed or unsigned, bit grid | [Base-N.g3a](dist/g3a/Base-N.g3a) | [Base-N.g1a](dist/g1a/Base-N.g1a) |
 | <img src="apps/net-tools/assets-cg/icon-sel.png" width="46"> | [**Net Tools**](apps/net-tools) | IPv4 subnet calculator: netmask, network, broadcast, host range, address class, bit grid | [NetTools.g3a](dist/g3a/NetTools.g3a) | [NetTools.g1a](dist/g1a/NetTools.g1a) |
 | <img src="apps/ascii-table/assets-cg/icon-sel.png" width="46"> | [**ASCII**](apps/ascii-table) | ASCII table as a list or a 16×8 grid, and a UTF-8 / UTF-16 encoder for any code point | [ASCII.g3a](dist/g3a/ASCII.g3a) | [ASCII.g1a](dist/g1a/ASCII.g1a) |
@@ -49,8 +50,8 @@ Electronics, Chemistry, Physics, Base-N, Net Tools, ASCII, Timer and Tone also c
 as `.g1a` add-ins for the fx-9860G II, fx-9750G II and Graph 35+E II (128×64
 screen, four shades of grey). They have their own layouts with the same
 tools; what had to be shortened is listed in each app's README. They run in
-English. Circuit, AC Circuit, Logic, FirmDump, SysInfo and Activation need the colour
-screen.
+English. Circuit, AC Circuit, Logic, Informatics, FirmDump, SysInfo and Activation
+need the colour screen.
 
 | | | |
 |:---:|:---:|:---:|
