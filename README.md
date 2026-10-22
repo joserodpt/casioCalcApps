@@ -8,7 +8,7 @@ with black and white versions of most of them for the fx-9860G family**
 DC and AC circuit simulators, toolkits for electronics, chemistry, physics,
 logic and networking, number converters, a timer, a tone generator for the
 link port and a firmware dumper, all with colour interfaces and in English
-and Portuguese.
+and Portuguese (SysInfo is English only).
 
 ![Calculator](https://img.shields.io/badge/calculator-fx--CG50%20%7C%20CG10%20%7C%20CG20%20%7C%20fx--9860G-1f6feb)
 ![Language](https://img.shields.io/badge/language-C-555555)

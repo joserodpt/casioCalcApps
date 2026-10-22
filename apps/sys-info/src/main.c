@@ -26,7 +26,6 @@
 #include "utils.h"
 #include "info.h"
 #include "version.h"
-#include "i18n.h"
 #include "usb_screen.h"
 
 #define COLOR    C_RGB(4, 14, 20)
@@ -184,7 +183,7 @@ static char const *mpu_name(void)
     case HWMPU_SH7724: return "SH7724 (SH-4A)";
     case HWMPU_SH7337: return "SH7337 (SH-3)";
     case HWMPU_SH7355: return "SH7355 (SH-3)";
-    default:           return L("unknown (SH-4A)", "desconhecido (SH-4A)");
+    default:           return "unknown (SH-4A)";
     }
 }
 
@@ -222,89 +221,85 @@ static void collect(void)
     usb_screen_init();          /* the world switch closes the USB link */
     bool emu = in_emulator();
 
-    section(L("Calculator", "Calculadora"));
-    row(L("Model", "Modelo"), "%s", model_name());
-    if (emu) row(L("Running on", "A correr em"), "%s",
-        L("emulator (OS area blank)", "emulador (OS vazia)"));
+    section("Calculator");
+    row("Model", "%s", model_name());
+    if (emu) row("Running on", "%s", "emulator (OS area blank)");
     uint8_t id[8];
     for (int i = 0; i < 8; i++) id[i] = peek(PRODUCT_ID + i);
-    row(L("Product ID", "ID do produto"), "%02X%02X%02X%02X %02X%02X%02X%02X",
+    row("Product ID", "%02X%02X%02X%02X %02X%02X%02X%02X",
         id[0], id[1], id[2], id[3], id[4], id[5], id[6], id[7]);
     rom_string(PRODUCT_ID, 8, buf);
-    if (buf[0]) row(L("Product ID (text)", "ID (texto)"), "%s", buf);
+    if (buf[0]) row("Product ID (text)", "%s", buf);
 
-    section(L("Operating system", "Sistema operativo"));
+    section("Operating system");
     rom_string(OS_VERSION, 10, buf);
-    if (buf[0]) row(L("OS version", "Versao da OS"), "%s", buf);
-    row(L("OS version (syscall)", "Versao (syscall)"), "%d.%02d  (%d, %d)",
+    if (buf[0]) row("OS version", "%s", buf);
+    row("OS version (syscall)", "%d.%02d  (%d, %d)",
         os.major, os.minor, os.c, os.d);
     rom_string(OS_HEADER, 8, buf);
-    row(L("OS header", "Cabecalho da OS"), "%s", buf[0] ? buf : "-");
+    row("OS header", "%s", buf[0] ? buf : "-");
     /* Casio's accented letters aren't ASCII: show them as '?' */
     for (char *p = os.language; *p; p++)
         if ((unsigned char)*p >= 127 || (unsigned char)*p < 32) *p = '?';
-    row(L("Language", "Idioma"), "%s", os.language[0] ? os.language : "?");
+    row("Language", "%s", os.language[0] ? os.language : "?");
 
-    section(L("Processor", "Processador"));
+    section("Processor");
     row("MPU", "%s", mpu_name());
     row("CPU PVR", "0x%08X", (unsigned)gint[HWCPUVR]);
     row("CPU PRR", "0x%08X", (unsigned)gint[HWCPUPR]);
     clock_frequency_t const *f = clock_freq();
-    mhz(L("CPU clock (I)", "Relogio CPU (I)"), f->Iphi_f);
-    mhz(L("Bus clock (B)", "Relogio bus (B)"), f->Bphi_f);
-    mhz(L("Peripheral clock (P)", "Relogio perif. (P)"), f->Pphi_f);
+    mhz("CPU clock (I)", f->Iphi_f);
+    mhz("Bus clock (B)", f->Bphi_f);
+    mhz("Peripheral clock (P)", f->Pphi_f);
     int speed = clock_get_speed();
     if (speed >= CLOCK_SPEED_F1 && speed <= CLOCK_SPEED_F5)
-        row(L("Speed level", "Nivel de veloc."), "F%d%s", speed,
-            speed == CLOCK_SPEED_DEFAULT ? L(" (default)", " (normal)") : "");
-    else row(L("Speed level", "Nivel de veloc."), "%s",
-        L("custom", "personalizado"));
+        row("Speed level", "F%d%s", speed,
+            speed == CLOCK_SPEED_DEFAULT ? " (default)" : "");
+    else row("Speed level", "%s", "custom");
 
-    section(L("Memory", "Memoria"));
+    section("Memory");
     hw_size("RAM", HWRAM);
-    hw_size(L("Add-in RAM", "RAM do add-in"), HWURAM);
-    hw_size(L("Flash ROM", "ROM flash"), HWROM);
+    hw_size("Add-in RAM", HWURAM);
+    hw_size("Flash ROM", HWROM);
     if (os.free_rc >= 0) {
         uint32_t free = os.free[0] ? (uint32_t)os.free[0] : (uint32_t)os.free[1];
         size_text(buf, sizeof buf, free);
-        row(L("Storage free", "Memoria livre"), "%s", buf);
+        row("Storage free", "%s", buf);
     }
-    else row(L("Storage free", "Memoria livre"), "%s (%d)",
-        L("error", "erro"), os.free_rc);
-    row(L("Filesystem", "Sistema fich."), "%s",
+    else row("Storage free", "%s (%d)", "error", os.free_rc);
+    row("Filesystem", "%s",
         gint[HWFS] == HWFS_FUGUE ? "Fugue (FAT)" :
         gint[HWFS] == HWFS_CASIOWIN ? "CASIOWIN" : "?");
-    row(L("Stack pointer", "Ponteiro de pilha"), "0x%08X",
-        (unsigned)os.stack);
+    row("Stack pointer", "0x%08X", (unsigned)os.stack);
 
-    section(L("Power", "Energia"));
-    row(L("Battery", "Bateria"), "%d.%02d V", os.battery_cv / 100,
+    section("Power");
+    row("Battery", "%d.%02d V", os.battery_cv / 100,
         os.battery_cv % 100);
-    row(L("Battery type", "Tipo de bateria"), "%s",
-        os.battery_type == 1 ? L("Alkaline", "Alcalina") :
+    row("Battery type", "%s",
+        os.battery_type == 1 ? "Alkaline" :
         os.battery_type == 2 ? "Ni-MH" : "?");
     if (os.backlight % 2)
-        row(L("Backlight off after", "Luz desliga apos"), "%d min 30 s",
+        row("Backlight off after", "%d min 30 s",
             os.backlight / 2);
-    else row(L("Backlight off after", "Luz desliga apos"), "%d min",
+    else row("Backlight off after", "%d min",
         os.backlight / 2);
-    row(L("Auto power off", "Desligar auto."), "%d min", os.power_off);
+    row("Auto power off", "%d min", os.power_off);
 
-    section(L("Display & keyboard", "Ecra e teclado"));
-    row(L("Screen", "Ecra"), "%dx%d, 16-bit, R61524", DWIDTH, DHEIGHT);
-    row(L("Keyboard scan", "Leitura teclado"), "%s",
+    section("Display & keyboard");
+    row("Screen", "%dx%d, 16-bit, R61524", DWIDTH, DHEIGHT);
+    row("Keyboard scan", "%s",
         gint[HWKBD] & HWKBD_KSI ? "KEYSC" :
-        gint[HWKBD] & HWKBD_IO ? L("I/O ports", "Portas I/O") : "?");
+        gint[HWKBD] & HWKBD_IO ? "I/O ports" : "?");
 
-    section(L("Clock", "Relogio"));
+    section("Clock");
     rtc_time_t t;
     rtc_get_time(&t);
-    row(L("Date", "Data"), "%04d-%02d-%02d", t.year, t.month + 1, t.month_day);
-    row(L("Time", "Hora"), "%02d:%02d:%02d", t.hours, t.minutes, t.seconds);
+    row("Date", "%04d-%02d-%02d", t.year, t.month + 1, t.month_day);
+    row("Time", "%02d:%02d:%02d", t.hours, t.minutes, t.seconds);
 
-    section(L("This add-in", "Este add-in"));
-    row(L("Version", "Versao"), "SysInfo %s", APPS_VERSION);
-    row(L("Built", "Compilado"), "%s %s", __DATE__, __TIME__);
+    section("This add-in");
+    row("Version", "SysInfo %s", APPS_VERSION);
+    row("Built", "%s %s", __DATE__, __TIME__);
 }
 
 //---
@@ -314,7 +309,7 @@ static void collect(void)
 static void draw(int top)
 {
     dclear(C_WHITE);
-    info_title(L("System info", "Info do sistema"), COLOR);
+    info_title("System info", COLOR);
 
     for (int k = 0; k < VISIBLE && top + k < row_count; k++) {
         row_t const *r = &rows[top + k];
@@ -331,8 +326,8 @@ static void draw(int top)
     if (row_count > VISIBLE)
         scrollbar_px(TOP, BOTTOM, 0, row_count, top, VISIBLE);
 
-    fkey_button_color(1, L("UPDATE", "ATUALIZ"), COLOR);
-    fkey_button(6, L("ABOUT", "SOBRE"));
+    fkey_button_color(1, "UPDATE", COLOR);
+    fkey_button(6, "ABOUT");
     dupdate();
 }
 
@@ -340,7 +335,6 @@ int main(void)
 {
     int top = 0;
 
-    lang_init();
     collect();
 
     while (1) {
@@ -351,8 +345,7 @@ int main(void)
         int key = getkey().key;
         if (key == KEY_EXIT) return 1;
         if (key == INFO_KEY || key == KEY_F6)
-            info_show("SysInfo", L("System info " APPS_VERSION,
-                "Info do sistema " APPS_VERSION), COLOR);
+            info_show("SysInfo", "System info " APPS_VERSION, COLOR);
         else if (key == KEY_F1) collect();
         else if (key == KEY_UP && top > 0) top--;
         else if (key == KEY_DOWN && top < max_top) top++;
