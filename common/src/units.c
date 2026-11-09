@@ -100,12 +100,17 @@ double unit_convert(category_t const *cat, int from, int to, double x)
 
 void units_screen(int cat, int color)
 {
+    units_screen_in(categories, category_count, cat, color);
+}
+
+void units_screen_in(category_t const *cats, int count, int cat, int color)
+{
     int from = 1;
     numfield_t val = { "1" };
     bool fresh = true;                  /* the first number typed replaces 1 */
 
     while (1) {
-        category_t const *c = &categories[cat];
+        category_t const *c = &cats[cat];
         dclear(C_WHITE);
         info_title(L(c->name, c->name_pt), color);
         double x = numfield_value(&val);
@@ -156,11 +161,11 @@ void units_screen(int cat, int color)
         if (key == INFO_KEY)
             info_app(L("Unit converter", "Conversor de unidades"), color);
         else if (key == KEY_LEFT) {
-            cat = (cat + category_count - 1) % category_count;
+            cat = (cat + count - 1) % count;
             from = 0;
         }
         else if (key == KEY_RIGHT) {
-            cat = (cat + 1) % category_count;
+            cat = (cat + 1) % count;
             from = 0;
         }
         else if (key == KEY_UP) from = (from + c->count - 1) % c->count;

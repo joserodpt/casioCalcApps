@@ -4,6 +4,7 @@
 #   ./run.sh                        ask which version, then which app
 #   ./run.sh cg base-n              run apps/base-n's .g3a
 #   ./run.sh fx base-n --scale 3    extra options are passed to the emulator
+#   ./run.sh 1 12                   the menus' numbers work too (cg, 12th app)
 # Only apps marked FX in their CMakeLists.txt have an fx version.
 # Set EMUCASIO if the emulator checkout is not in ~/VSCode/emuCasioCalc.
 set -euo pipefail
@@ -20,8 +21,10 @@ has_fx() {
 }
 
 platform=""
-if [[ $# -ge 1 && ( "$1" == cg || "$1" == fx ) ]]; then
-  platform="$1"; shift
+if [[ $# -ge 1 && ( "$1" == cg || "$1" == 1 ) ]]; then
+  platform=cg; shift
+elif [[ $# -ge 1 && ( "$1" == fx || "$1" == 2 ) ]]; then
+  platform=fx; shift
 else
   PS3="Run which version? "
   select platform in "cg (fx-CG, colour .g3a)" "fx (fx-9860G, black and white .g1a)"; do
@@ -31,15 +34,22 @@ else
   platform="${platform%% *}"
 fi
 
+APPS=()
+for d in "$ROOT"/apps/*/; do
+  a="$(basename "$d")"
+  if [[ $platform == cg ]] || has_fx "$a"; then APPS+=("$a"); fi
+done
+
 app=""
-if [[ $# -ge 1 && "$1" != -* ]]; then
+if [[ $# -ge 1 && "$1" =~ ^[0-9]+$ && ! -d "$ROOT/apps/$1" ]]; then
+  if (( $1 < 1 || $1 > ${#APPS[@]} )); then
+    echo "No app number $1 (1 to ${#APPS[@]})" >&2
+    exit 1
+  fi
+  app="${APPS[$1 - 1]}"; shift
+elif [[ $# -ge 1 && "$1" != -* ]]; then
   app="$1"; shift
 else
-  APPS=()
-  for d in "$ROOT"/apps/*/; do
-    a="$(basename "$d")"
-    if [[ $platform == cg ]] || has_fx "$a"; then APPS+=("$a"); fi
-  done
   PS3="Run which app? "
   select app in "${APPS[@]}"; do [[ -n "$app" ]] && break; done
   [[ -n "$app" ]] || exit 0  # Ctrl+D

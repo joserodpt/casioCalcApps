@@ -8,7 +8,7 @@ include(Fxconv)
 find_package(Gint 2.9 REQUIRED)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../common/common.cmake)
 
-casio_app(SysInfo NAME_PT "InfoSist"
+casio_app(SysInfo
   SOURCES
     src/main.c
 )
