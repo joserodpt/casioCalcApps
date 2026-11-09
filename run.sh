@@ -54,15 +54,27 @@ if [[ $platform == fx ]] && ! has_fx "$app"; then
   exit 1
 fi
 
-# Rebuild (incremental); quiet unless it fails
-echo "==> building $app"
-if ! out=$("$ROOT/scripts/build.sh" "$app" 2>&1); then
-  echo "$out" >&2
-  exit 1
-fi
-
 ext=g3a; [[ $platform == fx ]] && ext=g1a
-file=("$ROOT/apps/$app"/*.$ext)
+
+# Rebuild (incremental); quiet unless it fails. Without the fxSDK, run the
+# prebuilt add-in from dist/ instead (it may be older than the source).
+if PATH="$HOME/.local/bin:$PATH" command -v fxsdk >/dev/null; then
+  echo "==> building $app"
+  if ! out=$("$ROOT/scripts/build.sh" "$app" 2>&1); then
+    echo "$out" >&2
+    exit 1
+  fi
+  file=("$ROOT/apps/$app"/*.$ext)
+else
+  name=$(sed -nE 's/.*casio_app\(([A-Za-z0-9_-]+).*/\1/p' "$ROOT/apps/$app/CMakeLists.txt" | head -1)
+  file=("$ROOT/dist/$ext/$name.$ext")
+  if [[ ! -f "${file[0]}" ]]; then
+    echo "fxsdk not found and there is no prebuilt dist/$ext/$name.$ext." >&2
+    echo "Install the fxSDK and gint (see README, 'Building from source')." >&2
+    exit 1
+  fi
+  echo "!! fxsdk not found: running the prebuilt dist/$ext/$name.$ext (not rebuilt)" >&2
+fi
 echo "==> running ${file[0]#$ROOT/}"
 # The emulator keeps its storage/ folder in the current directory
 cd "$ROOT"

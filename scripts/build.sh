@@ -10,6 +10,13 @@ export PATH="$HOME/.local/bin:$PATH"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 mkdir -p "$ROOT/dist/g3a" "$ROOT/dist/g1a"
 
+if ! command -v fxsdk >/dev/null; then
+  echo "fxsdk not found. Install the fxSDK and gint, for example with GiteaPC:" >&2
+  echo "  https://gitea.planet-casio.com/Lephenixnoir/GiteaPC" >&2
+  echo "(see README, 'Building from source')." >&2
+  exit 1
+fi
+
 if [ $# -ge 1 ]; then APPS=("$@"); else
   APPS=(); for d in "$ROOT"/apps/*/; do APPS+=("$(basename "$d")"); done
 fi
