@@ -42,13 +42,14 @@ set(COMMON_ASSETS_fx
   ${CASIO_COMMON_DIR}/assets-fx/font_big.png
 )
 
-# casio_app(<NAME> [FX] [NAME_PT <name>] SOURCES ... [ASSETS ...]
-#           [ASSETS_fx ...] [ASSETS_cg ...])
+# casio_app(<NAME> [FX] [NAME_PT <name>] [NAME_FR <name>] SOURCES ...
+#           [ASSETS ...] [ASSETS_fx ...] [ASSETS_cg ...])
 # Builds <NAME>.g3a (fx-CG) or <NAME>.g1a (fx-9860G) with the common helpers.
 # FX marks the apps that have a 128x64 version: only they build a .g1a.
-# NAME_PT is the menu name shown when the calculator is set to Portuguese.
+# NAME_PT and NAME_FR are the menu names shown when the calculator is set
+# to Portuguese or French.
 function(casio_app NAME)
-  cmake_parse_arguments(APP "FX" "NAME_PT" "SOURCES;ASSETS;ASSETS_fx;ASSETS_cg"
+  cmake_parse_arguments(APP "FX" "NAME_PT;NAME_FR" "SOURCES;ASSETS;ASSETS_fx;ASSETS_cg"
     ${ARGN})
 
   if("${FXSDK_PLATFORM_LONG}" STREQUAL fx9860G AND NOT APP_FX)
@@ -77,14 +78,20 @@ function(casio_app NAME)
     generate_g3a(TARGET ${NAME} OUTPUT "${NAME}.g3a"
       NAME "${NAME}" VERSION "${APPS_VERSION_G3A}"
       ICONS assets-cg/icon-uns.png assets-cg/icon-sel.png)
-    if(DEFINED APP_NAME_PT)
-      # Runs after generate_g3a's own POST_BUILD step
-      set(_g3a "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.g3a")
+    # Runs after generate_g3a's own POST_BUILD step
+    set(_g3a "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.g3a")
+    foreach(_lang PT FR)
+      if(DEFINED APP_NAME_${_lang})
+        string(TOLOWER ${_lang} _l)
+        add_custom_command(TARGET ${NAME} POST_BUILD
+          COMMAND python3 ${CASIO_COMMON_DIR}/../scripts/g3a-name.py
+            ${_g3a} ${_l} "${APP_NAME_${_lang}}"
+          VERBATIM)
+      endif()
+    endforeach()
+    if(DEFINED APP_NAME_PT OR DEFINED APP_NAME_FR)
       add_custom_command(TARGET ${NAME} POST_BUILD
-        COMMAND python3 ${CASIO_COMMON_DIR}/../scripts/g3a-name.py
-          ${_g3a} pt "${APP_NAME_PT}"
-        COMMAND fxgxa -r ${_g3a}
-        VERBATIM)
+        COMMAND fxgxa -r ${_g3a} VERBATIM)
     endif()
   endif()
 endfunction()

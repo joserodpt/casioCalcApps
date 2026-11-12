@@ -17,8 +17,9 @@
 #define TICKS     128                   /* RTC ticks per second */
 #define DAY_TICKS (TICKS * 86400u)
 #define FRAME_US  50000                 /* screen refresh while waiting */
-#define L_DAYS { L("Sun","Dom"), L("Mon","Seg"), L("Tue","Ter"), \
-    L("Wed","Qua"), L("Thu","Qui"), L("Fri","Sex"), L("Sat","Sab") }
+#define L_DAYS { L("Sun","Dom","Dim"), L("Mon","Seg","Lun"), \
+    L("Tue","Ter","Mar"), L("Wed","Qua","Mer"), L("Thu","Qui","Jeu"), \
+    L("Fri","Sex","Ven"), L("Sat","Sab","Sam") }
 #define MAX_LAPS  99
 
 /* Layout: the fx-9860G (128x64) shows the same screens, more compactly */
@@ -176,14 +177,15 @@ static void sw_draw(stopwatch_t const *sw)
     char a[16], b[16];
     uint32_t t = chrono_ticks(&sw->chrono);
 
-    dtext(2, 10, C_BLACK, sw->chrono.running ? L("Running", "A contar")
-        : t ? L("Stopped", "Parado") : L("Ready", "Pronto"));
+    dtext(2, 10, C_BLACK, sw->chrono.running
+        ? L("Running", "A contar", "En cours") : t
+        ? L("Stopped", "Parado", "Arrete") : L("Ready", "Pronto", "Pret"));
 
     if (!sw->lap_count) {
         dtext_opt(DWIDTH / 2, 40, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
-            sw->chrono.running ? L("EXE: stop", "EXE: parar")
-            : t ? L("EXE: resume", "EXE: retomar")
-            : L("EXE: start", "EXE: iniciar"));
+            sw->chrono.running ? L("EXE: stop", "EXE: parar", "EXE: arret")
+            : t ? L("EXE: resume", "EXE: retomar", "EXE: reprise")
+            : L("EXE: start", "EXE: iniciar", "EXE: lancer"));
         return;
     }
 
@@ -210,12 +212,16 @@ static void sw_draw(stopwatch_t const *sw)
     char a[16], b[16];
     uint32_t t = chrono_ticks(&sw->chrono);
 
-    dtext(10, 20, SW_COLOR, sw->chrono.running ? L("Running", "A contar")
-        : t ? L("Stopped", "Parado") : L("Ready", "Pronto"));
+    dtext(10, 20, SW_COLOR, sw->chrono.running
+        ? L("Running", "A contar", "En cours") : t
+        ? L("Stopped", "Parado", "Arrete") : L("Ready", "Pronto", "Pret"));
     dtext_opt(DWIDTH / 2, 106, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
-        sw->chrono.running ? L("EXE: stop   F3: lap", "EXE: parar   F3: volta")
-        : t ? L("EXE: resume   F4 / AC: reset", "EXE: retomar   F4 / AC: repor")
-        : L("EXE: start   F4 / AC: reset", "EXE: iniciar   F4 / AC: repor"));
+        sw->chrono.running ? L("EXE: stop   F3: lap", "EXE: parar   F3: volta",
+            "EXE: arret   F3: tour")
+        : t ? L("EXE: resume   F4 / AC: reset",
+            "EXE: retomar   F4 / AC: repor", "EXE: reprise   F4 / AC: raz")
+        : L("EXE: start   F4 / AC: reset", "EXE: iniciar   F4 / AC: repor",
+            "EXE: lancer   F4 / AC: raz"));
 
     if (!sw->lap_count) return;
 
@@ -225,8 +231,8 @@ static void sw_draw(stopwatch_t const *sw)
 
     int y = 124;
     dline(6, y - 4, DWIDTH - 7, y - 4, C_LIGHT);
-    dtext(10, y, C_DARK, L("Lap", "Volta"));
-    dtext(110, y, C_DARK, L("Lap time", "Tempo"));
+    dtext(10, y, C_DARK, L("Lap", "Volta", "Tour"));
+    dtext(110, y, C_DARK, L("Lap time", "Tempo", "Temps"));
     dtext(250, y, C_DARK, "Total");
     for (int k = 0; k < LAPS_SHOWN && k < sw->lap_count; k++) {
         int i = sw->lap_count - 1 - k;
@@ -251,9 +257,9 @@ enum { PH_WORK, PH_SHORT, PH_LONG };
 static char const *phase_names[3];
 static void phase_names_init(void)
 {
-    phase_names[PH_WORK]  = L("Focus", "Foco");
-    phase_names[PH_SHORT] = L("Short break", "Pausa curta");
-    phase_names[PH_LONG]  = L("Long break", "Pausa longa");
+    phase_names[PH_WORK]  = L("Focus", "Foco", "Focus");
+    phase_names[PH_SHORT] = L("Short break", "Pausa curta", "Pause courte");
+    phase_names[PH_LONG]  = L("Long break", "Pausa longa", "Pause longue");
 }
 static int phase_color(int phase)
 {
@@ -360,7 +366,7 @@ static void pomo_draw(pomodoro_t const *p, bool blink)
         int fg = blink ? C_WHITE : C_BLACK;
         drect(0, 38, DWIDTH - 1, 54, bg);
         dtext_opt(DWIDTH / 2, 39, fg, C_NONE, DTEXT_CENTER, DTEXT_TOP,
-            L("Time's up!", "Tempo esgotado!"));
+            L("Time's up!", "Tempo esgotado!", "Temps ecoule!"));
         dprint_opt(DWIDTH / 2, 47, fg, C_NONE, DTEXT_CENTER, DTEXT_TOP,
             "EXE: %s", phase_names[p->phase]);
         return;
@@ -369,14 +375,14 @@ static void pomo_draw(pomodoro_t const *p, bool blink)
     dprint(2, 39, C_DARK, "%d/%d/%d min", work_choices[p->work_i],
         break_choices[p->break_i], 3 * break_choices[p->break_i]);
     dprint_opt(DWIDTH - 2, 39, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
-        L("%d done", "%d feitos"), p->done);
+        L("%d done", "%d feitos", "%d faits"), p->done);
 
-    if (paused) dtext(2, 48, C_BLACK, L("Paused", "Em pausa"));
+    if (paused) dtext(2, 48, C_BLACK, L("Paused", "Em pausa", "En pause"));
     dtext_opt(paused ? DWIDTH - 2 : DWIDTH / 2, 48, C_DARK, C_NONE,
         paused ? DTEXT_RIGHT : DTEXT_CENTER, DTEXT_TOP,
-        p->chrono.running ? L("EXE: pause", "EXE: pausar")
-        : paused ? L("EXE: resume", "EXE: retomar")
-        : L("EXE: start", "EXE: iniciar"));
+        p->chrono.running ? L("EXE: pause", "EXE: pausar", "EXE: pause")
+        : paused ? L("EXE: resume", "EXE: retomar", "EXE: reprise")
+        : L("EXE: start", "EXE: iniciar", "EXE: lancer"));
 }
 
 #else
@@ -390,7 +396,7 @@ static void pomo_draw(pomodoro_t const *p, bool blink)
     dtext(10, 20, color, phase_names[p->phase]);
     dtext_opt(DWIDTH / 2, 30, color, C_NONE, DTEXT_CENTER, DTEXT_TOP,
         p->chrono.running ? "" : p->alarm ? "" : chrono_ticks(&p->chrono)
-        ? L("Paused", "Em pausa") : "");
+        ? L("Paused", "Em pausa", "En pause") : "");
 
     /* Progress bar */
     int x1 = 40, x2 = DWIDTH - 41, y = 126;
@@ -408,7 +414,7 @@ static void pomo_draw(pomodoro_t const *p, bool blink)
         else dcircle(cx, y + 5, 6, C_WHITE, C_LIGHT);
     }
     dprint_opt(DWIDTH - 10, y, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
-        L("%d done", "%d feitos"), p->done);
+        L("%d done", "%d feitos", "%d faits"), p->done);
     dprint(10, y, C_DARK, "%d / %d / %d min", work_choices[p->work_i],
         break_choices[p->break_i], 3 * break_choices[p->break_i]);
 
@@ -418,15 +424,20 @@ static void pomo_draw(pomodoro_t const *p, bool blink)
         int fg = blink ? C_WHITE : color;
         drect(6, y - 3, DWIDTH - 7, y + 26, bg);
         dtext_opt(DWIDTH / 2, y, fg, C_NONE, DTEXT_CENTER, DTEXT_TOP,
-            L("Time's up!", "Tempo esgotado!"));
+            L("Time's up!", "Tempo esgotado!", "Temps ecoule!"));
         dprint_opt(DWIDTH / 2, y + 13, fg, C_NONE, DTEXT_CENTER, DTEXT_TOP,
-            L("EXE: start %s", "EXE: iniciar %s"), phase_names[p->phase]);
+            L("EXE: start %s", "EXE: iniciar %s",
+                "EXE: lancer %s"), phase_names[p->phase]);
     }
     else dtext_opt(DWIDTH / 2, y + 6, C_DARK, C_NONE, DTEXT_CENTER,
-        DTEXT_TOP, p->chrono.running ? L("EXE: pause   F3: skip", "EXE: pausar   F3: saltar")
+        DTEXT_TOP, p->chrono.running ? L("EXE: pause   F3: skip",
+            "EXE: pausar   F3: saltar", "EXE: pause   F3: passer")
         : chrono_ticks(&p->chrono) ? L("EXE: resume   F3: skip   F4: reset",
-            "EXE: retomar  F3: saltar  F4: repor")
-        : L("EXE: start   F3: skip   F4: reset", "EXE: iniciar  F3: saltar  F4: repor"));
+            "EXE: retomar  F3: saltar  F4: repor",
+            "EXE: reprise  F3: passer  F4: raz")
+        : L("EXE: start   F3: skip   F4: reset",
+            "EXE: iniciar  F3: saltar  F4: repor",
+            "EXE: lancer  F3: passer  F4: raz"));
 }
 
 #endif /* GINT_HW_FX */
@@ -464,7 +475,8 @@ static void draw(int mode, stopwatch_t const *sw, pomodoro_t const *p)
     if (mode == MODE_STOPWATCH) sw_draw_big(sw);
     else pomo_draw_big(p);
 
-    info_title(mode == MODE_STOPWATCH ? L("Stopwatch", "Cronometro") : "Pomodoro", color);
+    info_title(mode == MODE_STOPWATCH
+        ? L("Stopwatch", "Cronometro", "Chronometre") : "Pomodoro", color);
     draw_clock();
 
     if (mode == MODE_STOPWATCH) sw_draw(sw);
@@ -479,16 +491,19 @@ static void draw(int mode, stopwatch_t const *sw, pomodoro_t const *p)
 #define MIN_FMT    "%d MIN"
 #endif
     if (mode == MODE_STOPWATCH) {
-        fkey_button_color(1, FK(L("WATCH", "CRONO"), L("STW", "CRO")), color);
+        fkey_button_color(1, FK(L("WATCH", "CRONO", "CHRONO"),
+            L("STW", "CRO", "CHR")), color);
         fkey_button(2, FK("POMO", "POM"));
-        fkey_button(3, FK(L("LAP", "VOLTA"), L("LAP", "VLT")));
-        fkey_button(4, FK(L("RESET", "REPOR"), L("RST", "REP")));
+        fkey_button(3, FK(L("LAP", "VOLTA", "TOUR"), L("LAP", "VLT", "TR")));
+        fkey_button(4, FK(L("RESET", "REPOR", "RAZ"), L("RST", "REP", "RAZ")));
     }
     else {
-        fkey_button(1, FK(L("WATCH", "CRONO"), L("STW", "CRO")));
+        fkey_button(1, FK(L("WATCH", "CRONO", "CHRONO"),
+            L("STW", "CRO", "CHR")));
         fkey_button_color(2, FK("POMO", "POM"), color);
-        fkey_button(3, FK(L("SKIP", "SALTAR"), L("SKP", "SLT")));
-        fkey_button(4, FK(L("RESET", "REPOR"), L("RST", "REP")));
+        fkey_button(3, FK(L("SKIP", "SALTAR", "PASSER"),
+            L("SKP", "SLT", "PAS")));
+        fkey_button(4, FK(L("RESET", "REPOR", "RAZ"), L("RST", "REP", "RAZ")));
         sprintf(label, MIN_FMT, work_choices[p->work_i]);
         fkey_button(5, label);
         sprintf(label, MIN_FMT, break_choices[p->break_i]);
@@ -530,8 +545,10 @@ int main(void)
 
         if (key == KEY_EXIT) return 1;
         if (key == INFO_KEY) {
-            info_show(L("Timer", "Temporizador"), L("Stopwatch / Pomodoro " APPS_VERSION,
-                "Cronometro / Pomodoro " APPS_VERSION),
+            info_show(L("Timer", "Temporizador", "Minuteur"),
+                L("Stopwatch / Pomodoro " APPS_VERSION,
+                "Cronometro / Pomodoro " APPS_VERSION,
+                "Chronometre / Pomodoro " APPS_VERSION),
                 mode == MODE_STOPWATCH ? SW_COLOR : phase_color(p.phase));
             continue;
         }

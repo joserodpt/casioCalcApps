@@ -39,6 +39,7 @@ powers of 1024 (1 MiB = 2²⁰ bytes).
 | OPTN | Info screen |
 | EXIT | Back / quit |
 
-Language (English / Portuguese) follows the calculator's system language.
+Language (English / Portuguese / French) follows the calculator's system
+language.
 
 © José Rodrigues 2026

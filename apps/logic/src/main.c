@@ -360,7 +360,8 @@ static char const vnames[MAX_VARS] = { 'A', 'B', 'C', 'D' };
 /* Expression editor and the live SOP */
 static void draw_input(model_t const *m, cover_t const *cov)
 {
-    dtext(10, 24, C_DARK, L("Expression  (F(A,B,C,D) =)", "Expressao  (F(A,B,C,D) =)"));
+    dtext(10, 24, C_DARK, L("Expression  (F(A,B,C,D) =)",
+        "Expressao  (F(A,B,C,D) =)", "Expression  (F(A,B,C,D) =)"));
 
     int bx = 10, by = 40, bw = DWIDTH - 20;
     drect_border(bx, by, bx + bw, by + 20, C_WHITE, 2,
@@ -376,30 +377,33 @@ static void draw_input(model_t const *m, cover_t const *cov)
     dfont(old);
 
     int y = 74;
-    dtext(10, y, C_DARK, L("Operators", "Operadores"));
+    dtext(10, y, C_DARK, L("Operators", "Operadores", "Operateurs"));
     dtext(110, y, C_BLACK,
         "+ OR   (x) AND   ^ XOR   ! NOT   ' NOT");
     y += 14;
     dtext(110, C_DARK ? y : y, C_DARK,
         L("AB means A AND B. Variables A B C D.",
-        "AB e A E B. Variaveis A B C D."));
+        "AB e A E B. Variaveis A B C D.",
+        "AB vaut A ET B. Variables A B C D."));
     y += 20;
 
     dline(6, y - 4, DWIDTH - 7, y - 4, C_LIGHT);
     if (m->error) {
-        dtext(10, y, C_RED, L("Syntax error", "Erro de sintaxe"));
+        dtext(10, y, C_RED, L("Syntax error", "Erro de sintaxe",
+            "Erreur de syntaxe"));
     }
     else {
         char sop[80];
         sop_text(sop, sizeof sop, m, cov);
-        dtext(10, y, C_DARK, L("Minimal SOP", "SOP minima"));
+        dtext(10, y, C_DARK, L("Minimal SOP", "SOP minima", "SOP minimale"));
         dtext(10, y + 16, COLOR, "F =");
         font_t const *o2 = dfont(&font_big);
         dtext(44, y + 15, C_BLACK, sop);
         dfont(o2);
         y += 40;
         dprint(10, y, C_DARK, L("%d variable%s, %d minterm%s, %d term%s",
-            "%d variavel%s, %d minterm%s, %d termo%s"),
+            "%d variavel%s, %d minterm%s, %d termo%s",
+            "%d variable%s, %d minterme%s, %d terme%s"),
             m->var_count, m->var_count > 1 ? "s" : "",
             popcount(m->minterms), popcount(m->minterms) != 1 ? "s" : "",
             cov->count, cov->count != 1 ? "s" : "");
@@ -407,7 +411,8 @@ static void draw_input(model_t const *m, cover_t const *cov)
 
     dtext_opt(DWIDTH / 2, 186, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
         L("Vars A-D: F4-F6 and X,log,ln,sin   +*^()! = ops",
-        "Var A-D: F4-F6 e X,log,ln,sin   +*^()! = ops"));
+        "Var A-D: F4-F6 e X,log,ln,sin   +*^()! = ops",
+        "Var A-D: F4-F6 et X,log,ln,sin   +*^()! = ops"));
 }
 
 #define T_ROWH 11
@@ -463,7 +468,8 @@ static void draw_table(model_t const *m, int sel)
 
     dtext_opt(DWIDTH / 2, y0 + 14 + per_col * T_ROWH + 8, C_DARK, C_NONE,
         DTEXT_CENTER, DTEXT_TOP, L("EXE on a row toggles F (minterm mode)",
-        "EXE numa linha troca F (modo minterm)"));
+        "EXE numa linha troca F (modo minterm)",
+        "EXE: ligne inverse F (mode minterme)"));
 }
 
 /* Gray code order so neighbours differ in one bit */
@@ -580,8 +586,8 @@ static void draw_kmap(model_t const *m, cover_t const *cov)
         }
 
     /* Legend: one coloured term per group, down the left side */
-    dtext(10, 34, C_DARK, L("Groups", "Grupos"));
-    if (cov->count == 0) dtext(10, 52, C_LIGHT, L("none", "nenhum"));
+    dtext(10, 34, C_DARK, L("Groups", "Grupos", "Groupes"));
+    if (cov->count == 0) dtext(10, 52, C_LIGHT, L("none", "nenhum", "aucun"));
     for (int i = 0; i < cov->count && i < 6; i++) {
         char term[12];
         term_text(term, cov->items[i], m->var_count);
@@ -642,8 +648,9 @@ static char shifted_op(int key)
 static void draw(model_t *m, cover_t const *cov, int view, int table_sel)
 {
     char const * const titles[] = {
-        L("Boolean expression", "Expressao booleana"),
-        L("Truth table", "Tabela de verdade"), L("Karnaugh map", "Mapa de Karnaugh") };
+        L("Boolean expression", "Expressao booleana", "Expression booleenne"),
+        L("Truth table", "Tabela de verdade", "Table de verite"),
+        L("Karnaugh map", "Mapa de Karnaugh", "Tableau de Karnaugh") };
 
     dclear(C_WHITE);
     info_title(titles[view], COLOR);
@@ -652,7 +659,8 @@ static void draw(model_t *m, cover_t const *cov, int view, int table_sel)
     else if (view == VIEW_TABLE) draw_table(m, table_sel);
     else draw_kmap(m, cov);
 
-    char const * const labels[] = { L("EDIT", "EDITAR"), L("TABLE", "TABELA"), "KMAP" };
+    char const * const labels[] = { L("EDIT", "EDITAR", "EDITER"),
+        L("TABLE", "TABELA", "TABLE"), "KMAP" };
     for (int i = 0; i < 3; i++) {
         if (i == view) fkey_button_color(i + 1, labels[i], COLOR);
         else fkey_button(i + 1, labels[i]);
@@ -684,8 +692,10 @@ int main(void)
 
         if (key == KEY_EXIT) return 1;
         if (key == INFO_KEY) {
-            info_show(L("Logic", "Logica"), L("Truth table / K-map " APPS_VERSION,
-                "Tabela / Mapa K " APPS_VERSION), COLOR);
+            info_show(L("Logic", "Logica", "Logique"),
+                L("Truth table / K-map " APPS_VERSION,
+                "Tabela / Mapa K " APPS_VERSION,
+                "Table / Tableau K " APPS_VERSION), COLOR);
             continue;
         }
         if (key == KEY_F1) { view = VIEW_INPUT; continue; }

@@ -68,6 +68,7 @@ fx-9860G. What differs on the small screen:
 ![fx-9860G, molar mass of CO2](screenshots/fx-molar.png)
 ![fx-9860G, ideal gas at STP](screenshots/fx-gas.png)
 
-Language (English / Portuguese) follows the calculator's system language.
+Language (English / Portuguese / French) follows the calculator's system
+language.
 
 © José Rodrigues 2026

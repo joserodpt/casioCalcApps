@@ -72,7 +72,8 @@ static void smd_code_line(int y, char const *label, char const *code,
 {
     char a[32];
     if (!ok) {
-        result(y, label, C_DARK, L("not possible", "impossivel"));
+        result(y, label, C_DARK, L("not possible", "impossivel",
+            "impossible"));
         return;
     }
     result(y, label, SMD_COLOR, "%s", code);
@@ -88,26 +89,34 @@ static void smd_results(eform_t *f, int y)
         char const *t = f->fields[0].text;
         double v = smd_decode(t);
         if (isnan(v)) {
-            result(y, L("Value","Valor"), C_RED, L("invalid code", "codigo invalido"));
+            result(y, L("Value","Valor", "Valeur"), C_RED, L("invalid code",
+                "codigo invalido", "code invalide"));
         }
         else {
-            etext(10, y, C_DARK, DTEXT_LEFT, false, L("Value","Valor"));
+            etext(10, y, C_DARK, DTEXT_LEFT, false, L("Value","Valor",
+                "Valeur"));
             etext(100, y - 2, SMD_COLOR, DTEXT_LEFT, true,
                 fmt_si(a, v, S_OHM, 4));
             y += 6;
             int n = strlen(t);
-            result(y + RESULT_STEP, L("Type","Tipo"), C_BLACK, "%s",
-                v == 0 ? L("0 " S_OHM " jumper","ponte 0 " S_OHM) : strchr(t, 'R')
-                ? L("R = decimal point","R = virgula") : n == 4 ? L("4-digit, usually 1%","4 digitos, 1%")
-                : L("3-digit, usually 5%","3 digitos, 5%"));
+            result(y + RESULT_STEP, L("Type","Tipo", "Type"), C_BLACK, "%s",
+                v == 0 ? L("0 " S_OHM " jumper", "ponte 0 " S_OHM,
+                    "cavalier 0 " S_OHM)
+                : strchr(t, 'R')
+                ? L("R = decimal point", "R = virgula", "R = virgule")
+                : n == 4
+                ? L("4-digit, usually 1%", "4 digitos, 1%", "4 chiffres, 1%")
+                : L("3-digit, usually 5%", "3 digitos, 5%", "3 chiffres, 5%"));
             if (v > 0) {
-                result_e(y + 2 * RESULT_STEP, L("Nearest","Mais prox."), v, 24);
+                result_e(y + 2 * RESULT_STEP, L("Nearest","Mais prox.",
+                    "Plus proc."), v, 24);
                 result_e(y + 3 * RESULT_STEP, "", v, 96);
             }
         }
         etext(10, 192, C_DARK, DTEXT_LEFT, false,
             L("Press . to type R (4R7 = 4.7 " S_OHM ")",
-              "Prima . para R (4R7 = 4.7 " S_OHM ")"));
+              "Prima . para R (4R7 = 4.7 " S_OHM ")",
+              "Touche . pour R (4R7 = 4.7 " S_OHM ")"));
         return;
     }
 
@@ -115,25 +124,32 @@ static void smd_results(eform_t *f, int y)
         int n = atoi(f->fields[1].text);
         int m = e96_value(n);
         if (!m) {
-            result(y, L("Value","Valor"), C_RED, L("code must be 01 to 96","codigo 01 a 96"));
+            result(y, L("Value","Valor", "Valeur"), C_RED,
+                L("code must be 01 to 96","codigo 01 a 96",
+                "code de 01 a 96"));
             return;
         }
         double v = m * pow(10, eia96_letter_exp[f->fields[2].choice]);
-        etext(10, y, C_DARK, DTEXT_LEFT, false, L("Value","Valor"));
+        etext(10, y, C_DARK, DTEXT_LEFT, false, L("Value","Valor", "Valeur"));
         etext(100, y - 2, SMD_COLOR, DTEXT_LEFT, true,
             fmt_si(a, v, S_OHM, 4));
         y += 6;
-        result(y + RESULT_STEP, L("Code","Codigo"), C_BLACK, "%02d%c", n,
-            "ZYXABCDEF"[f->fields[2].choice]);
-        result(y + 2 * RESULT_STEP, L("Type","Tipo"), C_BLACK, L("EIA-96, 1%% series","EIA-96, serie 1%%"));
+        result(y + RESULT_STEP, L("Code","Codigo", "Code"), C_BLACK, "%02d%c",
+            n, "ZYXABCDEF"[f->fields[2].choice]);
+        result(y + 2 * RESULT_STEP, L("Type","Tipo", "Type"), C_BLACK,
+            L("EIA-96, 1%% series","EIA-96, serie 1%%", "EIA-96, serie 1%%"));
         etext(10, 192, C_DARK, DTEXT_LEFT, false,
-            L("Change the letter with left / right","Mude a letra com esq / dir"));
+            L("Change the letter with left / right",
+              "Mude a letra com esq / dir",
+              "Lettre: touches gauche / droite"));
         return;
     }
 
     double v = val(f, 3);
     if (isnan(v) || v < 0) {
-        result(y, L("Value","Valor"), C_RED, L("enter a resistance","introduza resistencia"));
+        result(y, L("Value","Valor", "Valeur"), C_RED,
+            L("enter a resistance","introduza resistencia",
+            "entrez une resistance"));
         return;
     }
     ok = smd_encode(code, v, 2, &exact);
@@ -156,17 +172,21 @@ static void smd_results_fx(eform_t *f, int y)
         char const *t = f->fields[0].text;
         double v = smd_decode(t);
         if (isnan(v)) {
-            result(y, L("Value","Valor"), C_BLACK, L("invalid","invalido"));
+            result(y, L("Value","Valor", "Valeur"), C_BLACK,
+                L("invalid","invalido", "invalide"));
             etext(1, y + 2 * RESULT_STEP, C_DARK, DTEXT_LEFT, false,
-                L(". types R (4R7)", ". escreve R (4R7)"));
+                L(". types R (4R7)", ". escreve R (4R7)", ". tape R (4R7)"));
             return;
         }
         int n = strlen(t);
-        result(y, L("Value","Valor"), C_BLACK, "%s", fmt_si(a, v, S_OHM, 4));
-        result(y + RESULT_STEP, L("Type","Tipo"), C_BLACK, "%s",
-            v == 0 ? L("0" S_OHM " jumper","ponte 0" S_OHM) : strchr(t, 'R')
-            ? L("R = point","R = virgula") : n == 4 ? L("4-digit, 1%","4 dig., 1%")
-            : L("3-digit, 5%","3 dig., 5%"));
+        result(y, L("Value","Valor", "Valeur"), C_BLACK, "%s",
+            fmt_si(a, v, S_OHM, 4));
+        result(y + RESULT_STEP, L("Type","Tipo", "Type"), C_BLACK, "%s",
+            v == 0
+            ? L("0" S_OHM " jumper", "ponte 0" S_OHM, "cavalier 0" S_OHM)
+            : strchr(t, 'R') ? L("R = point", "R = virgula", "R = virgule")
+            : n == 4 ? L("4-digit, 1%", "4 dig., 1%", "4 chif., 1%")
+            : L("3-digit, 5%", "3 dig., 5%", "3 chif., 5%"));
         if (v > 0) {
             char line[48];
             snprintf(line, sizeof line, "E24 %s  E96 %s",
@@ -181,21 +201,24 @@ static void smd_results_fx(eform_t *f, int y)
         int n = atoi(f->fields[1].text);
         int m = e96_value(n);
         if (!m) {
-            result(y, L("Value","Valor"), C_BLACK, L("code 01 to 96","codigo 01 a 96"));
+            result(y, L("Value","Valor", "Valeur"), C_BLACK,
+                L("code 01 to 96","codigo 01 a 96", "code de 01 a 96"));
             return;
         }
         double v = m * pow(10, eia96_letter_exp[f->fields[2].choice]);
-        result(y, L("Value","Valor"), C_BLACK, "%s", fmt_si(a, v, S_OHM, 4));
-        result(y + RESULT_STEP, L("Code","Codigo"), C_BLACK, "%02d%c", n,
-            "ZYXABCDEF"[f->fields[2].choice]);
-        result(y + 2 * RESULT_STEP, L("Type","Tipo"), C_BLACK,
-            L("EIA-96, 1%%","EIA-96, 1%%"));
+        result(y, L("Value","Valor", "Valeur"), C_BLACK, "%s",
+            fmt_si(a, v, S_OHM, 4));
+        result(y + RESULT_STEP, L("Code","Codigo", "Code"), C_BLACK, "%02d%c",
+            n, "ZYXABCDEF"[f->fields[2].choice]);
+        result(y + 2 * RESULT_STEP, L("Type","Tipo", "Type"), C_BLACK,
+            L("EIA-96, 1%%","EIA-96, 1%%", "EIA-96, 1%%"));
         return;
     }
 
     double v = val(f, 3);
     if (isnan(v) || v < 0) {
-        result(y, L("Code","Codigo"), C_BLACK, L("enter a value","falta valor"));
+        result(y, L("Code","Codigo", "Code"), C_BLACK,
+            L("enter a value","falta valor", "entrez valeur"));
         return;
     }
     static char const * const labels[3] = { "3-digit", "4-digit", "EIA-96" };
@@ -211,7 +234,7 @@ static void smd_results_fx(eform_t *f, int y)
         }
         if (!ok) {
             fx_line(y + k * RESULT_STEP, labels[k], 46, "-",
-                L("impossible", "impossivel"));
+                L("impossible", "impossivel", "impossible"));
             continue;
         }
         char note[32];
@@ -228,7 +251,7 @@ void smd_run(void)
         .color = SMD_COLOR, .fields = smd_fields,
         .count = 4, .cols = 1, .label_w = 70, .results = smd_results,
     };
-    f.title = L("SMD codes", "Codigos SMD");
+    f.title = L("SMD codes", "Codigos SMD", "Codes CMS");
     smd_fields[2].options = eia_letters;
 #if GINT_HW_FX
     f.color = C_BLACK;
@@ -265,19 +288,23 @@ static void rnet_results(eform_t *f, int y)
         else conductance += 1 / r;
     }
     if (!n) {
-        result(y, "Total", C_DARK, L("enter some resistors","introduza resistencias"));
+        result(y, "Total", C_DARK,
+            L("enter some resistors","introduza resistencias",
+            "entrez des resistances"));
         return;
     }
     double parallel = zero ? 0 : 1 / conductance;
 
-    result(y, L("Resistors","Resistencias"), C_BLACK, "%d", n);
-    result_e(y + RESULT_STEP, L("Series","Serie"), series, 24);
-    result_e(y + 2 * RESULT_STEP, L("Parallel","Paralelo"), parallel, 24);
+    result(y, L("Resistors","Resistencias", "Resistances"), C_BLACK, "%d", n);
+    result_e(y + RESULT_STEP, L("Series","Serie", "Serie"), series, 24);
+    result_e(y + 2 * RESULT_STEP, L("Parallel","Paralelo", "Parallele"),
+        parallel, 24);
     char a[32];
     if (!zero) result(y + 3 * RESULT_STEP, "G total", C_BLACK, "%s",
         fmt_si(a, conductance, "S", 4));
     etext(10, 192, C_DARK, DTEXT_LEFT, false,
-        L("Empty fields are ignored","Campos vazios sao ignorados"));
+        L("Empty fields are ignored","Campos vazios sao ignorados",
+            "Champs vides ignores"));
 }
 
 #if GINT_HW_FX
@@ -297,9 +324,10 @@ static void rnet_results_fx(eform_t *f, int y)
         else conductance += 1 / r;
     }
     if (!n) {
-        result(y, "Total", C_BLACK, L("enter some R","introduza R"));
+        result(y, "Total", C_BLACK, L("enter some R","introduza R",
+            "entrez R"));
         etext(1, y + 2 * RESULT_STEP, C_DARK, DTEXT_LEFT, false,
-            L("Empty fields ignored", "Vazios ignorados"));
+            L("Empty fields ignored", "Vazios ignorados", "Vides ignores"));
         return;
     }
     double parallel = zero ? 0 : 1 / conductance;
@@ -325,7 +353,7 @@ void rnet_run(void)
         .fields = rnet_fields, .count = 8, .cols = 2, .label_w = 30,
         .results = rnet_results,
     };
-    f.title = L("Series / parallel", "Serie / paralelo");
+    f.title = L("Series / parallel", "Serie / paralelo", "Serie / parallele");
 #if GINT_HW_FX
     f.color = C_BLACK;
     f.results = rnet_results_fx;
@@ -353,10 +381,12 @@ static void div_results(eform_t *f, int y)
         double i = vin / (r1 + r2);
         result(y, "Vout", DIV_COLOR, "%s", fmt_si(a, vin * r2 / (r1 + r2),
             "V", 4));
-        result_note(y, L("ratio %s","racio %s"), fmt_num(b, r2 / (r1 + r2), 4));
-        result(y + RESULT_STEP, L("Current","Corrente"), C_BLACK, "%s",
-            fmt_si(a, i, "A", 4));
-        result(y + 2 * RESULT_STEP, L("Power","Potencia"), C_BLACK, "R1 %s   R2 %s",
+        result_note(y, L("ratio %s","racio %s", "ratio %s"),
+            fmt_num(b, r2 / (r1 + r2), 4));
+        result(y + RESULT_STEP, L("Current","Corrente", "Courant"), C_BLACK,
+            "%s", fmt_si(a, i, "A", 4));
+        result(y + 2 * RESULT_STEP, L("Power","Potencia", "Puissance"),
+            C_BLACK, "R1 %s   R2 %s",
             fmt_si(a, i * i * r1, "W", 3), fmt_si(b, i * i * r2, "W", 3));
     }
     else result(y, "Vout", C_DARK, "-");
@@ -364,11 +394,14 @@ static void div_results(eform_t *f, int y)
     y += 3 * RESULT_STEP + 4;
     dline(6, y - 3, DWIDTH - 7, y - 3, C_LIGHT);
     if (isnan(vt) || isnan(vin) || isnan(r1) || vt <= 0 || vt >= vin) {
-        result(y, L("Target R2","R2 alvo"), C_DARK, L("needs 0 < target < Vin","precisa 0 < alvo < Vin"));
+        result(y, L("Target R2","R2 alvo", "R2 cible"), C_DARK,
+            L("needs 0 < target < Vin","precisa 0 < alvo < Vin",
+            "exige 0 < cible < Vin"));
         return;
     }
     double r2t = r1 * vt / (vin - vt);
-    result(y, L("Target R2","R2 alvo"), C_BLACK, "%s", fmt_si(a, r2t, S_OHM, 4));
+    result(y, L("Target R2","R2 alvo", "R2 cible"), C_BLACK, "%s",
+        fmt_si(a, r2t, S_OHM, 4));
     for (int k = 0; k < 2; k++) {
         int series = k ? 24 : 12;
         double e = eseries_nearest(series, r2t, false);
@@ -391,11 +424,12 @@ static void div_results_fx(eform_t *f, int y)
     /* On the target field, R2 for the target; otherwise Vout */
     if (f->sel == 3) {
         if (isnan(vt) || isnan(vin) || isnan(r1) || vt <= 0 || vt >= vin) {
-            result(y, "R2", C_BLACK, L("0 < Vt < Vin","0 < Vt < Vin"));
+            result(y, "R2", C_BLACK, L("0 < Vt < Vin","0 < Vt < Vin",
+                "0 < Vt < Vin"));
             return;
         }
         double r2t = r1 * vt / (vin - vt);
-        result(y, L("R2 for Vt","R2 p/ Vt"), C_BLACK, "%s",
+        result(y, L("R2 for Vt","R2 p/ Vt", "R2 pour Vt"), C_BLACK, "%s",
             fmt_si(a, r2t, S_OHM, 4));
         for (int k = 0; k < 2; k++) {
             int series = k ? 24 : 12;
@@ -417,7 +451,7 @@ static void div_results_fx(eform_t *f, int y)
     double i = vin / (r1 + r2);
     snprintf(line, sizeof line, "x%s", fmt_num(b, r2 / (r1 + r2), 4));
     fx_line(y, "Vout", 28, fmt_si(a, vin * r2 / (r1 + r2), "V", 4), line);
-    result(y + RESULT_STEP, L("Current","Corrente"), C_BLACK, "%s",
+    result(y + RESULT_STEP, L("Current","Corrente", "Courant"), C_BLACK, "%s",
         fmt_si(a, i, "A", 4));
     snprintf(line, sizeof line, "P1 %s  P2 %s", si(a, i * i * r1, "W", 3),
         si(b, i * i * r2, "W", 3));
@@ -431,7 +465,7 @@ void divider_run(void)
         .color = DIV_COLOR, .fields = div_fields,
         .count = 4, .cols = 1, .label_w = 108, .results = div_results,
     };
-    f.title = L("Voltage divider", "Divisor de tensao");
+    f.title = L("Voltage divider", "Divisor de tensao", "Pont diviseur");
 #if GINT_HW_FX
     f.color = C_BLACK;
     f.results = div_results_fx;
@@ -459,17 +493,20 @@ static void filt_results(eform_t *f, int y)
     bool hr = r > 0, hc = c > 0, hl = l > 0;
 
     result(y, "RC  fc", FILT_COLOR, "%s", hr && hc
-        ? fmt_si(a, 1 / (2 * PI * r * c), "Hz", 4) : L("needs R, C","precisa R, C"));
+        ? fmt_si(a, 1 / (2 * PI * r * c), "Hz", 4)
+            : L("needs R, C","precisa R, C", "exige R, C"));
     if (hr && hc) result_note(y, "tau = RC = %s", fmt_si(b, r * c, "s", 4));
     y += RESULT_STEP;
 
     result(y, "RL  fc", FILT_COLOR, "%s", hr && hl
-        ? fmt_si(a, r / (2 * PI * l), "Hz", 4) : L("needs R, L","precisa R, L"));
+        ? fmt_si(a, r / (2 * PI * l), "Hz", 4)
+            : L("needs R, L","precisa R, L", "exige R, L"));
     if (hr && hl) result_note(y, "tau = L/R = %s", fmt_si(b, l / r, "s", 4));
     y += RESULT_STEP;
 
     result(y, "LC  f0", FILT_COLOR, "%s", hc && hl
-        ? fmt_si(a, 1 / (2 * PI * sqrt(l * c)), "Hz", 4) : L("needs L, C","precisa L, C"));
+        ? fmt_si(a, 1 / (2 * PI * sqrt(l * c)), "Hz", 4)
+            : L("needs L, C","precisa L, C", "exige L, C"));
     if (hc && hl) result_note(y, "Z0 = %s", fmt_si(b, sqrt(l / c), S_OHM, 4));
     y += RESULT_STEP;
 
@@ -521,7 +558,7 @@ void filter_run(void)
         .fields = filt_fields, .count = 3, .cols = 1, .label_w = 30,
         .results = filt_results,
     };
-    f.title = L("RC / RL filters", "Filtros RC / RL");
+    f.title = L("RC / RL filters", "Filtros RC / RL", "Filtres RC / RL");
 #if GINT_HW_FX
     f.color = C_BLACK;
     f.results = filt_results_fx;
@@ -558,29 +595,33 @@ static void t555_results(eform_t *f, int y)
 
     if (f->fields[0].choice == 1) {
         if (!(r1 > 0 && c > 0)) {
-            result(y, L("Pulse","Pulso"), C_DARK, L("needs R, C","precisa R, C"));
+            result(y, L("Pulse","Pulso", "Impulsion"), C_DARK,
+                L("needs R, C","precisa R, C", "exige R, C"));
             return;
         }
-        result(y, L("Pulse width","Largura pulso"), T555_COLOR, "%s",
-            fmt_si(a, 1.1 * r1 * c, "s", 4));
+        result(y, L("Pulse width","Largura pulso", "Larg. impulsion"),
+            T555_COLOR, "%s", fmt_si(a, 1.1 * r1 * c, "s", 4));
         etext(10, y + 2 * RESULT_STEP, C_DARK, DTEXT_LEFT, false,
             "t = 1.1 R C");
         return;
     }
 
     if (!(r1 > 0 && r2 > 0 && c > 0)) {
-        result(y, L("Frequency","Frequencia"), C_DARK, L("needs R1, R2, C","precisa R1, R2, C"));
+        result(y, L("Frequency","Frequencia", "Frequence"), C_DARK,
+            L("needs R1, R2, C","precisa R1, R2, C", "exige R1, R2, C"));
         return;
     }
     double th = log(2) * (r1 + r2) * c;
     double tl = log(2) * r2 * c;
-    result(y, L("Frequency","Frequencia"), T555_COLOR, "%s", fmt_si(a, 1 / (th + tl),
-        "Hz", 4));
-    result(y + RESULT_STEP, L("Period","Periodo"), C_BLACK, "%s",
+    result(y, L("Frequency","Frequencia", "Frequence"), T555_COLOR, "%s",
+        fmt_si(a, 1 / (th + tl), "Hz", 4));
+    result(y + RESULT_STEP, L("Period","Periodo", "Periode"), C_BLACK, "%s",
         fmt_si(a, th + tl, "s", 4));
-    result(y + 2 * RESULT_STEP, L("High / low","Alto / baixo"), C_BLACK, "%s / %s",
+    result(y + 2 * RESULT_STEP, L("High / low","Alto / baixo", "Haut / bas"),
+        C_BLACK, "%s / %s",
         fmt_si(a, th, "s", 4), fmt_si(b, tl, "s", 4));
-    result(y + 3 * RESULT_STEP, L("Duty cycle","Ciclo"), C_BLACK, "%s%%",
+    result(y + 3 * RESULT_STEP, L("Duty cycle","Ciclo", "Rapp. cyclique"),
+        C_BLACK, "%s%%",
         fmt_num(a, 100 * th / (th + tl), 1));
     etext(10, y + 4 * RESULT_STEP + 4, C_DARK, DTEXT_LEFT, false,
         "f = 1 / (ln2 (R1 + 2 R2) C)");
@@ -594,27 +635,30 @@ static void t555_results_fx(eform_t *f, int y)
 
     if (f->fields[0].choice == 1) {
         if (!(r1 > 0 && c > 0)) {
-            result(y, L("Pulse","Pulso"), C_BLACK, L("needs R, C","precisa R, C"));
+            result(y, L("Pulse","Pulso", "Impulsion"), C_BLACK,
+                L("needs R, C","precisa R, C", "exige R, C"));
             return;
         }
-        result(y, L("Pulse","Pulso"), C_BLACK, "%s",
+        result(y, L("Pulse","Pulso", "Impulsion"), C_BLACK, "%s",
             fmt_si(a, 1.1 * r1 * c, "s", 4));
         etext(1, y + RESULT_STEP, C_DARK, DTEXT_LEFT, false, "t = 1.1 R C");
         return;
     }
 
     if (!(r1 > 0 && r2 > 0 && c > 0)) {
-        result(y, "f", C_BLACK, L("needs R1, R2, C","precisa R1, R2, C"));
+        result(y, "f", C_BLACK, L("needs R1, R2, C","precisa R1, R2, C",
+            "exige R1, R2, C"));
         return;
     }
     double th = log(2) * (r1 + r2) * c;
     double tl = log(2) * r2 * c;
-    snprintf(line, sizeof line, L("duty %s%%","ciclo %s%%"),
+    snprintf(line, sizeof line, L("duty %s%%","ciclo %s%%", "rapp. %s%%"),
         fmt_num(b, 100 * th / (th + tl), 1));
     fx_line(y, "f", 10, fmt_si(a, 1 / (th + tl), "Hz", 4), line);
-    result(y + RESULT_STEP, L("Period","Periodo"), C_BLACK, "%s",
+    result(y + RESULT_STEP, L("Period","Periodo", "Periode"), C_BLACK, "%s",
         fmt_si(a, th + tl, "s", 4));
-    result(y + 2 * RESULT_STEP, L("Hi/lo","Alto/bx"), C_BLACK, "%s / %s",
+    result(y + 2 * RESULT_STEP, L("Hi/lo","Alto/bx", "Haut/bas"), C_BLACK,
+        "%s / %s",
         si(a, th, "s", 3), si(b, tl, "s", 3));
 }
 #endif
@@ -626,7 +670,7 @@ void timer555_run(void)
         .count = 4, .cols = 1, .label_w = 50, .results = t555_results,
         .changed = t555_changed,
     };
-    f.title = L("555 timer", "Temporizador 555");
+    f.title = L("555 timer", "Temporizador 555", "Temporisateur 555");
 #if GINT_HW_FX
     f.color = C_BLACK;
     f.results = t555_results_fx;
@@ -680,18 +724,22 @@ static void led_results(eform_t *f, int y)
 
     if (isnan(n) || n < 1) n = 1;
     if (!(vs > 0 && vf > 0 && i > 0)) {
-        result(y, L("Resistor","Resistencia"), C_DARK, L("needs supply, Vf, current","precisa Vcc, Vf, corrente"));
+        result(y, L("Resistor","Resistencia", "Resistance"), C_DARK,
+            L("needs supply, Vf, current","precisa Vcc, Vf, corrente",
+            "exige Vcc, Vf, courant"));
         return;
     }
     double vr = vs - n * vf;
     if (vr <= 0) {
-        result(y, L("Resistor","Resistencia"), C_RED, L("supply below %s","Vcc abaixo de %s"),
+        result(y, L("Resistor","Resistencia", "Resistance"), C_RED,
+            L("supply below %s","Vcc abaixo de %s", "Vcc sous %s"),
             fmt_si(a, n * vf, "V", 3));
         return;
     }
 
     double r = vr / i;
-    result(y, L("Resistor","Resistencia"), LED_COLOR, "%s", fmt_si(a, r, S_OHM, 4));
+    result(y, L("Resistor","Resistencia", "Resistance"), LED_COLOR, "%s",
+        fmt_si(a, r, S_OHM, 4));
     result_note(y, "%s, %s", fmt_si(b, vr * i, "W", 3), rating(vr * i));
     for (int k = 0; k < 2; k++) {
         int series = k ? 24 : 12;
@@ -704,8 +752,8 @@ static void led_results(eform_t *f, int y)
         result_note(y + (k + 1) * RESULT_STEP, "%s, %s",
             fmt_si(b, ie, "A", 3), fmt_si(c, vr * ie, "W", 2));
     }
-    result(y + 3 * RESULT_STEP, L("LED power","Potencia LED"), C_BLACK, "%s",
-        fmt_si(a, n * vf * i, "W", 3));
+    result(y + 3 * RESULT_STEP, L("LED power","Potencia LED", "Puissance LED"),
+        C_BLACK, "%s", fmt_si(a, n * vf * i, "W", 3));
     etext(10, y + 4 * RESULT_STEP + 2, C_DARK, DTEXT_LEFT, false,
         "R = (Vs - n Vf) / I, rounded up");
 }
@@ -719,12 +767,13 @@ static void led_results_fx(eform_t *f, int y)
 
     if (isnan(n) || n < 1) n = 1;
     if (!(vs > 0 && vf > 0 && i > 0)) {
-        result(y, "R", C_BLACK, L("needs Vs, Vf, I","precisa Vs, Vf, I"));
+        result(y, "R", C_BLACK, L("needs Vs, Vf, I","precisa Vs, Vf, I",
+            "exige Vs, Vf, I"));
         return;
     }
     double vr = vs - n * vf;
     if (vr <= 0) {
-        result(y, "R", C_BLACK, L("Vs below %s","Vs abaixo %s"),
+        result(y, "R", C_BLACK, L("Vs below %s","Vs abaixo %s", "Vs sous %s"),
             fmt_si(a, n * vf, "V", 3));
         return;
     }
@@ -754,7 +803,7 @@ void led_run(void)
         .count = 5, .cols = 1, .label_w = 70, .results = led_results,
         .changed = led_changed,
     };
-    f.title = L("LED resistor", "Resistencia LED");
+    f.title = L("LED resistor", "Resistencia LED", "Resistance LED");
 #if GINT_HW_FX
     f.color = C_BLACK;
     f.results = led_results_fx;

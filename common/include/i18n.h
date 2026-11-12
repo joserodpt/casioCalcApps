@@ -4,10 +4,11 @@
 //	Call lang_init() once at start-up (it reads the OS message language
 //	through the gint world switch). Then wrap user-facing text in L():
 //
-//		dtext(10, 10, C_BLACK, L("Settings", "Definicoes"));
+//		dtext(10, 10, C_BLACK, L("Settings", "Definicoes", "Reglages"));
 //
-//	Only English and Portuguese are translated for now; every other OS
-//	language falls back to the English string.
+//	Only English, Portuguese and French are translated for now; every
+//	other OS language falls back to the English string. The fonts are
+//	ASCII only, so translations leave out accents.
 //---
 
 #ifndef CASIO_I18N
@@ -22,8 +23,9 @@ extern int lang_current;
 /* lang_init(): Detect the OS language. Safe to call once at start-up. */
 void lang_init(void);
 
-/* L(): English string, or its Portuguese translation when the calculator
-   is set to Portuguese (any other language uses the English string). */
-#define L(en, pt)  (lang_current == L_PT ? (pt) : (en))
+/* L(): English string, or its Portuguese or French translation when the
+   calculator is set to that language (any other uses the English one). */
+#define L(en, pt, fr)  (lang_current == L_PT ? (pt) : \
+                        lang_current == L_FR ? (fr) : (en))
 
 #endif /* CASIO_I18N */

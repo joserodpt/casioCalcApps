@@ -332,7 +332,8 @@ static void draw(state_t const *s)
     int n = 0, rows_h = 0;
 
     dclear(C_WHITE);
-    info_title(L("Base-N Converter", "Conversor Base-N"), b->color);
+    info_title(L("Base-N Converter", "Conversor Base-N",
+        "Convertisseur Base-N"), b->color);
 
     for (int m = 0; m < MODE_COUNT; m++) {
         if (m == s->mode) continue;
@@ -363,8 +364,8 @@ static void draw(state_t const *s)
     }
     snprintf(width_label, sizeof width_label, "%db", width_of(s));
     fkey_button(5, width_label);
-    if (s->is_signed) fkey_button_color(6, L("SGN", "C/S"), b->color);
-    else fkey_button(6, L("UNS", "S/S"));
+    if (s->is_signed) fkey_button_color(6, L("SGN", "C/S", "A/S"), b->color);
+    else fkey_button(6, L("UNS", "S/S", "S/S"));
 
     dupdate();
 }
@@ -465,13 +466,15 @@ static void draw(state_t const *s)
     dclear(C_WHITE);
 
     // Title bar in the colour of the active base
-    info_title(L("Base-N Converter", "Conversor Base-N"), b->color);
+    info_title(L("Base-N Converter", "Conversor Base-N",
+        "Convertisseur Base-N"), b->color);
 
     // Status line: input base on the left, word size on the right
     dtext(8, 20, b->color, b->name);
     dprint_opt(DWIDTH - 8, 20, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
         "%d-bit  %s", width_of(s),
-        s->is_signed ? L("signed", "com sinal") : L("unsigned", "sem sinal"));
+        s->is_signed ? L("signed", "com sinal", "signe")
+        : L("unsigned", "sem sinal", "non signe"));
 
     draw_input(s);
     dline(6, 68, DWIDTH - 7, 68, C_LIGHT);
@@ -484,8 +487,9 @@ static void draw(state_t const *s)
     }
     snprintf(width_label, sizeof width_label, "%d-bit", width_of(s));
     fkey_button(5, width_label);
-    if (s->is_signed) fkey_button_color(6, L("SIGNED", "SINAL"), b->color);
-    else fkey_button(6, L("SIGNED", "SINAL"));
+    if (s->is_signed) fkey_button_color(6, L("SIGNED", "SINAL", "SIGNE"),
+        b->color);
+    else fkey_button(6, L("SIGNED", "SINAL", "SIGNE"));
 
     dupdate();
 }
@@ -518,7 +522,8 @@ int main(void)
                 return 1;
             case INFO_KEY:
                 info_show("Base-N", L("Converter " APPS_VERSION,
-                    "Conversor " APPS_VERSION), bases[s.mode].color);
+                    "Conversor " APPS_VERSION, "Convertisseur " APPS_VERSION),
+                    bases[s.mode].color);
                 break;
             case KEY_F1: case KEY_F2: case KEY_F3: case KEY_F4:
                 s.mode = key - KEY_F1;

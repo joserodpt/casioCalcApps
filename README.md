@@ -7,8 +7,8 @@ with black and white versions of most of them for the fx-9860G family**
 
 DC and AC circuit simulators, toolkits for electronics, chemistry, physics,
 logic, networking and informatics, number converters, a timer, a tone generator for the
-link port and a firmware dumper, all with colour interfaces and in English
-and Portuguese (SysInfo is English only).
+link port and a firmware dumper, all with colour interfaces and in English,
+Portuguese and French (SysInfo is English only).
 
 ![Calculator](https://img.shields.io/badge/calculator-fx--CG50%20%7C%20CG10%20%7C%20CG20%20%7C%20fx--9860G-1f6feb)
 ![Language](https://img.shields.io/badge/language-C-555555)
@@ -319,7 +319,7 @@ the modules it uses.
 | --- | --- |
 | `info.h` | title bar with the info hint, About screen (`info_show`, `info_app`) |
 | `color.h` | colour names on both families (greys on the fx-9860G), `screen_init()` for the grey engine |
-| `i18n.h` | `lang_init()` and `L("English", "Portugues")` |
+| `i18n.h` | `lang_init()` and `L("English", "Portugues", "Francais")` |
 | `menu.h` | numbered tool list that toolkit apps open on (`menu_run`) |
 | `form.h` | screen of number fields with live results (`form_run`) |
 | `numfield.h` | one number input box (digits, `.`, EXP, sign) |

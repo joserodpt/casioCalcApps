@@ -119,17 +119,18 @@ static void code_boxes(int y, char const *s, int cursor, int color)
 static void draw_request(char const *typed, bool wrong)
 {
     dclear(C_WHITE);
-    info_title(L("Activation", "Ativacao"), COLOR);
+    info_title(L("Activation", "Ativacao", "Activation"), COLOR);
 
     dtext_opt(DWIDTH / 2, 24, C_BLACK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
-        L("Request code", "Codigo de pedido"));
+        L("Request code", "Codigo de pedido", "Code de demande"));
     code_boxes(38, request, -1, COLOR);
     dtext_opt(DWIDTH / 2, 74, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
         L("Send it to get this calculator's activation code.",
-          "Envie-o para receber o codigo de ativacao."));
+          "Envie-o para receber o codigo de ativacao.",
+          "Envoyez-le pour obtenir le code d'activation."));
 
     dtext_opt(DWIDTH / 2, 100, C_BLACK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
-        L("Activation code", "Codigo de ativacao"));
+        L("Activation code", "Codigo de ativacao", "Code d'activation"));
     int n = strlen(typed);
     code_boxes(114, typed, n < CODE_LEN ? n : -1,
         wrong ? BAD : C_BLACK);
@@ -137,21 +138,23 @@ static void draw_request(char const *typed, bool wrong)
     if (wrong)
         dtext_opt(DWIDTH / 2, 152, BAD, C_NONE, DTEXT_CENTER, DTEXT_TOP,
             L("Wrong code: check it and try again.",
-              "Codigo errado: verifique-o e tente de novo."));
+              "Codigo errado: verifique-o e tente de novo.",
+              "Code incorrect: verifiez-le et reessayez."));
     else
         dtext_opt(DWIDTH / 2, 152, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
             L("A-F: X,theta,T  log  ln  sin  cos  tan.  EXE: activate",
-              "A-F: X,theta,T  log  ln  sin  cos  tan.  EXE: ativar"));
+              "A-F: X,theta,T  log  ln  sin  cos  tan.  EXE: ativar",
+              "A-F: X,theta,T  log  ln  sin  cos  tan.  EXE: activer"));
 
-    fkey_button(1, L("CLEAR", "LIMPAR"));
-    fkey_button(6, L("ABOUT", "SOBRE"));
+    fkey_button(1, L("CLEAR", "LIMPAR", "EFFACER"));
+    fkey_button(6, L("ABOUT", "SOBRE", "INFOS"));
     dupdate();
 }
 
 static void draw_activated(void)
 {
     dclear(C_WHITE);
-    info_title(L("Activation", "Ativacao"), COLOR);
+    info_title(L("Activation", "Ativacao", "Activation"), COLOR);
 
     /* A green disc with a thick white tick */
     int const cx = DWIDTH / 2, cy = 70;
@@ -163,17 +166,19 @@ static void draw_activated(void)
 
     font_t const *old = dfont(&font_big);
     dtext_opt(cx, 120, GOOD, C_NONE, DTEXT_CENTER, DTEXT_TOP,
-        L("Activated", "Ativado"));
+        L("Activated", "Ativado", "Activee"));
     dfont(old);
     dtext_opt(cx, 144, C_BLACK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
         L("This calculator is activated. Thank you!",
-          "Esta calculadora esta ativada. Obrigado!"));
+          "Esta calculadora esta ativada. Obrigado!",
+          "Cette calculatrice est activee. Merci!"));
     dprint_opt(cx, 160, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
         L("Request code %s, activation code %s",
-          "Pedido %s, ativacao %s"), request, expected);
+          "Pedido %s, ativacao %s", "Demande %s, activation %s"),
+        request, expected);
 
-    fkey_button(1, L("RESET", "REPOR"));
-    fkey_button(6, L("ABOUT", "SOBRE"));
+    fkey_button(1, L("RESET", "REPOR", "RAZ"));
+    fkey_button(6, L("ABOUT", "SOBRE", "INFOS"));
     dupdate();
 }
 
@@ -195,7 +200,7 @@ int main(void)
         if (key == KEY_EXIT) return 1;
         if (key == INFO_KEY || key == KEY_F6) {
             info_show("Activation", L("Activation " APPS_VERSION,
-                "Ativacao " APPS_VERSION), COLOR);
+                "Ativacao " APPS_VERSION, "Activation " APPS_VERSION), COLOR);
         }
         else if (active) {
             if (key == KEY_F1) { /* back to the request screen */

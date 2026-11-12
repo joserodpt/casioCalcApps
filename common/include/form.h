@@ -2,7 +2,8 @@
 //	form - A screen of number fields with live results below
 //
 //	static form_t f = {
-//	    .title_en = "Dynamics", .title_pt = "Dinamica", .color = COLOR,
+//	    .title_en = "Dynamics", .title_pt = "Dinamica",
+//	    .title_fr = "Dynamique", .color = COLOR,
 //	    .count = 2, .fields = { { "m", "m", "kg" }, { "a", "a", "m/s2" } },
 //	    .results = dyn_results,
 //	};
@@ -31,10 +32,10 @@
 
 typedef struct form form_t;
 struct form {
-    char const *title_en, *title_pt;
+    char const *title_en, *title_pt, *title_fr;
     int color;
     struct {
-        char const *label_en, *label_pt, *unit;
+        char const *label_en, *label_pt, *label_fr, *unit;
         numfield_t f;
     } fields[FORM_MAX];
     int count;

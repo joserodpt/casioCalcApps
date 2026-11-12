@@ -82,21 +82,33 @@ static bool in(uint32_t a, uint32_t net, int prefix)
 /* Special-purpose ranges (RFC 6890 and friends) */
 static char const *address_type(uint32_t a)
 {
-    if (a == 0xffffffffu)           return L("Broadcast", "Broadcast");
-    if (in(a, 0x00000000, 8))       return L("This network", "Esta rede");
-    if (in(a, 0x0a000000, 8))       return L("Private", "Privado");
-    if (in(a, 0x64400000, 10))      return L("Shared (CGNAT)", "Partilhado CGNAT");
-    if (in(a, 0x7f000000, 8))       return L("Loopback", "Loopback");
-    if (in(a, 0xa9fe0000, 16))      return L("Link-local", "Link-local");
-    if (in(a, 0xac100000, 12))      return L("Private", "Privado");
-    if (in(a, 0xc0000200, 24))      return L("Documentation", "Documentacao");
-    if (in(a, 0xc0a80000, 16))      return L("Private", "Privado");
-    if (in(a, 0xc6120000, 15))      return L("Benchmarking", "Benchmarking");
-    if (in(a, 0xc6336400, 24))      return L("Documentation", "Documentacao");
-    if (in(a, 0xcb007100, 24))      return L("Documentation", "Documentacao");
-    if (in(a, 0xe0000000, 4))       return L("Multicast", "Multicast");
-    if (in(a, 0xf0000000, 4))       return L("Reserved", "Reservado");
-    return L("Public", "Publico");
+    if (a == 0xffffffffu)           return L("Broadcast", "Broadcast",
+                                             "Diffusion");
+    if (in(a, 0x00000000, 8))       return L("This network", "Esta rede",
+                                             "Ce reseau");
+    if (in(a, 0x0a000000, 8))       return L("Private", "Privado", "Prive");
+    if (in(a, 0x64400000, 10))      return L("Shared (CGNAT)",
+                                             "Partilhado CGNAT",
+                                             "Partage (CGNAT)");
+    if (in(a, 0x7f000000, 8))       return L("Loopback", "Loopback",
+                                             "Loopback");
+    if (in(a, 0xa9fe0000, 16))      return L("Link-local", "Link-local",
+                                             "Lien local");
+    if (in(a, 0xac100000, 12))      return L("Private", "Privado", "Prive");
+    if (in(a, 0xc0000200, 24))      return L("Documentation", "Documentacao",
+                                             "Documentation");
+    if (in(a, 0xc0a80000, 16))      return L("Private", "Privado", "Prive");
+    if (in(a, 0xc6120000, 15))      return L("Benchmarking", "Benchmarking",
+                                             "Benchmarking");
+    if (in(a, 0xc6336400, 24))      return L("Documentation", "Documentacao",
+                                             "Documentation");
+    if (in(a, 0xcb007100, 24))      return L("Documentation", "Documentacao",
+                                             "Documentation");
+    if (in(a, 0xe0000000, 4))       return L("Multicast", "Multicast",
+                                             "Multicast");
+    if (in(a, 0xf0000000, 4))       return L("Reserved", "Reservado",
+                                             "Reserve");
+    return L("Public", "Publico", "Public");
 }
 
 /* First and last host, and the number of usable hosts: /31 links use
@@ -190,7 +202,8 @@ static void step_subnet(state_t *s, int dir)
 
 #if GINT_HW_FX
 
-#define TITLE     L("Subnet calc", "Calc. sub-rede")
+#define TITLE     L("Subnet calc", "Calc. sub-rede", \
+                    "Calc. sous-reseau")
 #define FX_PAGES  4
 #define INPUT_Y   11
 #define ROWS_Y    20
@@ -262,29 +275,30 @@ static void draw_results(state_t const *s)
 
     switch (s->page) {
     case 0:
-        row(0, L("Net", "Rede"), ip_text(a, net));
-        row(1, L("Mask", "Masc"), ip_text(a, mask));
+        row(0, L("Net", "Rede", "Res."), ip_text(a, net));
+        row(1, L("Mask", "Masc", "Masq"), ip_text(a, mask));
         row(2, "Bcast", prefix < 31 ? ip_text(a, net | ~mask)
-            : L("none", "nenhum"));
+            : L("none", "nenhum", "aucune"));
         row(3, "Hosts", u64_text(a, usable));
         break;
     case 1:
-        row(0, prefix == 32 ? "Host" : L("First", "1o"), ip_text(a, first));
-        if (prefix < 32) row(1, L("Last", "Ult."), ip_text(a, last));
+        row(0, prefix == 32 ? "Host" : L("First", "1o", "1re"),
+            ip_text(a, first));
+        if (prefix < 32) row(1, L("Last", "Ult.", "Dern."), ip_text(a, last));
         row(2, "Total", u64_text(a, (uint64_t)1 << (32 - prefix)));
-        row(3, L("Wild", "Cur."), ip_text(a, ~mask));
+        row(3, L("Wild", "Cur.", "Inv."), ip_text(a, ~mask));
         break;
     case 2:
         sprintf(text, "0x%08X", (unsigned)mask);
         row(0, "Hex", text);
         sprintf(text, "%c", address_class(ip));
-        row(1, L("Class", "Cls."), text);
-        row(2, L("Type", "Tipo"), address_type(ip));
+        row(1, L("Class", "Cls.", "Cls."), text);
+        row(2, L("Type", "Tipo", "Type"), address_type(ip));
         break;
     default:
         draw_bits(0, "IP", ip, 0, prefix);
         draw_bits(1, NULL, ip, 1, prefix);
-        draw_bits(2, L("Mask", "Masc"), mask, 0, prefix);
+        draw_bits(2, L("Mask", "Masc", "Masq"), mask, 0, prefix);
         draw_bits(3, NULL, mask, 1, prefix);
         break;
     }
@@ -299,8 +313,8 @@ static void draw(state_t const *s)
     draw_input(s);
     draw_results(s);
 
-    fkey_button(1, L("PRV", "ANT"));
-    fkey_button(2, L("NXT", "SEG"));
+    fkey_button(1, L("PRV", "ANT", "PRE"));
+    fkey_button(2, L("NXT", "SEG", "SUI"));
     int prefixes[3] = { 16, 24, 30 };
     for (int i = 0; i < 3; i++) {
         sprintf(label, "/%d", prefixes[i]);
@@ -315,7 +329,8 @@ static void draw(state_t const *s)
 
 #else
 
-#define TITLE     L("IP subnet calculator", "Calc. de sub-rede")
+#define TITLE     L("IP subnet calculator", "Calc. de sub-rede", \
+                    "Calc. de sous-reseau")
 
 //---
 //  Rendering (fx-CG, 396x224)
@@ -379,18 +394,20 @@ static void draw_results(state_t const *s)
     uint32_t bcast = net | ~mask;
     uint64_t total = (uint64_t)1 << (32 - prefix);
 
-    row(0, L("Address", "Endereco"), ip_text(a, ip), C_BLACK);
-    sprintf(text, L("Class %c, %s", "Classe %c, %s"), address_class(ip), address_type(ip));
+    row(0, L("Address", "Endereco", "Adresse"), ip_text(a, ip), C_BLACK);
+    sprintf(text, L("Class %c, %s", "Classe %c, %s", "Classe %c, %s"),
+        address_class(ip), address_type(ip));
     note(0, text);
 
-    row(1, L("Netmask", "Mascara"), ip_text(a, mask), C_BLACK);
+    row(1, L("Netmask", "Mascara", "Masque"), ip_text(a, mask), C_BLACK);
     sprintf(text, "0x%08X", (unsigned)mask);
     note(1, text);
-    row(2, L("Wildcard", "Curinga"), ip_text(a, ~mask), C_BLACK);
+    row(2, L("Wildcard", "Curinga", "Inverse"), ip_text(a, ~mask), C_BLACK);
 
     sprintf(text, "%s/%d", ip_text(a, net), prefix);
-    row(3, L("Network", "Rede"), text, COLOR);
-    row(4, "Broadcast", prefix < 31 ? ip_text(a, bcast) : L("none", "nenhum"), COLOR);
+    row(3, L("Network", "Rede", "Reseau"), text, COLOR);
+    row(4, "Broadcast", prefix < 31 ? ip_text(a, bcast)
+        : L("none", "nenhum", "aucune"), COLOR);
 
     uint32_t first, last;
     uint64_t usable = host_range(ip, prefix, &first, &last);
@@ -400,9 +417,10 @@ static void draw_results(state_t const *s)
         row(5, "Hosts", text, C_BLACK);
     }
 
-    row(6, L("Usable", "Utilizaveis"), u64_text(a, usable), C_BLACK);
-    sprintf(text, L("of %s address%s", "de %s endereco%s"), u64_text(b, total),
-        total == 1 ? "" : "es");
+    row(6, L("Usable", "Utilizaveis", "Utilisables"), u64_text(a, usable),
+        C_BLACK);
+    sprintf(text, L("of %s address%s", "de %s endereco%s", "de %s adresse%s"),
+        u64_text(b, total), total == 1 ? "" : L("es", "s", "s"));
     note(6, text);
 }
 
@@ -467,8 +485,8 @@ static void draw(state_t const *s)
     dline(6, GRID_Y - 7, DWIDTH - 7, GRID_Y - 7, C_LIGHT);
     draw_grid(s);
 
-    fkey_button(1, L("PREV", "ANT"));
-    fkey_button(2, L("NEXT", "SEG"));
+    fkey_button(1, L("PREV", "ANT", "PREC"));
+    fkey_button(2, L("NEXT", "SEG", "SUIV"));
     int prefixes[4] = { 8, 16, 24, 30 };
     for (int i = 0; i < 4; i++) {
         char label[4];
@@ -504,7 +522,10 @@ int main(void)
         case KEY_EXIT:
             return 1;
         case INFO_KEY:
-            info_show(L("NetTools", "Redes"), L("IP subnet calc. " APPS_VERSION, "Calc. sub-rede " APPS_VERSION), COLOR);
+            info_show(L("NetTools", "Redes", "Reseaux"),
+                L("IP subnet calc. " APPS_VERSION,
+                "Calc. sub-rede " APPS_VERSION,
+                "Calc. sous-reseau " APPS_VERSION), COLOR);
             break;
         case KEY_LEFT:
             select_field(&s, s.sel - 1);

@@ -8,7 +8,7 @@ include(Fxconv)
 find_package(Gint 2.9 REQUIRED)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../common/common.cmake)
 
-casio_app(ACCircuit NAME_PT "Circuitos CA"
+casio_app(ACCircuit NAME_PT "Circuitos CA" NAME_FR "Circuits CA"
   SOURCES
     src/main.c
     src/ac.c

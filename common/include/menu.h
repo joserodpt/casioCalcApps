@@ -20,15 +20,15 @@
 #define MENU_MAX 7
 
 typedef struct {
-    char const *name_en, *name_pt;
-    char const *desc_en, *desc_pt;      /* one line under the name */
+    char const *name_en, *name_pt, *name_fr;
+    char const *desc_en, *desc_pt, *desc_fr;    /* one line under the name */
     void (*run)(void);
     int color;
 } menu_item_t;
 
 typedef struct {
-    char const *app, *app_pt;           /* title bar and info screen */
-    char const *about_en, *about_pt;    /* subtitle on the info screen */
+    char const *app, *app_pt, *app_fr;          /* title bar and info screen */
+    char const *about_en, *about_pt, *about_fr; /* subtitle on the info screen */
     int color;
     menu_item_t const *items;
     int count;                          /* at most MENU_MAX */

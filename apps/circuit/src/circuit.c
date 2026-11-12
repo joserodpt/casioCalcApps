@@ -49,11 +49,11 @@ static double const led_vf[LED_COLORS] = { 1.8, 1.9, 2.0, 2.8, 2.8 };
 char const *led_name(int color)
 {
     switch (color) {
-    case LED_RED: return L("red", "vermelho");
-    case LED_YELLOW: return L("yellow", "amarelo");
-    case LED_GREEN: return L("green", "verde");
-    case LED_BLUE: return L("blue", "azul");
-    default: return L("white", "branco");
+    case LED_RED: return L("red", "vermelho", "rouge");
+    case LED_YELLOW: return L("yellow", "amarelo", "jaune");
+    case LED_GREEN: return L("green", "verde", "vert");
+    case LED_BLUE: return L("blue", "azul", "bleu");
+    default: return L("white", "branco", "blanc");
     }
 }
 

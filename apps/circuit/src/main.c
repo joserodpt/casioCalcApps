@@ -394,17 +394,18 @@ static void draw_grid(int t)
 static char const *kind_name(int kind)
 {
     switch (kind) {
-    case P_WIRE: return L("Wire", "Fio");
-    case P_RES: return L("Resistor", "Resistencia");
-    case P_BATT: return L("Battery", "Pilha");
-    case P_LAMP: return L("Lamp", "Lampada");
-    case P_SWITCH: return L("Switch", "Interruptor");
-    case P_DIODE: return L("Diode", "Diodo");
-    case P_LED: return "LED";
-    case P_AMMETER: return L("Ammeter", "Amperimetro");
-    case P_VOLTMETER: return L("Voltmeter", "Voltimetro");
-    case P_POT: return L("Potentiometer", "Potenciometro");
-    case P_FUSE: return L("Fuse", "Fusivel");
+    case P_WIRE: return L("Wire", "Fio", "Fil");
+    case P_RES: return L("Resistor", "Resistencia", "Resistance");
+    case P_BATT: return L("Battery", "Pilha", "Pile");
+    case P_LAMP: return L("Lamp", "Lampada", "Lampe");
+    case P_SWITCH: return L("Switch", "Interruptor", "Interrupteur");
+    case P_DIODE: return L("Diode", "Diodo", "Diode");
+    case P_LED: return L("LED", "LED", "DEL");
+    case P_AMMETER: return L("Ammeter", "Amperimetro", "Amperemetre");
+    case P_VOLTMETER: return L("Voltmeter", "Voltimetro", "Voltmetre");
+    case P_POT: return L("Potentiometer", "Potenciometro",
+        "Potentiometre");
+    case P_FUSE: return L("Fuse", "Fusivel", "Fusible");
     }
     return "";
 }
@@ -419,17 +420,18 @@ static void draw_info(char const *message, int message_color)
     dline(6, INFO_Y - 3, DWIDTH - 7, INFO_Y - 3, C_LIGHT);
 
     if (pt >= 0) {
-        sprintf(line, L("Point %d, %d", "Ponto %d, %d"), pt % NX + 1,
-            pt / NX + 1);
+        sprintf(line, L("Point %d, %d", "Ponto %d, %d", "Point %d, %d"),
+            pt % NX + 1, pt / NX + 1);
         etext(10, y1, COLOR, DTEXT_LEFT, false, line);
         if (ok && !isnan(res.v[pt])) {
             sprintf(line, L("V = %s  (to the battery's -)",
-                "V = %s  (em relacao ao - da pilha)"),
+                "V = %s  (em relacao ao - da pilha)",
+                "V = %s  (relatif au - de la pile)"),
                 fmt_si(a, res.v[pt], "V", 4));
             etext(10, y2, C_BLACK, DTEXT_LEFT, false, line);
         }
         else if (ok) etext(10, y2, C_DARK, DTEXT_LEFT, false,
-            L("Not connected", "Sem ligacao"));
+            L("Not connected", "Sem ligacao", "Non connecte"));
     }
     else {
         part_t const *p = &circuit.parts[e];
@@ -442,7 +444,7 @@ static void draw_info(char const *message, int message_color)
         switch (p->kind) {
         case P_NONE:
             strcpy(line, L("Empty: F1-F5 place a part",
-                "Vazio: F1-F5 poem uma peca"));
+                "Vazio: F1-F5 poem uma peca", "Vide: F1-F5 pour une piece"));
             break;
         case P_RES:
             sprintf(line + strlen(line), "  %s", fmt_si(a, p->value, S_OHM, 4));
@@ -456,8 +458,8 @@ static void draw_info(char const *message, int message_color)
                 fmt_si(c, part_resistance(p), S_OHM, 3));
             if (ok) {
                 bool over = res.p[e] > 1.2 * p->value2;
-                sprintf(a, over ? L("OVERLOAD", "SOBRECARGA")
-                    : L("light %d%%", "luz %d%%"),
+                sprintf(a, over ? L("OVERLOAD", "SOBRECARGA", "SURCHARGE")
+                    : L("light %d%%", "luz %d%%", "eclat %d%%"),
                     (int)(lamp_brightness(e) * 100 + 0.5));
                 status = a;
                 status_color = over ? C_RED : C_RGB(20, 16, 0);
@@ -465,13 +467,14 @@ static void draw_info(char const *message, int message_color)
             break;
         case P_SWITCH:
             sprintf(line + strlen(line), "  %s", p->closed
-                ? L("closed", "fechado") : L("open", "aberto"));
+                ? L("closed", "fechado", "ferme")
+                : L("open", "aberto", "ouvert"));
             break;
         case P_DIODE:
             sprintf(line + strlen(line), "  %s", fmt_si(a, p->value, "V", 3));
             if (ok) {
-                status = i > 1e-9 ? L("conducting", "a conduzir")
-                    : L("blocking", "bloqueado");
+                status = i > 1e-9 ? L("conducting", "a conduzir", "passant")
+                    : L("blocking", "bloqueado", "bloque");
                 status_color = i > 1e-9 ? C_RGB(0, 18, 4) : C_DARK;
             }
             break;
@@ -479,22 +482,24 @@ static void draw_info(char const *message, int message_color)
             sprintf(line + strlen(line), "  %s", led_name(p->level));
             if (ok) {
                 bool over = i > 1.5 * LED_RATED;
-                if (over) strcpy(c, L("OVERLOAD", "SOBRECARGA"));
-                else if (i > 1e-9) sprintf(c, L("light %d%%", "luz %d%%"),
+                if (over) strcpy(c, L("OVERLOAD", "SOBRECARGA", "SURCHARGE"));
+                else if (i > 1e-9) sprintf(c,
+                    L("light %d%%", "luz %d%%", "eclat %d%%"),
                     (int)(led_brightness(e) * 100 + 0.5));
-                else strcpy(c, L("off", "apagado"));
+                else strcpy(c, L("off", "apagado", "eteinte"));
                 status = c;
                 status_color = over ? C_RED : C_RGB(20, 16, 0);
             }
             break;
         case P_POT:
             sprintf(line + strlen(line), L("  %s at %d%%  (%s)",
-                "  %s a %d%%  (%s)"), fmt_si(a, p->value, S_OHM, 3),
+                "  %s a %d%%  (%s)", "  %s a %d%%  (%s)"),
+                fmt_si(a, p->value, S_OHM, 3),
                 p->level, fmt_si(b, part_resistance(p), S_OHM, 3));
             break;
         case P_FUSE:
             sprintf(line + strlen(line), "  %s", fmt_si(a, p->value, "A", 3));
-            status = p->closed ? "OK" : L("BLOWN", "FUNDIDO");
+            status = p->closed ? "OK" : L("BLOWN", "FUNDIDO", "GRILLE");
             status_color = p->closed ? C_DARK : C_RED;
             break;
         }
@@ -512,12 +517,14 @@ static void draw_info(char const *message, int message_color)
                 fmt_si(b, i, "A", 4), fmt_si(c, res.p[e], "W", 4));
         else if (p->kind == P_BATT)
             sprintf(line, L("I = %s    P = %s supplied",
-                "I = %s    P = %s fornecida"), fmt_si(a, i, "A", 4),
+                "I = %s    P = %s fornecida", "I = %s    P = %s fournie"),
+                fmt_si(a, i, "A", 4),
                 fmt_si(b, res.p[e], "W", 4));
         else if (p->kind == P_VOLTMETER || (p->kind == P_SWITCH && !p->closed)
             || (p->kind == P_FUSE && !p->closed)) {
             if (!isnan(v)) sprintf(line, p->kind == P_VOLTMETER ? "V = %s"
-                : L("V = %s across it", "V = %s aos terminais"),
+                : L("V = %s across it", "V = %s aos terminais",
+                    "V = %s aux bornes"),
                 fmt_si(a, v, "V", 4));
         }
         else if (p->kind != P_NONE)
@@ -531,30 +538,38 @@ static void draw_info(char const *message, int message_color)
         return;
     }
     if (res.status == S_SHORT) etext(10, y3, C_RED, DTEXT_LEFT, false,
-        L("Short circuit across a battery!", "Curto-circuito numa pilha!"));
+        L("Short circuit across a battery!", "Curto-circuito numa pilha!",
+          "Court-circuit sur une pile!"));
     else if (res.status == S_LOOP) etext(10, y3, C_RED, DTEXT_LEFT, false,
-        L("Batteries in parallel or in a loop", "Pilhas em paralelo ou em ciclo"));
+        L("Batteries in parallel or in a loop",
+          "Pilhas em paralelo ou em ciclo",
+          "Piles en parallele ou en boucle"));
     else if (res.status == S_TOOBIG) etext(10, y3, C_RED, DTEXT_LEFT, false,
-        L("Too many parts to solve", "Pecas a mais para resolver"));
+        L("Too many parts to solve", "Pecas a mais para resolver",
+          "Trop de pieces a calculer"));
     else if (res.status == S_EMPTY) etext(10, y3, C_DARK, DTEXT_LEFT, false,
         L("Add a battery and a load.  VARS: examples",
-          "Junte uma pilha e uma carga.  VARS: exemplos"));
+          "Junte uma pilha e uma carga.  VARS: exemplos",
+          "Ajoutez pile et charge.  VARS: exemples"));
     else {
-        sprintf(line, L("Total power %s", "Potencia total %s"),
+        sprintf(line, L("Total power %s", "Potencia total %s",
+            "Puissance totale %s"),
             fmt_si(a, res.supplied, "W", 4));
         etext(10, y3, C_DARK, DTEXT_LEFT, false, line);
     }
 
     char const *hint = NULL;
     int kind = pt >= 0 ? P_NONE : circuit.parts[e].kind;
-    if (pt >= 0) hint = L("F1: draw wire", "F1: desenhar fio");
-    else if (kind == P_SWITCH) hint = L("EXE: on/off", "EXE: ligar");
+    if (pt >= 0) hint = L("F1: draw wire", "F1: desenhar fio",
+        "F1: tracer fil");
+    else if (kind == P_SWITCH) hint = L("EXE: on/off", "EXE: ligar",
+        "EXE: basculer");
     else if (kind == P_POT) hint = L("+/-: turn  EXE: edit",
-        "+/-: rodar  EXE: editar");
+        "+/-: rodar  EXE: editar", "+/-: tourner  EXE: editer");
     else if (kind == P_FUSE && !circuit.parts[e].closed)
-        hint = L("EXE: replace", "EXE: trocar");
+        hint = L("EXE: replace", "EXE: trocar", "EXE: changer");
     else if (kind >= P_RES && kind != P_AMMETER && kind != P_VOLTMETER)
-        hint = L("EXE: edit", "EXE: editar");
+        hint = L("EXE: edit", "EXE: editar", "EXE: editer");
     if (hint && res.status != S_LOOP && res.status != S_EMPTY)
         etext(DWIDTH - 10, y3, C_DARK, DTEXT_RIGHT, false, hint);
 }
@@ -574,15 +589,16 @@ static bool in_menu(int kind)
 static void draw_screen(int t, char const *message, int message_color)
 {
     dclear(C_WHITE);
-    info_title(L("Circuit", "Circuitos"), COLOR);
+    info_title(L("Circuit", "Circuitos", "Circuits"), COLOR);
     draw_grid(t);
     draw_info(message, message_color);
 
     int e = cursor_edge();
     int kind = e >= 0 ? circuit.parts[e].kind : drawing ? P_WIRE : P_NONE;
     static kind_t const fkey_kinds[] = { P_WIRE, P_RES, P_BATT, P_LAMP };
-    char const *labels[] = { L("WIRE", "FIO"), "R", L("BATT", "PILHA"),
-        L("LAMP", "LAMP."), L("PARTS", "PECAS"), L("DEL", "APAGAR") };
+    char const *labels[] = { L("WIRE", "FIO", "FIL"), "R",
+        L("BATT", "PILHA", "PILE"), L("LAMP", "LAMP.", "LAMPE"),
+        L("PARTS", "PECAS", "PIECES"), L("DEL", "APAGAR", "SUPPR") };
     for (int k = 0; k < 6; k++) {
         bool on = k < 4 ? kind == (int)fkey_kinds[k] : k == 4 && in_menu(kind);
         if (on) fkey_button_color(k + 1, labels[k], COLOR);
@@ -607,7 +623,7 @@ static int pick_part(int t)
         draw_screen(t, NULL, 0);
         drect_border(x1, y1, x2, y2, C_WHITE, 2, COLOR);
         drect(x1, y1, x2, y1 + 15, COLOR);
-        dtext(x1 + 8, y1 + 3, C_WHITE, L("Parts", "Pecas"));
+        dtext(x1 + 8, y1 + 3, C_WHITE, L("Parts", "Pecas", "Pieces"));
         for (int k = 0; k < MENU_COUNT; k++) {
             int y = y1 + 18 + k * row;
             if (k == sel) drect(x1 + 2, y - 1, x2 - 2, y + row - 3, TINT);
@@ -641,38 +657,46 @@ static void edit_results(eform_t *f, int y)
     if (kind == P_LAMP) {
         double v = field_value(&f->fields[0]);
         double p = field_value(&f->fields[1]);
-        if (v > 0 && p > 0) result(y, L("Resistance", "Resistencia"),
-            C_BLACK, "%s", fmt_si(a, v * v / p, S_OHM, 4));
+        if (v > 0 && p > 0) result(y,
+            L("Resistance", "Resistencia", "Resistance"), C_BLACK, "%s",
+            fmt_si(a, v * v / p, S_OHM, 4));
         result_note(y + RESULT_STEP, L("A lamp at its rated voltage gives "
-            "its rated power", "A tensao nominal da a potencia nominal"));
+            "its rated power", "A tensao nominal da a potencia nominal",
+            "La tension nominale donne la puissance nominale"));
     }
     else if (kind == P_LED) {
         int color = f->fields[0].choice;
-        result(y, L("Forward voltage", "Tensao direta"), C_BLACK,
-            L("%s at 20 mA", "%s a 20 mA"),
+        result(y, L("Forward voltage", "Tensao direta", "Tension directe"),
+            C_BLACK, L("%s at 20 mA", "%s a 20 mA", "%s a 20 mA"),
             fmt_si(a, led_forward(color) + LED_RATED * 10, "V", 2));
         result_note(y + RESULT_STEP, L("Lights fully at 20 mA; more than "
-            "30 mA is too much", "Acende bem a 20 mA; mais de 30 mA e demais"));
+            "30 mA is too much", "Acende bem a 20 mA; mais de 30 mA e demais",
+            "Pleine lumiere a 20 mA; plus de 30 mA, c'est trop"));
     }
     else if (kind == P_POT) {
         double max = field_value(&f->fields[0]);
         double pos = field_value(&f->fields[1]);
         if (max > 0 && pos >= 0 && pos <= 100)
-            result(y, L("Resistance now", "Resistencia atual"), C_BLACK,
+            result(y, L("Resistance now", "Resistencia atual",
+                "Resistance actuelle"), C_BLACK,
                 "%s", fmt_si(a, max * pos / 100, S_OHM, 4));
         result_note(y + RESULT_STEP, L("On the circuit, + and - turn it by "
-            "5%", "No circuito, + e - rodam 5%"));
+            "5%", "No circuito, + e - rodam 5%",
+            "Sur le circuit, + et - tournent de 5%"));
     }
     else if (kind == P_FUSE)
         result_note(y, L("It blows above this current; editing it "
             "puts in a new one", "Funde acima desta corrente; edita-lo "
-            "poe um novo"));
+            "poe um novo", "Grille au-dela de ce courant; l'editer en "
+            "remet un neuf"));
     else if (kind == P_DIODE)
         result_note(y, L("Conducts from the triangle to the bar",
-            "Conduz do triangulo para a barra"));
+            "Conduz do triangulo para a barra",
+            "Conduit du triangle vers la barre"));
 
     if (kind != P_LED) result_note(y + 3 * RESULT_STEP, L("F1-F6: p n " S_MU
-        " m k M    EXIT: back", "F1-F6: p n " S_MU " m k M    EXIT: voltar"));
+        " m k M    EXIT: back", "F1-F6: p n " S_MU " m k M    EXIT: voltar",
+        "F1-F6: p n " S_MU " m k M    EXIT: retour"));
 }
 
 /* Value typed in a field if it is usable, else the old one */
@@ -695,43 +719,47 @@ static void edit_part(part_t *p)
     for (int k = 0; k < 2; k++) fields[k].kind = F_NUM;
     switch (p->kind) {
     case P_RES:
-        fields[0].label = L("Resistance", "Resistencia");
+        fields[0].label = L("Resistance", "Resistencia", "Resistance");
         fields[0].unit = S_OHM;
         break;
     case P_BATT:
-        fields[0].label = L("Voltage", "Tensao");
+        fields[0].label = L("Voltage", "Tensao", "Tension");
         fields[0].unit = "V";
         break;
     case P_LAMP:
         f.count = 2;
-        fields[0].label = L("Rated voltage", "Tensao nominal");
+        fields[0].label = L("Rated voltage", "Tensao nominal",
+            "Tension nominale");
         fields[0].unit = "V";
-        fields[1].label = L("Rated power", "Potencia nominal");
+        fields[1].label = L("Rated power", "Potencia nominal",
+            "Puiss. nominale");
         fields[1].unit = "W";
         field_set(&fields[1], p->value2);
         break;
     case P_DIODE:
-        fields[0].label = L("Forward voltage", "Tensao direta");
+        fields[0].label = L("Forward voltage", "Tensao direta",
+            "Tension directe");
         fields[0].unit = "V";
         break;
     case P_LED:
         for (int k = 0; k < LED_COLORS; k++) colors[k] = led_name(k);
         fields[0].kind = F_CHOICE;
-        fields[0].label = L("Colour", "Cor");
+        fields[0].label = L("Colour", "Cor", "Couleur");
         fields[0].options = colors;
         fields[0].option_count = LED_COLORS;
         fields[0].choice = p->level % LED_COLORS;
         break;
     case P_POT:
         f.count = 2;
-        fields[0].label = L("Maximum", "Maximo");
+        fields[0].label = L("Maximum", "Maximo", "Maximum");
         fields[0].unit = S_OHM;
-        fields[1].label = L("Position", "Posicao");
+        fields[1].label = L("Position", "Posicao", "Position");
         fields[1].unit = "%";
         field_set(&fields[1], p->level);
         break;
     case P_FUSE:
-        fields[0].label = L("Rating", "Corrente nominal");
+        fields[0].label = L("Rating", "Corrente nominal",
+            "Courant nominal");
         fields[0].unit = "A";
         break;
     default:
@@ -814,7 +842,8 @@ static char const *load_example(circuit_t *c, int k)
         wires_v(c, 9, 2, 3);
         wires_h(c, 2, 9, 3);
         return L("Series: battery, switch, resistor, lamp",
-            "Serie: pilha, interruptor, resistencia, lampada");
+            "Serie: pilha, interruptor, resistencia, lampada",
+            "Serie: pile, interrupteur, resistance, lampe");
     }
     if (k == 1) {
         /* Two different lamps in parallel */
@@ -827,7 +856,8 @@ static char const *load_example(circuit_t *c, int k)
         wires_v(c, 9, 2, 3);
         wires_h(c, 2, 9, 3);
         return L("Parallel: two lamps on 6 V",
-            "Paralelo: duas lampadas a 6 V");
+            "Paralelo: duas lampadas a 6 V",
+            "Parallele: deux lampes sur 6 V");
     }
     if (k == 3) {
         /* Red LED with its resistor and an ammeter: (9 - 2) V / 340 Ω */
@@ -842,7 +872,8 @@ static char const *load_example(circuit_t *c, int k)
         wires_v(c, 9, 2, 3);
         wires_h(c, 2, 9, 3);
         return L("LED with a 330 " S_OHM " resistor and an ammeter",
-            "LED com resistencia de 330 " S_OHM " e amperimetro");
+            "LED com resistencia de 330 " S_OHM " e amperimetro",
+            "DEL avec resistance de 330 " S_OHM " et amperemetre");
     }
     if (k == 4) {
         /* Dimmer: fuse, potentiometer and lamp, voltmeter on the lamp */
@@ -860,7 +891,8 @@ static char const *load_example(circuit_t *c, int k)
         wires_v(c, 10, 2, 3);
         wires_h(c, 1, 10, 3);
         return L("Dimmer: turn the potentiometer with + and -",
-            "Regulador: rode o potenciometro com + e -");
+            "Regulador: rode o potenciometro com + e -",
+            "Variateur: + et - tournent le potentiometre");
     }
     /* Voltage divider: 12 V across 1k + 2.2k + 4.7k */
     put(c, 1, 1, false, with(P_BATT, 12, 0));
@@ -874,7 +906,8 @@ static char const *load_example(circuit_t *c, int k)
     wires_v(c, 9, 2, 3);
     wires_h(c, 1, 9, 3);
     return L("Voltage divider: 12 V on 1k, 2.2k, 4.7k",
-        "Divisor de tensao: 12 V em 1k, 2.2k, 4.7k");
+        "Divisor de tensao: 12 V em 1k, 2.2k, 4.7k",
+        "Diviseur de tension: 12 V, 1k, 2.2k, 4.7k");
 }
 
 //---
@@ -1005,8 +1038,10 @@ int main(void)
             return 1;
         }
         if (key == INFO_KEY) {
-            info_show(L("Circuit", "Circuitos"), L("DC circuit simulator "
-                APPS_VERSION, "Simulador de circuitos " APPS_VERSION), COLOR);
+            info_show(L("Circuit", "Circuitos", "Circuits"),
+                L("DC circuit simulator " APPS_VERSION,
+                "Simulador de circuitos " APPS_VERSION,
+                "Simulateur de circuits CC " APPS_VERSION), COLOR);
             continue;
         }
 
@@ -1049,7 +1084,8 @@ int main(void)
         else if (key == KEY_F5) {
             if (!p) {
                 message = L("Move onto a link to place a part",
-                    "Va para uma ligacao para por uma peca");
+                    "Va para uma ligacao para por uma peca",
+                    "Allez sur un lien pour poser une piece");
                 continue;
             }
             int kind = pick_part(t);
@@ -1078,7 +1114,8 @@ int main(void)
             else {
                 confirm_clear = true;
                 message = L("Press AC again to clear everything",
-                    "Prima AC de novo para limpar tudo");
+                    "Prima AC de novo para limpar tudo",
+                    "Rappuyez sur AC pour tout effacer");
                 message_color = C_RED;
             }
         }
@@ -1093,7 +1130,8 @@ int main(void)
             dirty = true;
             if (solve()) {
                 message = L("A fuse blew! EXE on it puts in a new one",
-                    "Um fusivel fundiu! EXE nele poe um novo");
+                    "Um fusivel fundiu! EXE nele poe um novo",
+                    "Fusible grille! EXE dessus le remplace");
                 message_color = C_RED;
             }
         }

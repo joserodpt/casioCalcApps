@@ -152,9 +152,9 @@ typedef struct {
 static char const *reg_name(int i)
 {
     switch (i) {
-    case REG_OS:  return L("OS firmware", "Firmware da OS");
-    case REG_ROM: return L("Full ROM", "ROM completa");
-    default:      return L("Custom", "Personalizado");
+    case REG_OS:  return L("OS firmware", "Firmware da OS", "Firmware OS");
+    case REG_ROM: return L("Full ROM", "ROM completa", "ROM complete");
+    default:      return L("Custom", "Personalizado", "Personnalise");
     }
 }
 
@@ -164,13 +164,15 @@ static void draw(int sel, int digit, progress_t const *pg)
     char buf[64];
 
     dclear(C_WHITE);
-    info_title(L("Firmware dump", "Copia do firmware"), COLOR);
+    info_title(L("Firmware dump", "Copia do firmware",
+        "Copie du firmware"), COLOR);
 
-    dtext(10, 22, C_DARK, L("Region", "Regiao"));
+    dtext(10, 22, C_DARK, L("Region", "Regiao", "Region"));
     bool emu = in_emulator();
     dtext_opt(DWIDTH - 12, 22, emu ? ERRC : OKC, C_NONE, DTEXT_RIGHT,
-        DTEXT_TOP, emu ? L("emulator (OS area blank)", "emulador (OS vazia)")
-        : L("real hardware", "calculadora real"));
+        DTEXT_TOP, emu ? L("emulator (OS area blank)", "emulador (OS vazia)",
+            "emulateur (OS vide)")
+        : L("real hardware", "calculadora real", "materiel reel"));
     for (int i = 0; i < REGION_COUNT; i++) {
         region_t const *r = &regions[i];
         int y = 40 + i * 30;
@@ -189,9 +191,10 @@ static void draw(int sel, int digit, progress_t const *pg)
         if (r->editable)
             dtext(14, y + 12, s ? COLOR : C_DARK,
                 L("F4 base  F5 size  (hex digits to edit)",
-                  "F4 base  F5 tam.  (digitos hex p/ editar)"));
+                  "F4 base  F5 tam.  (digitos hex p/ editar)",
+                  "F4 base  F5 taille  (editer en hex)"));
         else dprint(14, y + 12, C_DARK, L("-> DUMP\\%s00.bin ...",
-            "-> DUMP\\%s00.bin ..."), r->file);
+            "-> DUMP\\%s00.bin ...", "-> DUMP\\%s00.bin ..."), r->file);
     }
     (void)digit;
 
@@ -199,7 +202,7 @@ static void draw(int sel, int digit, progress_t const *pg)
     region_t const *r = &regions[sel];
     int y = 134;
     dline(6, y - 6, DWIDTH - 7, y - 6, C_LIGHT);
-    dtext(10, y, C_DARK, L("Preview", "Pre-vis."));
+    dtext(10, y, C_DARK, L("Preview", "Pre-vis.", "Apercu"));
     for (int row = 0; row < 2; row++) {
         uint32_t a = r->base + row * 16;
         int ry = y + 13 + row * 12;
@@ -228,9 +231,9 @@ static void draw(int sel, int digit, progress_t const *pg)
         if (w > 0) drect(x1 + 2, by + 2, x1 + 2 + w - 1, by + 7, COLOR);
     }
 
-    fkey_button_color(1, L("DUMP", "COPIAR"), COLOR);
+    fkey_button_color(1, L("DUMP", "COPIAR", "COPIER"), COLOR);
     fkey_button(2, "USB");
-    fkey_button(6, L("ABOUT", "SOBRE"));
+    fkey_button(6, L("ABOUT", "SOBRE", "INFO"));
     dupdate();
 }
 
@@ -328,7 +331,8 @@ static void run_dump(int sel, progress_t *pg)
 
             /* Refresh and allow aborting after every block */
             snprintf(pg->message, sizeof pg->message,
-                L("Writing part %d ...", "A escrever parte %d ..."), part);
+                L("Writing part %d ...", "A escrever parte %d ...",
+                    "Ecriture partie %d ..."), part);
             draw(sel, 0, pg);
             clearevents();
             if (keydown(KEY_EXIT)) {
@@ -336,7 +340,8 @@ static void run_dump(int sel, progress_t *pg)
                 swallow_exit();
                 pg->status = ST_ABORT;
                 snprintf(pg->message, sizeof pg->message,
-                    L("Aborted after %u KB", "Cancelado apos %u KB"), (unsigned)(pg->done >> 10));
+                    L("Aborted after %u KB", "Cancelado apos %u KB",
+                        "Annule apres %u KB"), (unsigned)(pg->done >> 10));
                 return;
             }
         }
@@ -349,7 +354,8 @@ static void run_dump(int sel, progress_t *pg)
     pg->status = ST_DONE;
     snprintf(pg->message, sizeof pg->message,
         L("Done: %u KB in %d file%s under \\fls0\\DUMP",
-        "Feito: %u KB em %d ficheiro%s em \\fls0\\DUMP"),
+        "Feito: %u KB em %d ficheiro%s em \\fls0\\DUMP",
+        "Fini: %u KB en %d fichier%s dans \\fls0\\DUMP"),
         (unsigned)(pg->done >> 10), pg->parts, pg->parts == 1 ? "" : "s");
 }
 
@@ -367,7 +373,8 @@ static bool usb_link(int sel, progress_t *pg)
     int rc = usb_open(intf, GINT_CALL_NULL);
     if (rc < 0 && rc != USB_OPEN_ALREADY_OPEN) {
         snprintf(pg->message, sizeof pg->message,
-            L("USB open failed (%d)", "Falha ao abrir USB (%d)"), rc);
+            L("USB open failed (%d)", "Falha ao abrir USB (%d)",
+                "Echec ouverture USB (%d)"), rc);
         pg->status = ST_ERROR;
         return false;
     }
@@ -375,7 +382,8 @@ static bool usb_link(int sel, progress_t *pg)
     pg->status = ST_IDLE;
     snprintf(pg->message, sizeof pg->message, "%s",
         L("Connect the USB cable (EXIT cancels)",
-        "Ligue o cabo USB (EXIT cancela)"));
+        "Ligue o cabo USB (EXIT cancela)",
+        "Branchez le cable USB (EXIT annule)"));
     draw(sel, 0, pg);
     while (!usb_is_open()) {
         clearevents();
@@ -384,7 +392,7 @@ static bool usb_link(int sel, progress_t *pg)
             swallow_exit();
             pg->status = ST_ABORT;
             snprintf(pg->message, sizeof pg->message, "%s",
-                L("USB cancelled", "USB cancelado"));
+                L("USB cancelled", "USB cancelado", "USB annule"));
             return false;
         }
         sleep_ms(50);
@@ -412,7 +420,8 @@ static void run_stream(int sel, progress_t *pg)
     pg->done = 0;
     pg->parts = 0;
     snprintf(pg->message, sizeof pg->message,
-        L("Sending %s over USB ...", "A enviar %s por USB ..."), type);
+        L("Sending %s over USB ...", "A enviar %s por USB ...",
+            "Envoi de %s par USB ..."), type);
     draw(sel, 0, pg);
 
     int pipe = usb_ff_bulk_output();
@@ -438,7 +447,8 @@ static void run_stream(int sel, progress_t *pg)
             swallow_exit();
             pg->status = ST_ABORT;
             snprintf(pg->message, sizeof pg->message,
-                L("Aborted after %u KB", "Cancelado apos %u KB"),
+                L("Aborted after %u KB", "Cancelado apos %u KB",
+                    "Annule apres %u KB"),
                 (unsigned)(pg->done >> 10));
             return;
         }
@@ -454,14 +464,16 @@ static void run_stream(int sel, progress_t *pg)
         if (rc == USB_TIMEOUT)
             snprintf(pg->message, sizeof pg->message, "%s",
                 L("PC not reading: run firmdump-recv",
-                "PC nao le: corra firmdump-recv"));
+                "PC nao le: corra firmdump-recv",
+                "PC inactif: lancez firmdump-recv"));
         else snprintf(pg->message, sizeof pg->message,
-            L("USB error %d", "Erro USB %d"), rc);
+            L("USB error %d", "Erro USB %d", "Erreur USB %d"), rc);
         return;
     }
     pg->status = ST_DONE;
     snprintf(pg->message, sizeof pg->message,
-        L("Sent %u KB as %s over USB", "Enviados %u KB (%s) por USB"),
+        L("Sent %u KB as %s over USB", "Enviados %u KB (%s) por USB",
+            "Envoyes %u KB (%s) par USB"),
         (unsigned)(pg->done >> 10), type);
 }
 
@@ -482,7 +494,8 @@ int main(void)
     regions[REG_ROM].size = rom_size();
 
     strcpy(pg.message, L("F1 dumps the selected region to \\fls0\\DUMP",
-        "F1 copia a regiao para \\fls0\\DUMP"));
+        "F1 copia a regiao para \\fls0\\DUMP",
+        "F1 copie la region vers \\fls0\\DUMP"));
 
     while (1) {
         draw(sel, edit, &pg);
@@ -494,7 +507,8 @@ int main(void)
         if (key == KEY_EXIT) { usb_close(); return 1; }
         if (key == INFO_KEY || key == KEY_F6) {
             info_show("FirmDump", L("Firmware dump " APPS_VERSION,
-                "Copia de firmware " APPS_VERSION), COLOR);
+                "Copia de firmware " APPS_VERSION,
+                "Copie du firmware " APPS_VERSION), COLOR);
             continue;
         }
         if (key == KEY_UP) { sel = (sel + REGION_COUNT - 1) % REGION_COUNT;

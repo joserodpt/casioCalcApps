@@ -123,10 +123,10 @@ static void suvat_results(form_t *f, int y)
     if (given < 3) {
 #if GINT_HW_FX
         dtext(1, y, C_DARK, L("Enter any 3 values",
-            "Introduza 3 valores"));
+            "Introduza 3 valores", "Entrez 3 valeurs"));
 #else
         dtext(10, y, C_DARK, L("Enter any 3 values",
-            "Introduza 3 valores"));
+            "Introduza 3 valores", "Entrez 3 valeurs"));
 #endif
         return;
     }
@@ -140,11 +140,11 @@ static void suvat_results(form_t *f, int y)
         if (k[i]) fx_res(y + n * FORM_LINE, names[i], C_BLACK, x[i],
             units_[i]);
         else form_result(y + n * FORM_LINE, 0, names[i], C_BLACK, "%s",
-            L("no real solution", "sem solucao real"));
+            L("no real solution", "sem solucao real", "sans sol. reelle"));
         n++;
     }
     if (n == 0) dtext(1, y, C_DARK, L("All values known",
-        "Todos conhecidos"));
+        "Todos conhecidos", "Tout est connu"));
     return;
 #endif
 
@@ -159,13 +159,13 @@ static void suvat_results(form_t *f, int y)
             dtext(10, y + line * 14, COLOR, b);
         } else {
             sprintf(b, "%s: %s", names[i], L("no real solution",
-                "sem solucao real"));
+                "sem solucao real", "sans sol. reelle"));
             dtext(10, y + line * 14, C_RED, b);
         }
         line++;
     }
     if (line == 0) dtext(10, y, C_DARK, L("All values known",
-        "Todos conhecidos"));
+        "Todos conhecidos", "Tout est connu"));
 }
 
 static void kinematics_screen(void)
@@ -174,13 +174,16 @@ static void kinematics_screen(void)
 #if GINT_HW_FX
         /* The fx title bar cuts titles at 100 px */
         .title_en = "Kinematics", .title_pt = "Cinematica",
+        .title_fr = "Cinematique",
 #else
         .title_en = "Kinematics (SUVAT)", .title_pt = "Cinematica (SUVAT)",
+        .title_fr = "Cinematique (SUVAT)",
 #endif
         .color = COLOR, .count = 5, .cols = 1,
         .fields = {
-            { "s", "s", "m" }, { "u", "u", "m/s" }, { "v", "v", "m/s" },
-            { "a", "a", "m/s2" }, { "t", "t", "s" },
+            { "s", "s", "s", "m" }, { "u", "u", "u", "m/s" },
+            { "v", "v", "v", "m/s" }, { "a", "a", "a", "m/s2" },
+            { "t", "t", "t", "s" },
         },
         .results = suvat_results,
     };
@@ -202,7 +205,7 @@ static void dyn_results(form_t *f, int y)
     (void)b;
     if (!isnan(m) && !isnan(a)) fx_res(y, "F = m a", C_BLACK, m * a, "N");
     else form_result(y, 0, "F = m a", C_DARK, "%s",
-        L("need m, a", "falta m, a"));
+        L("need m, a", "falta m, a", "manque m, a"));
     y += FORM_LINE;
     if (!isnan(m)) fx_res(y, "W = m g", C_BLACK, m * g, "N");
     y += FORM_LINE;
@@ -213,7 +216,7 @@ static void dyn_results(form_t *f, int y)
 
     if (!isnan(m) && !isnan(a)) res(y, "F = m a", COLOR, "%s N",
         fmt_g(b, m * a, 6));
-    else res(y, "F = m a", C_DARK, L("need m, a", "falta m, a"));
+    else res(y, "F = m a", C_DARK, L("need m, a", "falta m, a", "manque m, a"));
     y += 16;
     if (!isnan(m)) res(y, "W = m g", C_BLACK, "%s N", fmt_g(b, m * g, 6));
     y += 16;
@@ -228,10 +231,11 @@ static void dynamics_screen(void)
 {
     static form_t f = {
         .title_en = "Dynamics", .title_pt = "Dinamica",
+        .title_fr = "Dynamique",
         .color = COLOR, .count = 4, .cols = 1,
         .fields = {
-            { "m", "m", "kg" }, { "a", "a", "m/s2" }, { "v", "v", "m/s" },
-            { "g", "g", "m/s2" },
+            { "m", "m", "m", "kg" }, { "a", "a", "a", "m/s2" },
+            { "v", "v", "v", "m/s" }, { "g", "g", "g", "m/s2" },
         },
         .results = dyn_results,
     };
@@ -298,11 +302,13 @@ static void energy_screen(void)
 {
     static form_t f = {
         .title_en = "Energy & power", .title_pt = "Energia e potencia",
+        .title_fr = "Energie et puissance",
         .color = COLOR, .count = 7, .cols = 2,
         .fields = {
-            { "m", "m", "kg" }, { "v", "v", "m/s" }, { "h", "h", "m" },
-            { "F", "F", "N" }, { "d", "d", "m" }, { "t", "t", "s" },
-            { "g", "g", "m/s2" },
+            { "m", "m", "m", "kg" }, { "v", "v", "v", "m/s" },
+            { "h", "h", "h", "m" }, { "F", "F", "F", "N" },
+            { "d", "d", "d", "m" }, { "t", "t", "t", "s" },
+            { "g", "g", "g", "m/s2" },
         },
         .results = energy_results,
     };
@@ -332,7 +338,7 @@ static void wave_results(form_t *f, int y)
         if (fabs(s2) <= 1) fx_res(y, "Snell O2", C_BLACK,
             asin(s2) / DEG, "deg");
         else form_result(y, 0, "O2", C_BLACK, "%s",
-            L("total int. refl.", "reflexao total"));
+            L("total int. refl.", "reflexao total", "reflexion tot."));
     }
     return;
 #endif
@@ -350,7 +356,7 @@ static void wave_results(form_t *f, int y)
         if (fabs(s2) <= 1) res(y, "O2", COLOR, "%s deg",
             fmt_g(b, asin(s2) / DEG, 6));
         else res(y, "O2", C_RED, L("total internal refl.",
-            "reflexao total"));
+            "reflexao total", "reflexion totale"));
     }
 }
 
@@ -358,11 +364,12 @@ static void waves_screen(void)
 {
     static form_t f = {
         .title_en = "Waves & optics", .title_pt = "Ondas e optica",
+        .title_fr = "Ondes et optique",
         .color = COLOR, .count = 5, .cols = 1,
         .fields = {
-            { "f", "f", "Hz" }, { "lambda", "lambda", "m" },
-            { "n1", "n1", "" }, { "angle1", "angulo1", "deg" },
-            { "n2", "n2", "" },
+            { "f", "f", "f", "Hz" }, { "lambda", "lambda", "lambda", "m" },
+            { "n1", "n1", "n1", "" }, { "angle1", "angulo1", "angle1", "deg" },
+            { "n2", "n2", "n2", "" },
         },
         .results = wave_results,
     };
@@ -373,48 +380,67 @@ static void waves_screen(void)
 //  Physical constants
 //---
 
-typedef struct { char const *name, *name_pt, *sym, *value, *unit; } constant_t;
+typedef struct {
+    char const *name, *name_pt, *name_fr, *sym, *value, *unit;
+} constant_t;
 
 static constant_t const constants[] = {
-    { "Speed of light in vacuum", "Velocidade da luz no vazio", "c", "2.99792458e8", "m/s" },
-    { "Standard gravity", "Aceleracao da gravidade", "g", "9.80665", "m/s2" },
-    { "Gravitational constant", "Constante gravitacional", "G", "6.67430e-11", "N m2/kg2" },
-    { "Planck constant", "Constante de Planck", "h", "6.62607015e-34", "J s" },
-    { "Reduced Planck constant", "Constante de Planck reduzida", "h-bar", "1.054571817e-34", "J s" },
-    { "Elementary charge", "Carga elementar", "e", "1.602176634e-19", "C" },
-    { "Electron mass", "Massa do eletrao", "me", "9.1093837e-31", "kg" },
-    { "Proton mass", "Massa do protao", "mp", "1.6726219e-27", "kg" },
-    { "Avogadro constant", "Constante de Avogadro", "NA", "6.02214076e23", "1/mol" },
-    { "Boltzmann constant", "Constante de Boltzmann", "kB", "1.380649e-23", "J/K" },
-    { "Molar gas constant", "Constante dos gases ideais", "R", "8.314462618", "J/mol/K" },
-    { "Vacuum permittivity", "Permitividade do vazio", "e0", "8.8541878e-12", "F/m" },
-    { "Vacuum permeability", "Permeabilidade do vazio", "u0", "1.25663706e-6", "H/m" },
-    { "Coulomb constant", "Constante de Coulomb", "k", "8.9875518e9", "N m2/C2" },
-    { "Stefan-Boltzmann constant", "Constante de Stefan-Boltzmann", "sigma", "5.670374e-8", "W/m2/K4" },
-    { "Atomic mass unit", "Unidade de massa atomica", "u", "1.66053907e-27", "kg" },
+    { "Speed of light in vacuum", "Velocidade da luz no vazio",
+      "Vitesse de la lumiere (vide)", "c", "2.99792458e8", "m/s" },
+    { "Standard gravity", "Aceleracao da gravidade",
+      "Pesanteur standard", "g", "9.80665", "m/s2" },
+    { "Gravitational constant", "Constante gravitacional",
+      "Constante gravitationnelle", "G", "6.67430e-11", "N m2/kg2" },
+    { "Planck constant", "Constante de Planck",
+      "Constante de Planck", "h", "6.62607015e-34", "J s" },
+    { "Reduced Planck constant", "Constante de Planck reduzida",
+      "Constante de Planck reduite", "h-bar", "1.054571817e-34", "J s" },
+    { "Elementary charge", "Carga elementar",
+      "Charge elementaire", "e", "1.602176634e-19", "C" },
+    { "Electron mass", "Massa do eletrao",
+      "Masse de l'electron", "me", "9.1093837e-31", "kg" },
+    { "Proton mass", "Massa do protao",
+      "Masse du proton", "mp", "1.6726219e-27", "kg" },
+    { "Avogadro constant", "Constante de Avogadro",
+      "Constante d'Avogadro", "NA", "6.02214076e23", "1/mol" },
+    { "Boltzmann constant", "Constante de Boltzmann",
+      "Constante de Boltzmann", "kB", "1.380649e-23", "J/K" },
+    { "Molar gas constant", "Constante dos gases ideais",
+      "Constante des gaz parfaits", "R", "8.314462618", "J/mol/K" },
+    { "Vacuum permittivity", "Permitividade do vazio",
+      "Permittivite du vide", "e0", "8.8541878e-12", "F/m" },
+    { "Vacuum permeability", "Permeabilidade do vazio",
+      "Permeabilite du vide", "u0", "1.25663706e-6", "H/m" },
+    { "Coulomb constant", "Constante de Coulomb",
+      "Constante de Coulomb", "k", "8.9875518e9", "N m2/C2" },
+    { "Stefan-Boltzmann constant", "Constante de Stefan-Boltzmann",
+      "Constante de Stefan-Boltzmann", "sigma", "5.670374e-8", "W/m2/K4" },
+    { "Atomic mass unit", "Unidade de massa atomica",
+      "Unite de masse atomique", "u", "1.66053907e-27", "kg" },
 };
 #define CONST_COUNT (int)(sizeof constants / sizeof *constants)
 #define CONST_ROWS  11
 
 #if GINT_HW_FX
-/* fx-9860G: short names (up to 15 characters) for the 128-px list */
-static char const * const const_short[][2] = {
-    { "Speed of light", "Veloc. da luz" },
-    { "Gravity (std)", "Gravidade" },
-    { "Gravitational", "Gravitacional" },
-    { "Planck", "Planck" },
-    { "Reduced Planck", "Planck reduzida" },
-    { "Elem. charge", "Carga elementar" },
-    { "Electron mass", "Massa eletrao" },
-    { "Proton mass", "Massa protao" },
-    { "Avogadro", "Avogadro" },
-    { "Boltzmann", "Boltzmann" },
-    { "Gas constant", "Const. gases" },
-    { "Permittivity", "Permitividade" },
-    { "Permeability", "Permeabilidade" },
-    { "Coulomb", "Coulomb" },
-    { "Stefan-Boltzm.", "Stefan-Boltzm." },
-    { "Atomic mass u.", "Massa atomica" },
+/* fx-9860G: short names (up to 15 characters) for the 128-px list, in
+   English, Portuguese and French */
+static char const * const const_short[][3] = {
+    { "Speed of light", "Veloc. da luz", "Vit. lumiere" },
+    { "Gravity (std)", "Gravidade", "Pesanteur" },
+    { "Gravitational", "Gravitacional", "Gravitation" },
+    { "Planck", "Planck", "Planck" },
+    { "Reduced Planck", "Planck reduzida", "Planck reduite" },
+    { "Elem. charge", "Carga elementar", "Charge elem." },
+    { "Electron mass", "Massa eletrao", "Masse electron" },
+    { "Proton mass", "Massa protao", "Masse proton" },
+    { "Avogadro", "Avogadro", "Avogadro" },
+    { "Boltzmann", "Boltzmann", "Boltzmann" },
+    { "Gas constant", "Const. gases", "Const. gaz" },
+    { "Permittivity", "Permitividade", "Permittivite" },
+    { "Permeability", "Permeabilidade", "Permeabilite" },
+    { "Coulomb", "Coulomb", "Coulomb" },
+    { "Stefan-Boltzm.", "Stefan-Boltzm.", "Stefan-Boltzm." },
+    { "Atomic mass u.", "Massa atomica", "Masse atomique" },
 };
 #define FX_CONST_ROWS 5
 
@@ -422,7 +448,7 @@ static char const * const const_short[][2] = {
 static void constants_draw_fx(int sel, int top)
 {
     dclear(C_WHITE);
-    info_title(L("Constants", "Constantes"), COLOR);
+    info_title(L("Constants", "Constantes", "Constantes"), COLOR);
 
     for (int r = 0; r < FX_CONST_ROWS && top + r < CONST_COUNT; r++) {
         int i = top + r, y = 10 + r * 8;
@@ -436,7 +462,8 @@ static void constants_draw_fx(int sel, int top)
         /* The name stops short of the symbol */
         struct dwindow old = dwindow_set((struct dwindow){ 0, 0,
             DWIDTH - 8 - sw - 3, DHEIGHT });
-        dtext(1, y, fg, const_short[i][lang_current == L_PT]);
+        dtext(1, y, fg, L(const_short[i][0], const_short[i][1],
+            const_short[i][2]));
         dwindow_set(old);
     }
     scrollbar_px(9, 9 + FX_CONST_ROWS * 8, 0, CONST_COUNT, top,
@@ -454,7 +481,7 @@ static void constants_screen(void)
     int sel = 0, top = 0;
     while (1) {
         dclear(C_WHITE);
-        info_title(L("Constants", "Constantes"), COLOR);
+        info_title(L("Constants", "Constantes", "Constantes"), COLOR);
 
         if (sel < top) top = sel;
 #if GINT_HW_FX
@@ -468,8 +495,8 @@ static void constants_screen(void)
             int y = 22 + r * 16;
             bool s = i == sel;
             if (s) drect(4, y - 1, DWIDTH - 9, y + 13, C_RGB(28, 29, 31));
-            dtext(10, y, s ? COLOR : C_BLACK, lang_current == L_PT
-                ? constants[i].name_pt : constants[i].name);
+            dtext(10, y, s ? COLOR : C_BLACK, L(constants[i].name,
+                constants[i].name_pt, constants[i].name_fr));
             dtext(310, y, s ? COLOR : C_DARK, constants[i].sym);
         }
         scrollbar_px(22, 22 + CONST_ROWS * 16, 0, CONST_COUNT, top,
@@ -484,7 +511,8 @@ static void constants_screen(void)
 
         int key = getkey().key;
         if (key == KEY_EXIT) return;
-        if (key == INFO_KEY) info_app(L("Constants", "Constantes"), COLOR);
+        if (key == INFO_KEY) info_app(L("Constants", "Constantes",
+            "Constantes"), COLOR);
         else if (key == KEY_UP) sel = (sel + CONST_COUNT - 1) % CONST_COUNT;
         else if (key == KEY_DOWN) sel = (sel + 1) % CONST_COUNT;
     }
@@ -495,24 +523,31 @@ static void constants_screen(void)
 //---
 
 static menu_item_t const tools[] = {
-    { "Unit converter", "Conversor de unidades",
+    { "Unit converter", "Conversor de unidades", "Convertisseur d'unites",
       "Length, time, speed, energy...", "Comprimento, tempo, energia...",
-      units_run, COLOR },
-    { "Kinematics", "Cinematica", "SUVAT: enter any 3, solve the rest",
-      "SUVAT: 3 valores, resolve o resto", kinematics_screen, COLOR },
-    { "Dynamics", "Dinamica", "F = ma, weight, momentum",
-      "F = ma, peso, quantidade de mov.", dynamics_screen, COLOR },
-    { "Energy & power", "Energia e potencia", "KE, PE, work, power",
-      "Ec, Ep, trabalho, potencia", energy_screen, COLOR },
-    { "Waves & optics", "Ondas e optica", "v = f lambda, Snell's law",
-      "v = f lambda, lei de Snell", waves_screen, COLOR },
-    { "Constants", "Constantes", "c, g, G, h, e, NA, R...",
-      "c, g, G, h, e, NA, R...", constants_screen, COLOR },
+      "Longueur, temps, energie...", units_run, COLOR },
+    { "Kinematics", "Cinematica", "Cinematique",
+      "SUVAT: enter any 3, solve the rest",
+      "SUVAT: 3 valores, resolve o resto",
+      "SUVAT: 3 valeurs, calcule le reste", kinematics_screen, COLOR },
+    { "Dynamics", "Dinamica", "Dynamique", "F = ma, weight, momentum",
+      "F = ma, peso, quantidade de mov.",
+      "F = ma, poids, quantite de mvt", dynamics_screen, COLOR },
+    { "Energy & power", "Energia e potencia", "Energie et puissance",
+      "KE, PE, work, power", "Ec, Ep, trabalho, potencia",
+      "Ec, Ep, travail, puissance", energy_screen, COLOR },
+    { "Waves & optics", "Ondas e optica", "Ondes et optique",
+      "v = f lambda, Snell's law", "v = f lambda, lei de Snell",
+      "v = f lambda, loi de Snell", waves_screen, COLOR },
+    { "Constants", "Constantes", "Constantes", "c, g, G, h, e, NA, R...",
+      "c, g, G, h, e, NA, R...", "c, g, G, h, e, NA, R...",
+      constants_screen, COLOR },
 };
 
 static menu_t const menu = {
-    "Physics", "Fisica", "Physics toolkit " APPS_VERSION,
-    "Ferramentas de fisica " APPS_VERSION, COLOR,
+    "Physics", "Fisica", "Physique", "Physics toolkit " APPS_VERSION,
+    "Ferramentas de fisica " APPS_VERSION,
+    "Outils de physique " APPS_VERSION, COLOR,
     tools, (int)(sizeof tools / sizeof *tools),
 };
 

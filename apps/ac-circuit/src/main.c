@@ -68,15 +68,20 @@ static double wrap_deg(double d)
 static char const *kind_name(int kind)
 {
     switch (kind) {
-    case P_WIRE: return L("Wire", "Fio");
-    case P_RES: return L("Resistor", "Resistencia");
-    case P_CAP: return L("Capacitor", "Condensador");
-    case P_IND: return L("Inductor", "Bobina");
-    case P_SRC: return L("AC source", "Fonte CA");
-    case P_LAMP: return L("Lamp", "Lampada");
-    case P_SWITCH: return L("Switch", "Interruptor");
-    case P_AMMETER: return L("Ammeter", "Amperimetro");
-    case P_VOLTMETER: return L("Voltmeter", "Voltimetro");
+    case P_WIRE: return L("Wire", "Fio", "Fil");
+    case P_RES: return L("Resistor", "Resistencia",
+        "Resistance");
+    case P_CAP: return L("Capacitor", "Condensador",
+        "Condensateur");
+    case P_IND: return L("Inductor", "Bobina", "Bobine");
+    case P_SRC: return L("AC source", "Fonte CA", "Source CA");
+    case P_LAMP: return L("Lamp", "Lampada", "Lampe");
+    case P_SWITCH: return L("Switch", "Interruptor",
+        "Interrupteur");
+    case P_AMMETER: return L("Ammeter", "Amperimetro",
+        "Amperemetre");
+    case P_VOLTMETER: return L("Voltmeter", "Voltimetro",
+        "Voltmetre");
     }
     return "";
 }
@@ -89,8 +94,8 @@ static char *fmt_pf(char *buf, cplx s)
     if (!(mag > 0)) return strcpy(buf, "-");
     fmt_num(a, fabs(s.re) / mag, 3);
     if (fabs(s.im) < 1e-6 * mag) strcpy(buf, a);
-    else sprintf(buf, "%s %s", a, s.im > 0 ? L("lagging", "indutivo")
-        : L("leading", "capacitivo"));
+    else sprintf(buf, "%s %s", a, s.im > 0 ? L("lagging", "indutivo",
+        "inductif") : L("leading", "capacitivo", "capacitif"));
     return buf;
 }
 
@@ -421,17 +426,19 @@ static void draw_info(char const *message, int message_color)
     dline(6, INFO_Y - 3, DWIDTH - 7, INFO_Y - 3, C_LIGHT);
 
     if (pt >= 0) {
-        sprintf(line, L("Point %d, %d", "Ponto %d, %d"), pt % NX + 1,
+        sprintf(line, L("Point %d, %d", "Ponto %d, %d",
+            "Point %d, %d"), pt % NX + 1,
             pt / NX + 1);
         etext(10, y1, COLOR, DTEXT_LEFT, false, line);
         if (ok && res.known[pt]) {
             sprintf(line, L("V = %s  (to the source's -)",
-                "V = %s  (em relacao ao - da fonte)"),
+                "V = %s  (em relacao ao - da fonte)",
+                "V = %s  (p/r au - de la source)"),
                 fmt_phasor(a, res.v[pt], "V", 4));
             etext(10, y2, C_BLACK, DTEXT_LEFT, false, line);
         }
         else if (ok) etext(10, y2, C_DARK, DTEXT_LEFT, false,
-            L("Not connected", "Sem ligacao"));
+            L("Not connected", "Sem ligacao", "Non connecte"));
     }
     else {
         part_t const *p = &circuit.parts[e];
@@ -445,7 +452,7 @@ static void draw_info(char const *message, int message_color)
         switch (p->kind) {
         case P_NONE:
             strcpy(line, L("Empty: F1-F6 place a part",
-                "Vazio: F1-F6 poem uma peca"));
+                "Vazio: F1-F6 poem uma peca", "Vide: F1-F6 pose une piece"));
             break;
         case P_RES:
             sprintf(line + strlen(line), "  %s", fmt_si(a, p->value, S_OHM, 4));
@@ -472,8 +479,8 @@ static void draw_info(char const *message, int message_color)
                 fmt_si(a, p->value, "V", 3), fmt_si(b, p->value2, "W", 3));
             if (ok) {
                 bool over = res.s[e].re > 1.2 * p->value2;
-                sprintf(c, over ? L("OVERLOAD", "SOBRECARGA")
-                    : L("light %d%%", "luz %d%%"),
+                sprintf(c, over ? L("OVERLOAD", "SOBRECARGA", "SURCHARGE")
+                    : L("light %d%%", "luz %d%%", "lum. %d%%"),
                     (int)(lamp_brightness(e) * 100 + 0.5));
                 status = c;
                 status_color = over ? C_RED : C_RGB(20, 16, 0);
@@ -481,7 +488,8 @@ static void draw_info(char const *message, int message_color)
             break;
         case P_SWITCH:
             sprintf(line + strlen(line), "  %s", p->closed
-                ? L("closed", "fechado") : L("open", "aberto"));
+                ? L("closed", "fechado", "ferme")
+                : L("open", "aberto", "ouvert"));
             break;
         }
         if (p->kind == P_RES || p->kind == P_CAP || p->kind == P_IND) {
@@ -502,11 +510,13 @@ static void draw_info(char const *message, int message_color)
             sprintf(line, "V = %s    I = %s", fmt_phasor(a, v, "V", 3),
                 fmt_phasor(b, i, "A", 3));
         else if (p->kind == P_SRC)
-            sprintf(line, L("I = %s    S = %s", "I = %s    S = %s"),
+            sprintf(line, L("I = %s    S = %s", "I = %s    S = %s",
+                "I = %s    S = %s"),
                 fmt_phasor(a, i, "A", 3), fmt_si(b, c_abs(res.s[e]), "VA", 3));
         else if (p->kind == P_VOLTMETER || (p->kind == P_SWITCH && !p->closed))
             sprintf(line, p->kind == P_VOLTMETER ? "V = %s"
-                : L("V = %s across it", "V = %s aos terminais"),
+                : L("V = %s across it", "V = %s aos terminais",
+                "V = %s aux bornes"),
                 fmt_phasor(a, v, "V", 4));
         else if (p->kind != P_NONE)
             sprintf(line, "I = %s", fmt_phasor(a, i, "A", 4));
@@ -519,14 +529,18 @@ static void draw_info(char const *message, int message_color)
         return;
     }
     if (res.status == S_SHORT) etext(10, y3, C_RED, DTEXT_LEFT, false,
-        L("Short circuit across a source!", "Curto-circuito numa fonte!"));
+        L("Short circuit across a source!", "Curto-circuito numa fonte!",
+        "Court-circuit sur une source!"));
     else if (res.status == S_LOOP) etext(10, y3, C_RED, DTEXT_LEFT, false,
-        L("Sources in parallel or in a loop", "Fontes em paralelo ou em ciclo"));
+        L("Sources in parallel or in a loop", "Fontes em paralelo ou em ciclo",
+        "Sources en parallele ou boucle"));
     else if (res.status == S_TOOBIG) etext(10, y3, C_RED, DTEXT_LEFT, false,
-        L("Too many parts to solve", "Pecas a mais para resolver"));
+        L("Too many parts to solve", "Pecas a mais para resolver",
+        "Trop de pieces a resoudre"));
     else if (res.status == S_EMPTY) etext(10, y3, C_DARK, DTEXT_LEFT, false,
         L("Add an AC source and a load.  VARS: examples",
-          "Junte uma fonte CA e uma carga.  VARS: exemplos"));
+          "Junte uma fonte CA e uma carga.  VARS: exemplos",
+          "Ajoutez source CA et charge.  VARS: exemples"));
     if (res.status != S_OK) return;
 
     cplx s = res.supplied;
@@ -536,9 +550,10 @@ static void draw_info(char const *message, int message_color)
         "Hz", 4), fmt_si(b, s.re, "W", 3), fmt_si(c, s.im, "var", 3));
     etext(10, y3, C_DARK, DTEXT_LEFT, false, line);
 
-    char const *hint = L("1-3: graphs", "1-3: graficos");
-    if (kind == P_SWITCH) hint = L("EXE: on/off", "EXE: ligar");
-    else if (editable(kind)) hint = L("EXE: edit", "EXE: editar");
+    char const *hint = L("1-3: graphs", "1-3: graficos", "1-3: graphes");
+    if (kind == P_SWITCH) hint = L("EXE: on/off", "EXE: ligar", "EXE: on/off");
+    else if (editable(kind)) hint = L("EXE: edit", "EXE: editar",
+        "EXE: editer");
     if (etext_width(line, false) + etext_width(hint, false) + 30 < DWIDTH)
         etext(DWIDTH - 10, y3, C_DARK, DTEXT_RIGHT, false, hint);
 }
@@ -560,14 +575,14 @@ static kind_t const fkey_kinds[] = { P_WIRE, P_RES, P_CAP, P_IND, P_SRC };
 static void draw_screen(int t, char const *message, int message_color)
 {
     dclear(C_WHITE);
-    info_title(L("AC Circuit", "Circuitos CA"), COLOR);
+    info_title(L("AC Circuit", "Circuitos CA", "Circuits CA"), COLOR);
     draw_grid(t);
     draw_info(message, message_color);
 
     int e = cursor_edge();
     int kind = e >= 0 ? circuit.parts[e].kind : drawing ? P_WIRE : P_NONE;
-    char const *labels[] = { L("WIRE", "FIO"), "R", "C", "L",
-        L("SOURCE", "FONTE"), L("PARTS", "PECAS") };
+    char const *labels[] = { L("WIRE", "FIO", "FIL"), "R", "C", "L",
+        L("SOURCE", "FONTE", "SOURCE"), L("PARTS", "PECAS", "PIECES") };
     for (int k = 0; k < 6; k++) {
         bool on = k < 5 ? kind == (int)fkey_kinds[k] : in_menu(kind);
         if (on) fkey_button_color(k + 1, labels[k], COLOR);
@@ -592,7 +607,7 @@ static int pick_part(int t)
         draw_screen(t, NULL, 0);
         drect_border(x1, y1, x2, y2, C_WHITE, 2, COLOR);
         drect(x1, y1, x2, y1 + 15, COLOR);
-        dtext(x1 + 8, y1 + 3, C_WHITE, L("Parts", "Pecas"));
+        dtext(x1 + 8, y1 + 3, C_WHITE, L("Parts", "Pecas", "Pieces"));
         for (int k = 0; k < MENU_COUNT; k++) {
             int y = y1 + 18 + k * row;
             if (k == sel) drect(x1 + 2, y - 1, x2 - 2, y + row - 3, TINT);
@@ -634,29 +649,32 @@ static void edit_results(eform_t *f, int y)
         }
         if (v > 0) {
             cplx z = part_impedance(&p, circuit.freq);
-            result(y, L("Reactance", "Reatancia"), C_BLACK, "%s",
+            result(y, L("Reactance", "Reatancia", "Reactance"), C_BLACK, "%s",
                 fmt_si(a, fabs(z.im), S_OHM, 4));
-            result(y + RESULT_STEP, L("Impedance", "Impedancia"), C_BLACK,
-                "%s", fmt_phasor(a, z, S_OHM, 4));
+            result(y + RESULT_STEP, L("Impedance", "Impedancia",
+                "Impedance"), C_BLACK, "%s", fmt_phasor(a, z, S_OHM, 4));
         }
-        result_note(y + 2 * RESULT_STEP, L("at f = %s", "a f = %s"),
-            fmt_si(a, circuit.freq, "Hz", 4));
+        result_note(y + 2 * RESULT_STEP, L("at f = %s", "a f = %s",
+            "a f = %s"), fmt_si(a, circuit.freq, "Hz", 4));
     }
     else if (kind == P_LAMP) {
         double w = field_value(&f->fields[1]);
-        if (v > 0 && w > 0) result(y, L("Resistance", "Resistencia"),
+        if (v > 0 && w > 0) result(y, L("Resistance", "Resistencia",
+            "Resistance"),
             C_BLACK, "%s", fmt_si(a, v * v / w, S_OHM, 4));
         result_note(y + RESULT_STEP, L("Rated values are rms",
-            "Valores nominais eficazes"));
+            "Valores nominais eficazes", "Valeurs nominales efficaces"));
     }
     else if (kind == P_SRC) {
-        result(y, L("Peak", "Pico"), C_BLACK, "%s",
+        result(y, L("Peak", "Pico", "Crete"), C_BLACK, "%s",
             fmt_si(a, v > 0 ? v * sqrt(2) : NAN, "V", 4));
         result_note(y + RESULT_STEP, L("The voltage is rms; the phase is "
-            "in degrees", "Tensao eficaz; a fase e em graus"));
+            "in degrees", "Tensao eficaz; a fase e em graus",
+            "Tension efficace; phase en degres"));
     }
     result_note(y + 3 * RESULT_STEP, L("F1-F6: p n " S_MU " m k M    "
-        "EXIT: back", "F1-F6: p n " S_MU " m k M    EXIT: voltar"));
+        "EXIT: back", "F1-F6: p n " S_MU " m k M    EXIT: voltar",
+        "F1-F6: p n " S_MU " m k M    EXIT: retour"));
 }
 
 /* Value typed in a field if it is usable, else the old one */
@@ -678,34 +696,39 @@ static void edit_part(part_t *p)
     for (int k = 0; k < 2; k++) fields[k].kind = F_NUM;
     switch (p->kind) {
     case P_RES:
-        fields[0].label = L("Resistance", "Resistencia");
+        fields[0].label = L("Resistance", "Resistencia",
+            "Resistance");
         fields[0].unit = S_OHM;
         break;
     case P_CAP:
-        fields[0].label = L("Capacitance", "Capacidade");
+        fields[0].label = L("Capacitance", "Capacidade", "Capacite");
         fields[0].unit = "F";
         break;
     case P_IND:
         f.count = 2;
-        fields[0].label = L("Inductance", "Indutancia");
+        fields[0].label = L("Inductance", "Indutancia", "Inductance");
         fields[0].unit = "H";
-        fields[1].label = L("Wire resistance", "Resist. do fio");
+        fields[1].label = L("Wire resistance", "Resist. do fio",
+            "Resist. du fil");
         fields[1].unit = S_OHM;
         field_set(&fields[1], p->value2);
         break;
     case P_SRC:
         f.count = 2;
-        fields[0].label = L("Voltage (rms)", "Tensao (eficaz)");
+        fields[0].label = L("Voltage (rms)", "Tensao (eficaz)",
+            "Tension (eff.)");
         fields[0].unit = "V";
-        fields[1].label = L("Phase", "Fase");
+        fields[1].label = L("Phase", "Fase", "Phase");
         fields[1].unit = S_DEG;
         field_set(&fields[1], p->value2);
         break;
     case P_LAMP:
         f.count = 2;
-        fields[0].label = L("Rated voltage", "Tensao nominal");
+        fields[0].label = L("Rated voltage", "Tensao nominal",
+            "Tension nominale");
         fields[0].unit = "V";
-        fields[1].label = L("Rated power", "Potencia nominal");
+        fields[1].label = L("Rated power", "Potencia nominal",
+            "Puiss. nominale");
         fields[1].unit = "W";
         field_set(&fields[1], p->value2);
         break;
@@ -742,14 +765,15 @@ static void freq_results(eform_t *f, int y)
     char a[48];
     double v = field_value(&f->fields[0]);
     if (v >= FREQ_MIN && v <= FREQ_MAX) {
-        result(y, L("Angular", "Angular"), C_BLACK, "%s",
+        result(y, L("Angular", "Angular", "Pulsation"), C_BLACK, "%s",
             fmt_si(a, 2 * PI * v, "rad/s", 4));
-        result(y + RESULT_STEP, L("Period", "Periodo"), C_BLACK, "%s",
-            fmt_si(a, 1 / v, "s", 4));
+        result(y + RESULT_STEP, L("Period", "Periodo", "Periode"), C_BLACK,
+            "%s", fmt_si(a, 1 / v, "s", 4));
     }
-    else result(y, L("Range", "Intervalo"), C_DARK, "1 Hz - 1 MHz");
+    else result(y, L("Range", "Intervalo", "Plage"), C_DARK, "1 Hz - 1 MHz");
     result_note(y + 3 * RESULT_STEP, L("All sources run at this frequency",
-        "Todas as fontes usam esta frequencia"));
+        "Todas as fontes usam esta frequencia",
+        "Toutes les sources a cette frequence"));
 }
 
 static void edit_freq(void)
@@ -757,10 +781,11 @@ static void edit_freq(void)
     static field_t fields[1];
     memset(fields, 0, sizeof fields);
     fields[0].kind = F_NUM;
-    fields[0].label = L("Frequency", "Frequencia");
+    fields[0].label = L("Frequency", "Frequencia", "Frequence");
     fields[0].unit = "Hz";
     field_set(&fields[0], circuit.freq);
-    eform_t f = { .title = L("Frequency", "Frequencia"), .color = COLOR,
+    eform_t f = { .title = L("Frequency", "Frequencia", "Frequence"),
+        .color = COLOR,
         .fields = fields, .count = 1, .cols = 1, .label_w = 150,
         .results = freq_results };
     eform_run(&f);
@@ -850,10 +875,12 @@ static void phase_line(int x, int y, cplx v, cplx i)
     char a[32], line[64];
     double d = wrap_deg(c_deg(i) - c_deg(v));
     fmt_num(a, fabs(d), 0);
-    if (fabs(d) < 0.5) strcpy(line, L("I and V in phase", "I e V em fase"));
+    if (fabs(d) < 0.5) strcpy(line, L("I and V in phase", "I e V em fase",
+        "I et V en phase"));
     else sprintf(line, d > 0 ? L("I leads V by %s" S_DEG,
-        "I adiantada %s" S_DEG " de V") : L("I lags V by %s" S_DEG,
-        "I atrasada %s" S_DEG " de V"), a);
+        "I adiantada %s" S_DEG " de V", "I avance de %s" S_DEG " sur V")
+        : L("I lags V by %s" S_DEG, "I atrasada %s" S_DEG " de V",
+        "I retarde de %s" S_DEG " sur V"), a);
     etext(x, y, C_BLACK, DTEXT_LEFT, false, line);
 }
 
@@ -865,7 +892,7 @@ static void view_phasors(target_t t)
     cplx v = part_v(&res, t.e), i = part_i(&res, t.e);
     bool own = t.e == src;
 
-    view_title(L("Phasors", "Fasores"));
+    view_title(L("Phasors", "Fasores", "Phaseurs"));
 
     int cx = 102, cy = 112, r = 82;
     dcircle(cx, cy, r, C_NONE, C_RGB(28, 28, 28));
@@ -887,7 +914,7 @@ static void view_phasors(target_t t)
     int x = 204, y = 26;
     if (!own) {
         etext(x, y, SRC_COLOR, DTEXT_LEFT, false, L("Source (grey)",
-            "Fonte (cinzento)"));
+            "Fonte (cinzento)", "Source (gris)"));
         sprintf(line, "V = %s", fmt_phasor(a, vs, "V", 3));
         etext(x + 8, y + 13, SRC_COLOR, DTEXT_LEFT, false, line);
         sprintf(line, "I = %s", fmt_phasor(a, is, "A", 3));
@@ -918,10 +945,11 @@ static void view_phasors(target_t t)
     }
 
     etext(x, 172, C_DARK, DTEXT_LEFT, false, L("V and I: separate scales",
-        "V e I: escalas separadas"));
+        "V e I: escalas separadas", "V, I: echelles separees"));
     etext(DWIDTH / 2, 192, C_DARK, DTEXT_CENTER, false,
         L("Angles from the source's phase.  Any key: back",
-        "Angulos a partir da fase da fonte.  Tecla: voltar"));
+        "Angulos a partir da fase da fonte.  Tecla: voltar",
+        "Angles p/r a la phase source.  Touche: retour"));
     dupdate();
     getkey();
 }
@@ -934,7 +962,7 @@ static void view_waves(target_t t)
     cplx v = part_v(&res, t.e), i = part_i(&res, t.e);
     double f = circuit.freq;
 
-    view_title(L("Waveforms", "Formas de onda"));
+    view_title(L("Waveforms", "Formas de onda", "Formes d'onde"));
 
     int x1 = 44, x2 = DWIDTH - 44, y1 = 34, y2 = 164, mid = (y1 + y2) / 2;
     drect_border(x1, y1, x2, y2, C_WHITE, 1, C_LIGHT);
@@ -986,20 +1014,21 @@ static void view_waves(target_t t)
     etext(x2, y2 + 3, C_DARK, DTEXT_RIGHT, false, line);
 
     line[0] = '\0';
-    if (t.has_v) sprintf(line, L("v peak %s", "v pico %s"),
+    if (t.has_v) sprintf(line, L("v peak %s", "v pico %s", "v crete %s"),
         fmt_si(a, sqrt(2) * c_abs(v), "V", 3));
     etext(x1, 20, V_COLOR, DTEXT_LEFT, false, line);
     line[0] = '\0';
-    if (t.has_i) sprintf(line, L("i peak %s", "i pico %s"),
+    if (t.has_i) sprintf(line, L("i peak %s", "i pico %s", "i crete %s"),
         fmt_si(b, imax, "A", 3));
     etext(x2, 20, I_COLOR, DTEXT_RIGHT, false, line);
     etext(DWIDTH / 2, 20, COLOR, DTEXT_CENTER, false, t.name);
 
     if (t.has_v && t.has_i && imax > 0) phase_line(x1, 182, v, i);
     if (t.e != src) etext(x2, 182, C_RGB(20, 20, 20), DTEXT_RIGHT, false,
-        L("grey: the source", "cinzento: a fonte"));
+        L("grey: the source", "cinzento: a fonte",
+        "gris: la source"));
     etext(DWIDTH / 2, 196, C_DARK, DTEXT_CENTER, false,
-        L("Any key: back", "Tecla: voltar"));
+        L("Any key: back", "Tecla: voltar", "Touche: retour"));
     dupdate();
     getkey();
 }
@@ -1045,10 +1074,12 @@ static void view_bode(target_t t)
     if (lo * 1e5 > FREQ_MAX) lo = FREQ_MAX / 1e5;
     double decades = 5;
 
-    view_title(L("Frequency response", "Resposta em frequencia"));
+    view_title(L("Frequency response", "Resposta em frequencia",
+        "Reponse en frequence"));
     etext(DWIDTH / 2, 100, C_DARK, DTEXT_CENTER, false,
         L("Solving the circuit at each frequency...",
-        "A resolver o circuito em cada frequencia..."));
+        "A resolver o circuito em cada frequencia...",
+        "Resolution du circuit a chaque frequence..."));
     dupdate();
 
     double mmin = INFINITY, mmax = -INFINITY;
@@ -1079,7 +1110,8 @@ static void view_bode(target_t t)
     }
 
     while (1) {
-        view_title(L("Frequency response", "Resposta em frequencia"));
+        view_title(L("Frequency response", "Resposta em frequencia",
+            "Reponse en frequence"));
 
         /* Decade lines and their labels */
         for (int d = 0; d <= decades; d++) {
@@ -1155,16 +1187,18 @@ static void view_bode(target_t t)
         else if (gain) sprintf(b, "%s dB", fmt_num(a, mag[cur], 1));
         else fmt_si(b, pow(10, mag[cur]), "A", 3);
         sprintf(line, "f = %s    %s %s    %s %s" S_DEG,
-            fmt_si(a, f, "Hz", 3), gain ? L("gain", "ganho") : "I", b,
-            L("phase", "fase"), fmt_num(c, ph[cur], 0));
+            fmt_si(a, f, "Hz", 3), gain ? L("gain", "ganho", "gain") : "I", b,
+            L("phase", "fase", "phase"), fmt_num(c, ph[cur], 0));
         etext(10, 20, C_BLACK, DTEXT_LEFT, false, line);
         sprintf(line, gain ? L("%s: V over the source's V", "%s: V sobre V da "
-            "fonte") : L("%s: current", "%s: corrente"), t.name);
+            "fonte", "%s: V sur V de la source") : L("%s: current",
+            "%s: corrente", "%s: courant"), t.name);
         etext(DWIDTH / 2, 178, color, DTEXT_CENTER, false, line);
 
         etext(DWIDTH / 2, 192, C_DARK, DTEXT_CENTER, false,
             L("LEFT/RIGHT: move    EXE: use this f    EXIT: back",
-            "ESQ/DIR: mover    EXE: usar esta f    EXIT: voltar"));
+            "ESQ/DIR: mover    EXE: usar esta f    EXIT: voltar",
+            "G/D: deplacer    EXE: utiliser f    EXIT: retour"));
         dupdate();
 
         int key = getkey_opt(GETKEY_DEFAULT | GETKEY_REP_ARROWS, NULL).key;
@@ -1233,7 +1267,8 @@ static char const *load_example(circuit_t *c, int k)
         put(c, 5, 3, true, part_default(P_AMMETER));
         wires_h(c, 6, 9, 3);
         return L("Series RLC: tune with +/-, brightest at 503 Hz",
-            "RLC serie: sintonize com +/-, maximo a 503 Hz");
+            "RLC serie: sintonize com +/-, maximo a 503 Hz",
+            "RLC serie: reglez avec +/-, max a 503 Hz");
     }
     if (k == 2) {
         /* RL load (50 Ω, 0.2 H) on 230 V 50 Hz; a 30 µF capacitor behind
@@ -1251,7 +1286,8 @@ static char const *load_example(circuit_t *c, int k)
         put(c, 8, 2, false, with(P_IND, 0.2, 0));
         wires_h(c, 1, 8, 3);
         return L("RL load, PF 0.62: close the switch to fix it",
-            "Carga RL, FP 0,62: feche o interruptor");
+            "Carga RL, FP 0,62: feche o interruptor",
+            "Charge RL, FP 0,62: fermez l'interrupteur");
     }
     if (k == 3) {
         /* Parallel LC tank fed through 330 Ω: 1 mH, 1 µF, f0 = 5.03 kHz */
@@ -1267,7 +1303,8 @@ static char const *load_example(circuit_t *c, int k)
         wires_v(c, 10, 2, 3);
         wires_h(c, 1, 10, 3);
         return L("LC tank: the voltage peaks at 5.03 kHz (try +/-)",
-            "Circuito LC: tensao maxima a 5,03 kHz (+/-)");
+            "Circuito LC: tensao maxima a 5,03 kHz (+/-)",
+            "Circuit LC: tension max a 5,03 kHz (+/-)");
     }
 
     /* RC filters: 1 kΩ and 100 nF, corner at 1.59 kHz; the voltmeter is
@@ -1283,9 +1320,11 @@ static char const *load_example(circuit_t *c, int k)
     wires_v(c, 10, 2, 3);
     wires_h(c, 1, 10, 3);
     if (high) return L("RC high-pass: 3 on a part shows its response",
-        "Passa-alto RC: 3 numa peca mostra a resposta");
+        "Passa-alto RC: 3 numa peca mostra a resposta",
+        "Passe-haut RC: 3 sur une piece: sa reponse");
     return L("RC low-pass: corner at 1.59 kHz. 1-3: graphs",
-        "Passa-baixo RC: corte 1,59 kHz. 1-3: graficos");
+        "Passa-baixo RC: corte 1,59 kHz. 1-3: graficos",
+        "Passe-bas RC: coupure 1,59 kHz. 1-3: graphes");
 }
 
 //---
@@ -1409,9 +1448,10 @@ int main(void)
             return 1;
         }
         if (key == INFO_KEY) {
-            info_show(L("AC Circuit", "Circuitos CA"), L("AC circuit "
-                "simulator " APPS_VERSION, "Simulador de circuitos CA "
-                APPS_VERSION), COLOR);
+            info_show(L("AC Circuit", "Circuitos CA", "Circuits CA"),
+                L("AC circuit simulator " APPS_VERSION,
+                "Simulador de circuitos CA " APPS_VERSION,
+                "Simulateur de circuits CA " APPS_VERSION), COLOR);
             continue;
         }
 
@@ -1453,7 +1493,8 @@ int main(void)
         else if (key == KEY_F6) {
             if (!p) {
                 message = L("Move onto a link to place a part",
-                    "Va para uma ligacao para por uma peca");
+                    "Va para uma ligacao para por uma peca",
+                    "Allez sur un lien pour poser une piece");
                 continue;
             }
             int kind = pick_part(t);
@@ -1473,7 +1514,8 @@ int main(void)
             target_t tg = get_target();
             if (res.status != S_OK || tg.e < 0) {
                 message = L("Nothing to show: the circuit has no solution",
-                    "Nada a mostrar: o circuito nao tem solucao");
+                    "Nada a mostrar: o circuito nao tem solucao",
+                    "Rien a afficher: circuit sans solution");
                 message_color = C_RED;
                 continue;
             }
@@ -1502,7 +1544,8 @@ int main(void)
             else {
                 confirm_clear = true;
                 message = L("Press AC again to clear everything",
-                    "Prima AC de novo para limpar tudo");
+                    "Prima AC de novo para limpar tudo",
+                    "Rappuyez sur AC pour tout effacer");
                 message_color = C_RED;
             }
         }

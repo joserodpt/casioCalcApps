@@ -15,6 +15,7 @@ typedef struct {
 typedef struct {
     char const *name;       /* category name, e.g. "Volume" */
     char const *name_pt;
+    char const *name_fr;
     unit_t const *units;
     int count;
 } category_t;

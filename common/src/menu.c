@@ -16,14 +16,15 @@ static void menu_draw(menu_t const *m, int sel)
     int top = sel < ROWS ? 0 : sel - ROWS + 1;
 
     dclear(C_WHITE);
-    info_title(L(m->app, m->app_pt), m->color);
+    info_title(L(m->app, m->app_pt, m->app_fr), m->color);
     for (int k = 0; k < ROWS && top + k < m->count; k++) {
         int i = top + k, y = 10 + 9 * k;
         menu_item_t const *it = &m->items[i];
         bool s = i == sel;
         if (s) drect(0, y - 1, DWIDTH - 1, y + 7, C_BLACK);
         dprint(2, y, s ? C_WHITE : C_DARK, "%d", i + 1);
-        dtext(10, y, s ? C_WHITE : C_BLACK, L(it->name_en, it->name_pt));
+        dtext(10, y, s ? C_WHITE : C_BLACK,
+            L(it->name_en, it->name_pt, it->name_fr));
     }
     dupdate();
 }
@@ -41,7 +42,7 @@ static void menu_draw(menu_t const *m, int sel)
         ? &roomy : &tight;
 
     dclear(C_WHITE);
-    info_title(L(m->app, m->app_pt), m->color);
+    info_title(L(m->app, m->app_pt, m->app_fr), m->color);
 
     for (int i = 0; i < m->count; i++) {
         menu_item_t const *it = &m->items[i];
@@ -55,9 +56,9 @@ static void menu_draw(menu_t const *m, int sel)
         dprint_opt(8 + l->box / 2, ty, C_WHITE, C_NONE, DTEXT_CENTER,
             DTEXT_TOP, "%d", i + 1);
         dtext(18 + l->box, y + 3, i == sel ? color : C_BLACK,
-            L(it->name_en, it->name_pt));
+            L(it->name_en, it->name_pt, it->name_fr));
         dtext(18 + l->box, y + l->pad + 11, C_DARK,
-            L(it->desc_en, it->desc_pt));
+            L(it->desc_en, it->desc_pt, it->desc_fr));
         if (i == sel) dtext_opt(DWIDTH - 10, ty, color, C_NONE,
             DTEXT_RIGHT, DTEXT_TOP, ">");
     }
@@ -69,7 +70,7 @@ static void menu_draw(menu_t const *m, int sel)
 void menu_run(menu_t const *m)
 {
     int sel = 0;
-    app_name = L(m->app, m->app_pt);
+    app_name = L(m->app, m->app_pt, m->app_fr);
 
     while (1) {
         menu_draw(m, sel);
@@ -78,7 +79,8 @@ void menu_run(menu_t const *m)
 
         if (key == KEY_EXIT) return;
         if (key == INFO_KEY)
-            info_show(app_name, L(m->about_en, m->about_pt), m->color);
+            info_show(app_name, L(m->about_en, m->about_pt, m->about_fr),
+                m->color);
         else if (key == KEY_UP) sel = (sel + m->count - 1) % m->count;
         else if (key == KEY_DOWN) sel = (sel + 1) % m->count;
         else if (key == KEY_EXE || key == KEY_RIGHT) open = sel;

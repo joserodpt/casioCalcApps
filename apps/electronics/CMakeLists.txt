@@ -8,7 +8,7 @@ include(Fxconv)
 find_package(Gint 2.9 REQUIRED)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../common/common.cmake)
 
-casio_app(Electronics FX NAME_PT "Eletronica"
+casio_app(Electronics FX NAME_PT "Eletronica" NAME_FR "Electronique"
   SOURCES
     src/main.c
     src/eseries.c

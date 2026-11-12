@@ -26,10 +26,14 @@ static char const * const color_names_pt[COLOR_COUNT] = {
     "Preto", "Castanho", "Vermelho", "Laranja", "Amarelo", "Verde", "Azul",
     "Violeta", "Cinza", "Branco", "Ouro", "Prata", "Nenhuma" };
 
+static char const * const color_names_fr[COLOR_COUNT] = {
+    "Noir", "Marron", "Rouge", "Orange", "Jaune", "Vert", "Bleu", "Violet",
+    "Gris", "Blanc", "Or", "Argent", "Aucune" };
+
 /* Translated colour name */
 static char const *cname(int c)
 {
-    return lang_current == L_PT ? color_names_pt[c] : color_names[c];
+    return L(color_names[c], color_names_pt[c], color_names_fr[c]);
 }
 
 #if !GINT_HW_FX
@@ -72,9 +76,12 @@ static char const * const role_names[] = {
 static char const * const role_names_pt[] = {
     "Digito", "Multiplicador", "Tolerancia", "Tempco" };
 
+static char const * const role_names_fr[] = {
+    "Chiffre", "Multiplicateur", "Tolerance", "Tempco" };
+
 static char const *rname(int r)
 {
-    return lang_current == L_PT ? role_names_pt[r] : role_names[r];
+    return L(role_names[r], role_names_pt[r], role_names_fr[r]);
 }
 #endif
 
@@ -298,7 +305,8 @@ static void draw_info(cc_t const *s)
     role_t r = role_of(s, s->sel);
     int c = s->band[s->sel];
     eprint(DWIDTH - 10, y - 1, C_DARK, DTEXT_RIGHT, L("Band %d/%d: %s",
-        "Banda %d/%d: %s"), s->sel + 1, s->count, rname(r));
+        "Banda %d/%d: %s",
+        "Bande %d/%d: %s"), s->sel + 1, s->count, rname(r));
     if (r == ROLE_DIGIT) snprintf(text, sizeof text, "%s = %d",
         cname(c), c);
     else if (r == ROLE_MULT) {
@@ -315,7 +323,7 @@ static void draw_info(cc_t const *s)
 
     y = 114;
     dline(6, y - 4, DWIDTH - 7, y - 4, C_LIGHT);
-    result(y, L("Range","Gama"), C_BLACK, "%s ... %s",
+    result(y, L("Range","Gama", "Plage"), C_BLACK, "%s ... %s",
         fmt_si(a, v * (1 - tol / 100), "", 4),
         fmt_si(b, v * (1 + tol / 100), S_OHM, 4));
     y += RESULT_STEP;
@@ -335,13 +343,13 @@ static void draw(cc_t const *s)
     char label[8];
 
     dclear(C_WHITE);
-    info_title(L("Colour code", "Codigo de cores"), COLOR);
+    info_title(L("Colour code", "Codigo de cores", "Code couleurs"), COLOR);
     draw_resistor(s);
     draw_info(s);
 
-    sprintf(label, L("%d BAND","%d BND"), s->count);
+    sprintf(label, L("%d BAND","%d BND", "%d BND"), s->count);
     efkey(1, label, COLOR);
-    efkey(2, L("VALUE","VALOR"), C_BLACK);
+    efkey(2, L("VALUE","VALOR", "VALEUR"), C_BLACK);
     efkey(4, "E12", C_BLACK);
     efkey(5, "E24", C_BLACK);
     efkey(6, "E96", C_BLACK);
@@ -359,6 +367,10 @@ static char const * const color_codes[COLOR_COUNT] = {
 static char const * const color_codes_pt[COLOR_COUNT] = {
     "pre", "cas", "vrm", "lar", "ama", "vrd", "azu", "vio", "cin", "bra",
     "our", "pra", "---" };
+
+static char const * const color_codes_fr[COLOR_COUNT] = {
+    "noi", "mar", "rou", "ora", "jau", "ver", "ble", "vio", "gri", "bla",
+    "or", "arg", "---" };
 
 #define CELL_W    19        /* 3 characters and a margin */
 #define BAND_Y    10        /* top of the body */
@@ -398,7 +410,7 @@ static void draw_resistor(cc_t const *s)
         drect(x, BAND_Y + 1, x + CELL_W - 1, BAND_Y + 8,
             sel ? C_BLACK : C_WHITE);
         dtext(x + 1, BAND_Y + 2, sel ? C_WHITE : C_BLACK,
-            lang_current == L_PT ? color_codes_pt[c] : color_codes[c]);
+            L(color_codes[c], color_codes_pt[c], color_codes_fr[c]));
     }
 }
 
@@ -461,13 +473,13 @@ static void draw(cc_t const *s)
     char label[8];
 
     dclear(C_WHITE);
-    info_title(L("Colour code", "Codigo de cores"), COLOR);
+    info_title(L("Colour code", "Codigo de cores", "Code couleurs"), COLOR);
     draw_resistor(s);
     draw_info(s);
 
     sprintf(label, "%dB", s->count);
     efkey(1, label, C_BLACK);
-    efkey(2, L("VAL","VAL"), C_BLACK);
+    efkey(2, L("VAL","VAL", "VAL"), C_BLACK);
     efkey(4, "E12", C_BLACK);
     efkey(5, "E24", C_BLACK);
     efkey(6, "E96", C_BLACK);
@@ -489,11 +501,12 @@ static void set_from_value(cc_t *s, double v)
 
     if (fabs(shown - v) > v * 1e-9)
 #if GINT_HW_FX
-        snprintf(s->note, sizeof s->note, L("Typed %s","Pedido %s"),
+        snprintf(s->note, sizeof s->note, L("Typed %s","Pedido %s", "Saisi %s"),
             fmt_si(a, v, S_OHM, 4));
 #else
-        snprintf(s->note, sizeof s->note, L("%s shown as %s","%s mostrado %s"), fmt_si(a, v,
-            S_OHM, 4), fmt_si(b, shown, S_OHM, 4));
+        snprintf(s->note, sizeof s->note, L("%s shown as %s","%s mostrado %s",
+            "%s affiche %s"), fmt_si(a, v, S_OHM, 4),
+            fmt_si(b, shown, S_OHM, 4));
 #endif
     else s->note[0] = '\0';
 }
@@ -512,19 +525,21 @@ static void prompt_value(cc_t *s)
         /* Over the E-series lines; the bands and value stay in view */
         drect(0, 29, DWIDTH - 1, 55, C_WHITE);
         dline(0, 29, DWIDTH - 1, 29, C_BLACK);
-        dtext(1, 34, C_BLACK, L("Value","Valor"));
+        dtext(1, 34, C_BLACK, L("Value","Valor", "Valeur"));
         field_box(&f, 32, 33, 82, true, C_BLACK);
         etext(116, 34, C_DARK, DTEXT_LEFT, false, S_OHM);
-        dtext(1, 45, C_DARK, L("EXE ok   EXIT cancel","EXE ok   EXIT anula"));
+        dtext(1, 45, C_DARK, L("EXE ok   EXIT cancel","EXE ok   EXIT anula",
+            "EXE ok   EXIT annuler"));
         field_fkeys(&f, C_BLACK);
 #else
         drect(0, 172, DWIDTH - 1, 223, C_WHITE);
         dline(0, 172, DWIDTH - 1, 172, COLOR);
-        dtext(10, 180, COLOR, L("Value","Valor"));
+        dtext(10, 180, COLOR, L("Value","Valor", "Valeur"));
         field_box(&f, 60, 177, 160, true, COLOR);
         etext(224, 180, C_DARK, DTEXT_LEFT, false, S_OHM);
-        dtext(250, 180, C_DARK, L("EXE: keep","EXE: manter"));
-        dtext(250, 192, C_DARK, L("EXIT: cancel","EXIT: cancelar"));
+        dtext(250, 180, C_DARK, L("EXE: keep","EXE: manter", "EXE: garder"));
+        dtext(250, 192, C_DARK, L("EXIT: cancel","EXIT: cancelar",
+            "EXIT: annuler"));
         field_fkeys(&f, COLOR);
 #endif
         dupdate();
@@ -562,7 +577,8 @@ void colorcode_run(void)
         case KEY_EXIT:
             return;
         case INFO_KEY:
-            info_app(L("Colour code", "Codigo de cores"), COLOR);
+            info_app(L("Colour code", "Codigo de cores", "Code couleurs"),
+                COLOR);
             break;
         case KEY_LEFT:
             s.sel = (s.sel + s.count - 1) % s.count;

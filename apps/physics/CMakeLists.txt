@@ -8,7 +8,7 @@ include(Fxconv)
 find_package(Gint 2.9 REQUIRED)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../common/common.cmake)
 
-casio_app(Physics FX NAME_PT "Fisica"
+casio_app(Physics FX NAME_PT "Fisica" NAME_FR "Physique"
   SOURCES
     src/main.c
 )

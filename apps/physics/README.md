@@ -34,8 +34,8 @@ quantity they can compute from what you entered.
 | OPTN | Info screen |
 | EXIT | Back / quit |
 
-Angles for Snell's law are in degrees. Language (English / Portuguese)
-follows the calculator's system language.
+Angles for Snell's law are in degrees. Language (English / Portuguese /
+French) follows the calculator's system language.
 
 ## fx-9860G (128x64)
 

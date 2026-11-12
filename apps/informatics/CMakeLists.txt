@@ -8,7 +8,7 @@ include(Fxconv)
 find_package(Gint 2.9 REQUIRED)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../common/common.cmake)
 
-casio_app(Informatics NAME_PT "Informatica"
+casio_app(Informatics NAME_PT "Informatica" NAME_FR "Informatique"
   SOURCES
     src/main.c
 )

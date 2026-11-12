@@ -8,7 +8,7 @@ include(Fxconv)
 find_package(Gint 2.9 REQUIRED)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../common/common.cmake)
 
-casio_app(Tone FX NAME_PT "Som"
+casio_app(Tone FX NAME_PT "Som" NAME_FR "Son"
   SOURCES
     src/main.c
     src/audio.c

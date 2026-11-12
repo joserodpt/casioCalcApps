@@ -11,13 +11,17 @@
 static void draw(void)
 {
     dclear(C_WHITE);
-    info_title(L("Hello", "Ola"), COLOR);
+    info_title(L("Hello", "Ola", "Bonjour"), COLOR);
 #if GINT_HW_FX
-    dtext(2, 14, C_BLACK, L("Hello from Hello!", "Ola do Hello!"));
-    dtext(2, 24, C_DARK, L("Press EXIT to quit.", "Prima EXIT para sair."));
+    dtext(2, 14, C_BLACK, L("Hello from Hello!", "Ola do Hello!",
+        "Bonjour de Hello!"));
+    dtext(2, 24, C_DARK, L("Press EXIT to quit.", "Prima EXIT para sair.",
+        "EXIT pour quitter."));
 #else
-    dtext(6, 36, C_BLACK, L("Hello from Hello!", "Ola do Hello!"));
-    dtext(6, 64, C_BLACK, L("Press EXIT to quit.", "Prima EXIT para sair."));
+    dtext(6, 36, C_BLACK, L("Hello from Hello!", "Ola do Hello!",
+        "Bonjour de Hello!"));
+    dtext(6, 64, C_BLACK, L("Press EXIT to quit.", "Prima EXIT para sair.",
+        "EXIT pour quitter."));
 #endif
     dupdate();
 }
@@ -33,6 +37,7 @@ int main(void)
 
         int key = getkey().key;
         if(key == KEY_EXIT) return 1;
-        if(key == INFO_KEY) info_show(L("Hello", "Ola"), APPS_VERSION, COLOR);
+        if(key == INFO_KEY)
+            info_show(L("Hello", "Ola", "Bonjour"), APPS_VERSION, COLOR);
     }
 }

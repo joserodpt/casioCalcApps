@@ -28,7 +28,7 @@ static int form_rows(form_t const *f)
 
 static char const *form_title(form_t const *f)
 {
-    return lang_current == L_PT ? f->title_pt : f->title_en;
+    return L(f->title_en, f->title_pt, f->title_fr);
 }
 
 #if GINT_HW_FX
@@ -45,7 +45,8 @@ static void form_draw(form_t *f)
     int fx = 0, uw = 0;
     for (int i = 0; i < f->count; i++) {
         int w;
-        dsize(L(f->fields[i].label_en, f->fields[i].label_pt), NULL, &w,
+        dsize(L(f->fields[i].label_en, f->fields[i].label_pt,
+            f->fields[i].label_fr), NULL, &w,
             NULL);
         if (w + 4 > fx) fx = w + 4;
         if (f->fields[i].unit) {
@@ -58,7 +59,8 @@ static void form_draw(form_t *f)
         int i = top + k, y = FORM_Y + k * FORM_STEP;
         bool sel = i == f->sel;
         dtext(1, y + 1, sel ? C_BLACK : C_DARK,
-            L(f->fields[i].label_en, f->fields[i].label_pt));
+            L(f->fields[i].label_en, f->fields[i].label_pt,
+            f->fields[i].label_fr));
         numfield_draw(&f->fields[i].f, fx, y, DWIDTH - fx - uw - 1, sel,
             f->color);
         if (f->fields[i].unit)
@@ -87,7 +89,8 @@ static void form_draw(form_t *f)
     int fx = 54;
     for (int i = 0; i < f->count; i++) {
         int w;
-        dsize(L(f->fields[i].label_en, f->fields[i].label_pt), NULL, &w,
+        dsize(L(f->fields[i].label_en, f->fields[i].label_pt,
+            f->fields[i].label_fr), NULL, &w,
             NULL);
         if (10 + w + 8 > fx) fx = 10 + w + 8;
     }
@@ -98,7 +101,8 @@ static void form_draw(form_t *f)
         bool sel = i == f->sel;
         int bw = cols == 2 ? colw - 90 : 170;
         dtext(x + 10, y + 3, sel ? f->color : C_BLACK,
-            L(f->fields[i].label_en, f->fields[i].label_pt));
+            L(f->fields[i].label_en, f->fields[i].label_pt,
+            f->fields[i].label_fr));
         numfield_draw(&f->fields[i].f, x + fx, y, bw, sel, f->color);
         if (f->fields[i].unit)
             dtext(x + fx + bw + 4, y + 3, C_DARK, f->fields[i].unit);

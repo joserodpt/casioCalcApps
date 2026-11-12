@@ -85,9 +85,9 @@ static char *time_text(char *buf, double s)
     return buf;
 }
 
-static void hint(int y, char const *en, char const *pt)
+static void hint(int y, char const *en, char const *pt, char const *fr)
 {
-    dtext(10, y, C_DARK, L(en, pt));
+    dtext(10, y, C_DARK, L(en, pt, fr));
 }
 
 //---
@@ -121,13 +121,14 @@ static unit_t const freq_units[] = {
     U("Hz", 1), U("kHz", 1e3), U("MHz", 1e6), U("GHz", 1e9),
 };
 
-#define CAT(n, pt, arr) { n, pt, arr, (int)(sizeof arr / sizeof *arr) }
+#define CAT(n, pt, fr, arr) \
+    { n, pt, fr, arr, (int)(sizeof arr / sizeof *arr) }
 
 static category_t const cats[] = {
-    CAT("Data size", "Tamanho de dados", size_units),
-    CAT("Data rate", "Taxa de dados", rate_units),
-    CAT("Time", "Tempo", time_units),
-    CAT("Frequency", "Frequencia", freq_units),
+    CAT("Data size", "Tamanho de dados", "Taille de donnees", size_units),
+    CAT("Data rate", "Taxa de dados", "Debit de donnees", rate_units),
+    CAT("Time", "Tempo", "Temps", time_units),
+    CAT("Frequency", "Frequencia", "Frequence", freq_units),
 };
 
 static void units_run(void)
@@ -147,9 +148,11 @@ static void transfer_results(form_t *f, int y)
 
     if (empty < 0) {
         hint(y, "Leave one field empty to solve it.",
-            "Deixe um campo vazio para o calcular.");
+            "Deixe um campo vazio para o calcular.",
+            "Videz un champ pour le calculer.");
         hint(y + 16, "Size in MB (10^6 bytes), speed in Mbit/s.",
-            "Tamanho em MB (10^6 bytes), velocidade em Mbit/s.");
+            "Tamanho em MB (10^6 bytes), velocidade em Mbit/s.",
+            "Taille en MB (10^6 octets), debit en Mbit/s.");
         return;
     }
     /* MB * 8 = Mbit */
@@ -157,25 +160,26 @@ static void transfer_results(form_t *f, int y)
     else if (empty == 1) speed = t > 0 ? size * 8 / t : NAN;
     else t = speed > 0 ? size * 8 / speed : NAN;
     if (isnan(size) || isnan(speed) || isnan(t)) {
-        res(y, L("Result", "Resultado"), C_RED, "-");
+        res(y, L("Result", "Resultado", "Resultat"), C_RED, "-");
         return;
     }
 
-    char const *names[3] = { L("Size", "Tamanho"), L("Speed", "Velocidade"),
-        L("Time", "Tempo") };
+    char const *names[3] = { L("Size", "Tamanho", "Taille"),
+        L("Speed", "Velocidade", "Debit"), L("Time", "Tempo", "Temps") };
     if (empty == 0) res(y, names[0], COLOR, "%s MB", fmt_g(b, size, 6));
     else if (empty == 1) res(y, names[1], COLOR, "%s Mbit/s",
         fmt_g(b, speed, 6));
     else res(y, names[2], COLOR, "%s", time_text(b, t));
     y += 22;
     if (empty != 2) {
-        res(y, L("Time", "Tempo"), C_BLACK, "%s", time_text(b, t));
+        res(y, L("Time", "Tempo", "Temps"), C_BLACK, "%s", time_text(b, t));
         y += 16;
     }
-    res(y, L("Size", "Tamanho"), C_BLACK, "%s", size_text(b, size * 1e6));
+    res(y, L("Size", "Tamanho", "Taille"), C_BLACK, "%s",
+        size_text(b, size * 1e6));
     y += 16;
     char a[32];
-    res(y, L("Speed", "Velocidade"), C_BLACK, "%s MB/s  (%s MiB/s)",
+    res(y, L("Speed", "Velocidade", "Debit"), C_BLACK, "%s MB/s  (%s MiB/s)",
         fmt_g(a, speed / 8, 5), fmt_g(b, speed * 1e6 / 8 / 1048576, 5));
 }
 
@@ -183,11 +187,12 @@ static void transfer_screen(void)
 {
     static form_t f = {
         .title_en = "Transfer time", .title_pt = "Tempo de transferencia",
+        .title_fr = "Temps de transfert",
         .color = COLOR, .count = 3, .cols = 1,
         .fields = {
-            { "Size", "Tamanho", "MB", { "700" } },
-            { "Speed", "Velocidade", "Mbit/s", { "100" } },
-            { "Time", "Tempo", "s" },
+            { "Size", "Tamanho", "Taille", "MB", { "700" } },
+            { "Speed", "Velocidade", "Debit", "Mbit/s", { "100" } },
+            { "Time", "Tempo", "Temps", "s" },
         },
         .results = transfer_results,
     };
@@ -206,38 +211,39 @@ static void media_results(form_t *f, int y)
 
     double frame = w * h * bpp / 8;     /* NaN if any is missing */
     if (!isnan(frame)) {
-        res(y, L("Image", "Imagem"), COLOR, "%s", size_text(a, frame));
+        res(y, L("Image", "Imagem", "Image"), COLOR, "%s", size_text(a, frame));
         y += 16;
         if (bpp >= 1 && bpp <= 64)
-            res(y, L("Colours", "Cores"), C_BLACK, "2^%d = %s",
+            res(y, L("Colours", "Cores", "Couleurs"), C_BLACK, "2^%d = %s",
                 (int)bpp, bpp <= 62 ? int_text(b, 1ll << (int)bpp)
                 : fmt_g(b, pow(2, bpp), 6));
         y += 16;
     }
     else { hint(y, "Image: width x height x bits/px",
-        "Imagem: largura x altura x bits/px"); y += 32; }
+        "Imagem: largura x altura x bits/px",
+        "Image: largeur x hauteur x bits/px"); y += 32; }
 
     if (!isnan(frame) && !isnan(fps)) {
-        res(y, L("Video bitrate", "Debito video"), COLOR, "%s Mbit/s",
-            fmt_g(b, frame * 8 * fps / 1e6, 5));
+        res(y, L("Video bitrate", "Debito video", "Debit video"), COLOR,
+            "%s Mbit/s", fmt_g(b, frame * 8 * fps / 1e6, 5));
         y += 16;
         if (!isnan(t)) {
-            res(y, L("Video size", "Tamanho video"), C_BLACK, "%s",
-                size_text(a, frame * fps * t));
+            res(y, L("Video size", "Tamanho video", "Taille video"), C_BLACK,
+                "%s", size_text(a, frame * fps * t));
             y += 16;
         }
     }
     y += 6;
     double bps = rate * bits * ch;
     if (!isnan(bps)) {
-        res(y, L("Audio bitrate", "Debito audio"), COLOR, "%s kbit/s",
-            fmt_g(b, bps / 1e3, 6));
+        res(y, L("Audio bitrate", "Debito audio", "Debit audio"), COLOR,
+            "%s kbit/s", fmt_g(b, bps / 1e3, 6));
         y += 16;
-        if (!isnan(t)) res(y, L("Audio size", "Tamanho audio"), C_BLACK,
-            "%s", size_text(a, bps * t / 8));
+        if (!isnan(t)) res(y, L("Audio size", "Tamanho audio",
+            "Taille audio"), C_BLACK, "%s", size_text(a, bps * t / 8));
     }
     else hint(y, "Audio: rate x bits x channels",
-        "Audio: taxa x bits x canais");
+        "Audio: taxa x bits x canais", "Audio: freq. x bits x canaux");
 }
 
 static void media_screen(void)
@@ -245,16 +251,17 @@ static void media_screen(void)
     static form_t f = {
         .title_en = "Media sizes (uncompressed)",
         .title_pt = "Tamanho de media (sem compressao)",
+        .title_fr = "Taille media (non compresse)",
         .color = COLOR, .count = 8, .cols = 2,
         .fields = {
-            { "Width", "Largura", "px", { "1920" } },
-            { "Height", "Altura", "px", { "1080" } },
-            { "Bits/px", "Bits/px", "", { "24" } },
-            { "FPS", "FPS", "", { "30" } },
-            { "Rate", "Taxa", "Hz", { "44100" } },
-            { "Bits", "Bits", "", { "16" } },
-            { "Chan.", "Canais", "", { "2" } },
-            { "Time", "Tempo", "s", { "60" } },
+            { "Width", "Largura", "Largeur", "px", { "1920" } },
+            { "Height", "Altura", "Hauteur", "px", { "1080" } },
+            { "Bits/px", "Bits/px", "Bits/px", "", { "24" } },
+            { "FPS", "FPS", "FPS", "", { "30" } },
+            { "Rate", "Taxa", "Freq.", "Hz", { "44100" } },
+            { "Bits", "Bits", "Bits", "", { "16" } },
+            { "Chan.", "Canais", "Canaux", "", { "2" } },
+            { "Time", "Tempo", "Temps", "s", { "60" } },
         },
         .results = media_results,
     };
@@ -270,9 +277,11 @@ typedef union { double d; uint64_t u; } f64_t;
 
 static char const *float_class(int exp, uint64_t mant, int max_exp)
 {
-    if (exp == max_exp) return mant ? "NaN" : L("infinity", "infinito");
-    if (exp == 0) return mant ? L("subnormal", "subnormal") : L("zero", "zero");
-    return L("normal", "normal");
+    if (exp == max_exp)
+        return mant ? "NaN" : L("infinity", "infinito", "infini");
+    if (exp == 0) return mant ? L("subnormal", "subnormal", "sous-normal")
+        : L("zero", "zero", "zero");
+    return L("normal", "normal", "normal");
 }
 
 /* The 32 bits in boxes: sign, exponent, mantissa in their colours */
@@ -317,8 +326,9 @@ static void ieee_screen(void)
         info_title("IEEE 754", COLOR);
         char a[48], b[48];
 
-        dtext(10, 24, C_BLACK, hex_mode ? L("Float bits", "Bits float")
-            : L("Value", "Valor"));
+        dtext(10, 24, C_BLACK, hex_mode
+            ? L("Float bits", "Bits float", "Bits float")
+            : L("Value", "Valor", "Valeur"));
         if (hex_mode) {
             numfield_t box;
             sprintf(box.text, "0x%s", hex);
@@ -336,16 +346,16 @@ static void ieee_screen(void)
             if (e && e != 0xFF)
                 sprintf(a, "%d - 127 = %d", e, e - 127);
             else sprintf(a, "%d", e);
-            dprint(10, 80, C_RGB(22, 4, 4), L("sign %d", "sinal %d"),
-                (int)(f.u >> 31));
-            dprint(70, 80, C_RGB(2, 16, 2), L("exponent %s", "expoente %s"),
-                a);
+            dprint(10, 80, C_RGB(22, 4, 4), L("sign %d", "sinal %d",
+                "signe %d"), (int)(f.u >> 31));
+            dprint(70, 80, C_RGB(2, 16, 2), L("exponent %s", "expoente %s",
+                "exposant %s"), a);
             dprint_opt(DWIDTH - 10, 80, C_RGB(2, 10, 24), C_NONE,
                 DTEXT_RIGHT, DTEXT_TOP, "mant. 0x%06X", (unsigned)m);
-            res(98, L("Stored", "Guardado"), C_BLACK, "%s",
+            res(98, L("Stored", "Guardado", "Stocke"), C_BLACK, "%s",
                 fmt_g(a, (double)f.f, 9));
             if (!hex_mode && e != 0xFF)
-                res(114, L("Error", "Erro"), C_BLACK, "%s",
+                res(114, L("Error", "Erro", "Erreur"), C_BLACK, "%s",
                     fmt_g(a, (double)f.f - x, 3));
 
             int de = d.u >> 52 & 0x7FF;
@@ -356,13 +366,14 @@ static void ieee_screen(void)
                 float_class(de, dm, 0x7FF));
             if (de && de != 0x7FF) sprintf(b, "%d - 1023 = %d", de, de - 1023);
             else sprintf(b, "%d", de);
-            res(154, L("Sign, exponent", "Sinal, expoente"), C_BLACK,
-                "%d,  %s", (int)(d.u >> 63), b);
-            res(170, L("Stored", "Guardado"), C_BLACK, "%s",
+            res(154, L("Sign, exponent", "Sinal, expoente", "Signe, exposant"),
+                C_BLACK, "%d,  %s", (int)(d.u >> 63), b);
+            res(170, L("Stored", "Guardado", "Stocke"), C_BLACK, "%s",
                 fmt_g(a, d.d, 15));
         }
         else hint(46, "Type a number, or press F2 to type the bits.",
-            "Escreva um numero, ou F2 para escrever os bits.");
+            "Escreva um numero, ou F2 para escrever os bits.",
+            "Entrez un nombre, ou F2 pour entrer les bits.");
 
         fkey_button_color(1, "DEC", hex_mode ? C_BLACK : COLOR);
         fkey_button_color(2, "HEX", hex_mode ? COLOR : C_BLACK);
@@ -426,8 +437,10 @@ static char const *weekday(long long days)
         "Sunday", "Monday", "Tuesday", "Wednesday" };
     static char const * const pt[] = { "quinta-feira", "sexta-feira",
         "sabado", "domingo", "segunda-feira", "terca-feira", "quarta-feira" };
+    static char const * const fr[] = { "jeudi", "vendredi", "samedi",
+        "dimanche", "lundi", "mardi", "mercredi" };
     int i = (int)(((days % 7) + 7) % 7);    /* 1970-01-01 was a Thursday */
-    return L(en[i], pt[i]);
+    return L(en[i], pt[i], fr[i]);
 }
 
 static void unix_results(form_t *f, int y)
@@ -443,21 +456,25 @@ static void unix_results(form_t *f, int y)
     }
     else if (!isnan(Y) && !isnan(M) && !isnan(D)) {
         if (M < 1 || M > 12 || D < 1 || D > 31 || fabs(Y) > 1e7) {
-            res(y, L("Date", "Data"), C_RED, L("invalid", "invalida"));
+            res(y, L("Date", "Data", "Date"), C_RED,
+                L("invalid", "invalida", "invalide"));
             return;
         }
         t = days_from_civil((long long)Y, (int)M, (int)D) * 86400
             + (long long)(isnan(h) ? 0 : h) * 3600
             + (long long)(isnan(mi) ? 0 : mi) * 60
             + (long long)(isnan(s) ? 0 : s);
-        res(y, L("Unix time", "Tempo Unix"), COLOR, "%s s", int_text(a, t));
+        res(y, L("Unix time", "Tempo Unix", "Heure Unix"), COLOR, "%s s",
+            int_text(a, t));
         y += 18;
     }
     else {
         hint(y, "Enter a Unix time (seconds since 1970),",
-            "Escreva um tempo Unix (segundos desde 1970),");
+            "Escreva um tempo Unix (segundos desde 1970),",
+            "Entrez une heure Unix (s depuis 1970),");
         hint(y + 16, "or leave it empty and enter a UTC date.",
-            "ou deixe-o vazio e escreva uma data UTC.");
+            "ou deixe-o vazio e escreva uma data UTC.",
+            "ou videz-la et entrez une date UTC.");
         return;
     }
 
@@ -469,27 +486,32 @@ static void unix_results(form_t *f, int y)
         int_text(a, year), mon, day, (int)(secs / 3600),
         (int)(secs / 60 % 60), (int)(secs % 60));
     y += 16;
-    res(y, L("Weekday", "Dia da semana"), C_BLACK, "%s", weekday(days));
+    res(y, L("Weekday", "Dia da semana", "Jour de semaine"), C_BLACK, "%s",
+        weekday(days));
     y += 16;
-    res(y, L("Milliseconds", "Milissegundos"), C_BLACK, "%s",
+    res(y, L("Milliseconds", "Milissegundos", "Millisecondes"), C_BLACK, "%s",
         int_text(b, t * 1000));
     y += 16;
     bool fits = t >= -2147483648ll && t <= 2147483647ll;
-    res(y, L("Signed 32-bit", "32 bits c/ sinal"), fits ? C_BLACK : C_RED,
-        "%s", fits ? L("fits (until 2038-01-19 03:14:07)",
-        "cabe (ate 2038-01-19 03:14:07)") : L("overflows", "excede"));
+    res(y, L("Signed 32-bit", "32 bits c/ sinal", "32 bits signe"),
+        fits ? C_BLACK : C_RED, "%s", fits
+        ? L("fits (until 2038-01-19 03:14:07)",
+            "cabe (ate 2038-01-19 03:14:07)",
+            "ok jusqu'au 2038-01-19 03:14:07")
+        : L("overflows", "excede", "deborde"));
 }
 
 static void unix_screen(void)
 {
     static form_t f = {
         .title_en = "Unix time (UTC)", .title_pt = "Tempo Unix (UTC)",
+        .title_fr = "Heure Unix (UTC)",
         .color = COLOR, .count = 7, .cols = 2,
         .fields = {
-            { "Unix", "Unix", "s", { "1700000000" } },
-            { "Year", "Ano", "" }, { "Month", "Mes", "" },
-            { "Day", "Dia", "" }, { "Hour", "Hora", "" },
-            { "Min", "Min", "" }, { "Sec", "Seg", "" },
+            { "Unix", "Unix", "Unix", "s", { "1700000000" } },
+            { "Year", "Ano", "Annee", "" }, { "Month", "Mes", "Mois", "" },
+            { "Day", "Dia", "Jour", "" }, { "Hour", "Hora", "Heure", "" },
+            { "Min", "Min", "Min", "" }, { "Sec", "Seg", "Sec", "" },
         },
         .results = unix_results,
     };
@@ -507,9 +529,9 @@ static void cpu_results(form_t *f, int y)
     char a[32], b[32];
 
     if (!isnan(ic) && !isnan(cpi) && !isnan(mhz) && mhz > 0) {
-        res(y, L("CPU time", "Tempo CPU"), COLOR, "%s  (%s %s)",
+        res(y, L("CPU time", "Tempo CPU", "Temps CPU"), COLOR, "%s  (%s %s)",
             time_text(a, ic * cpi / (mhz * 1e6)), fmt_g(b, ic * cpi, 4),
-            L("cycles", "ciclos"));
+            L("cycles", "ciclos", "cycles"));
         y += 16;
     }
     if (!isnan(cpi) && !isnan(mhz) && cpi > 0) {
@@ -519,12 +541,13 @@ static void cpu_results(form_t *f, int y)
     y += 6;
     if (!isnan(p) && !isnan(n) && p >= 0 && p <= 100 && n >= 1) {
         double fr = p / 100, sp = 1 / ((1 - fr) + fr / n);
-        res(y, L("Speed-up", "Aceleracao"), COLOR, "%sx  (%s%% %s)",
+        res(y, L("Speed-up", "Aceleracao", "Acceleration"), COLOR,
+            "%sx  (%s%% %s)",
             fmt_g(a, sp, 4), fmt_g(b, sp / n * 100, 3),
-            L("efficiency", "eficiencia"));
+            L("efficiency", "eficiencia", "efficacite"));
         y += 16;
-        res(y, L("Limit (N = inf)", "Limite (N = inf)"), C_BLACK, "%s",
-            fr < 1 ? fmt_g(a, 1 / (1 - fr), 4) : "inf");
+        res(y, L("Limit (N = inf)", "Limite (N = inf)", "Limite (N = inf)"),
+            C_BLACK, "%s", fr < 1 ? fmt_g(a, 1 / (1 - fr), 4) : "inf");
         y += 16;
     }
     dtext(10, y + 4, C_DARK, "T = IC x CPI / f     S = 1 / ((1 - p) + p / N)");
@@ -534,13 +557,14 @@ static void cpu_screen(void)
 {
     static form_t f = {
         .title_en = "CPU performance", .title_pt = "Desempenho do CPU",
+        .title_fr = "Performance CPU",
         .color = COLOR, .count = 5, .cols = 1,
         .fields = {
-            { "Instructions", "Instrucoes", "", { "1E9" } },
-            { "CPI", "CPI", "", { "1.5" } },
-            { "Clock", "Relogio", "MHz", { "2000" } },
-            { "Parallel (p)", "Paralelo (p)", "%", { "90" } },
-            { "Cores (N)", "Nucleos (N)", "", { "8" } },
+            { "Instructions", "Instrucoes", "Instructions", "", { "1E9" } },
+            { "CPI", "CPI", "CPI", "", { "1.5" } },
+            { "Clock", "Relogio", "Horloge", "MHz", { "2000" } },
+            { "Parallel (p)", "Paralelo (p)", "Parallele (p)", "%", { "90" } },
+            { "Cores (N)", "Nucleos (N)", "Coeurs (N)", "", { "8" } },
         },
         .results = cpu_results,
     };
@@ -551,42 +575,72 @@ static void cpu_screen(void)
 //  Constants and limits
 //---
 
-typedef struct { char const *name, *name_pt, *sym, *value; } constant_t;
+typedef struct {
+    char const *name, *name_pt, *name_fr, *sym, *value;
+} constant_t;
 
 static constant_t const constants[] = {
-    { "2 to the 8", "2 elevado a 8", "2^8", "256" },
-    { "2 to the 10 (kibi)", "2 elevado a 10 (kibi)", "2^10", "1 024" },
-    { "2 to the 16", "2 elevado a 16", "2^16", "65 536" },
-    { "2 to the 20 (mebi)", "2 elevado a 20 (mebi)", "2^20", "1 048 576" },
-    { "2 to the 30 (gibi)", "2 elevado a 30 (gibi)", "2^30", "1 073 741 824" },
-    { "2 to the 32", "2 elevado a 32", "2^32", "4 294 967 296" },
-    { "2 to the 64", "2 elevado a 64", "2^64", "18 446 744 073 709 551 616" },
-    { "Signed 8-bit range", "Gama 8 bits c/ sinal", "int8", "-128 .. 127" },
-    { "Unsigned 8-bit max.", "Max. 8 bits s/ sinal", "uint8", "255" },
-    { "Signed 16-bit range", "Gama 16 bits c/ sinal", "int16", "-32 768 .. 32 767" },
-    { "Unsigned 16-bit max.", "Max. 16 bits s/ sinal", "uint16", "65 535" },
-    { "Signed 32-bit min.", "Min. 32 bits c/ sinal", "INT32_MIN", "-2 147 483 648" },
-    { "Signed 32-bit max.", "Max. 32 bits c/ sinal", "INT32_MAX", "2 147 483 647" },
-    { "Unsigned 32-bit max.", "Max. 32 bits s/ sinal", "UINT32_MAX", "4 294 967 295" },
-    { "Signed 64-bit min.", "Min. 64 bits c/ sinal", "INT64_MIN", "-9 223 372 036 854 775 808" },
-    { "Signed 64-bit max.", "Max. 64 bits c/ sinal", "INT64_MAX", "9 223 372 036 854 775 807" },
-    { "Unsigned 64-bit max.", "Max. 64 bits s/ sinal", "UINT64_MAX", "18 446 744 073 709 551 615" },
-    { "Float largest", "Maior float", "FLT_MAX", "3.40282347e38" },
-    { "Float smallest normal", "Menor float normal", "FLT_MIN", "1.17549435e-38" },
-    { "Float epsilon", "Epsilon do float", "FLT_EPS", "1.19209290e-7 (2^-23)" },
-    { "Float precision", "Precisao do float", "FLT_DIG", "24 bits, ~7 digits" },
-    { "Double largest", "Maior double", "DBL_MAX", "1.7976931348623157e308" },
-    { "Double smallest normal", "Menor double normal", "DBL_MIN", "2.2250738585072014e-308" },
-    { "Double epsilon", "Epsilon do double", "DBL_EPS", "2.220446049250313e-16 (2^-52)" },
-    { "Double precision", "Precisao do double", "DBL_DIG", "53 bits, ~15-16 digits" },
-    { "Unix epoch", "Epoca Unix", "t = 0", "1970-01-01 00:00:00 UTC" },
-    { "Year 2038 problem", "Problema do ano 2038", "2^31-1 s", "2038-01-19 03:14:07 UTC" },
-    { "Ethernet MTU", "MTU Ethernet", "MTU", "1500 B" },
-    { "IPv4 header (min.)", "Cabecalho IPv4 (min.)", "IPv4", "20 B" },
-    { "IPv6 header", "Cabecalho IPv6", "IPv6", "40 B" },
-    { "TCP header (min.)", "Cabecalho TCP (min.)", "TCP", "20 B" },
-    { "UDP header", "Cabecalho UDP", "UDP", "8 B" },
-    { "Light in optical fibre", "Luz em fibra otica", "c/n", "~2e8 m/s (5 us/km)" },
+    { "2 to the 8", "2 elevado a 8", "2 puissance 8", "2^8", "256" },
+    { "2 to the 10 (kibi)", "2 elevado a 10 (kibi)", "2 puissance 10 (kibi)",
+      "2^10", "1 024" },
+    { "2 to the 16", "2 elevado a 16", "2 puissance 16", "2^16", "65 536" },
+    { "2 to the 20 (mebi)", "2 elevado a 20 (mebi)", "2 puissance 20 (mebi)",
+      "2^20", "1 048 576" },
+    { "2 to the 30 (gibi)", "2 elevado a 30 (gibi)", "2 puissance 30 (gibi)",
+      "2^30", "1 073 741 824" },
+    { "2 to the 32", "2 elevado a 32", "2 puissance 32",
+      "2^32", "4 294 967 296" },
+    { "2 to the 64", "2 elevado a 64", "2 puissance 64",
+      "2^64", "18 446 744 073 709 551 616" },
+    { "Signed 8-bit range", "Gama 8 bits c/ sinal", "Plage 8 bits signe",
+      "int8", "-128 .. 127" },
+    { "Unsigned 8-bit max.", "Max. 8 bits s/ sinal", "Max. 8 bits non signe",
+      "uint8", "255" },
+    { "Signed 16-bit range", "Gama 16 bits c/ sinal", "Plage 16 bits signe",
+      "int16", "-32 768 .. 32 767" },
+    { "Unsigned 16-bit max.", "Max. 16 bits s/ sinal", "Max. 16 bits non signe",
+      "uint16", "65 535" },
+    { "Signed 32-bit min.", "Min. 32 bits c/ sinal", "Min. 32 bits signe",
+      "INT32_MIN", "-2 147 483 648" },
+    { "Signed 32-bit max.", "Max. 32 bits c/ sinal", "Max. 32 bits signe",
+      "INT32_MAX", "2 147 483 647" },
+    { "Unsigned 32-bit max.", "Max. 32 bits s/ sinal", "Max. 32 bits non signe",
+      "UINT32_MAX", "4 294 967 295" },
+    { "Signed 64-bit min.", "Min. 64 bits c/ sinal", "Min. 64 bits signe",
+      "INT64_MIN", "-9 223 372 036 854 775 808" },
+    { "Signed 64-bit max.", "Max. 64 bits c/ sinal", "Max. 64 bits signe",
+      "INT64_MAX", "9 223 372 036 854 775 807" },
+    { "Unsigned 64-bit max.", "Max. 64 bits s/ sinal", "Max. 64 bits non signe",
+      "UINT64_MAX", "18 446 744 073 709 551 615" },
+    { "Float largest", "Maior float", "Plus grand float",
+      "FLT_MAX", "3.40282347e38" },
+    { "Float smallest normal", "Menor float normal", "Plus petit float normal",
+      "FLT_MIN", "1.17549435e-38" },
+    { "Float epsilon", "Epsilon do float", "Epsilon du float",
+      "FLT_EPS", "1.19209290e-7 (2^-23)" },
+    { "Float precision", "Precisao do float", "Precision du float",
+      "FLT_DIG", "24 bits, ~7 digits" },
+    { "Double largest", "Maior double", "Plus grand double",
+      "DBL_MAX", "1.7976931348623157e308" },
+    { "Double smallest normal", "Menor double normal",
+      "Plus petit double normal", "DBL_MIN", "2.2250738585072014e-308" },
+    { "Double epsilon", "Epsilon do double", "Epsilon du double",
+      "DBL_EPS", "2.220446049250313e-16 (2^-52)" },
+    { "Double precision", "Precisao do double", "Precision du double",
+      "DBL_DIG", "53 bits, ~15-16 digits" },
+    { "Unix epoch", "Epoca Unix", "Epoque Unix",
+      "t = 0", "1970-01-01 00:00:00 UTC" },
+    { "Year 2038 problem", "Problema do ano 2038", "Probleme de l'an 2038",
+      "2^31-1 s", "2038-01-19 03:14:07 UTC" },
+    { "Ethernet MTU", "MTU Ethernet", "MTU Ethernet", "MTU", "1500 B" },
+    { "IPv4 header (min.)", "Cabecalho IPv4 (min.)", "En-tete IPv4 (min.)",
+      "IPv4", "20 B" },
+    { "IPv6 header", "Cabecalho IPv6", "En-tete IPv6", "IPv6", "40 B" },
+    { "TCP header (min.)", "Cabecalho TCP (min.)", "En-tete TCP (min.)",
+      "TCP", "20 B" },
+    { "UDP header", "Cabecalho UDP", "En-tete UDP", "UDP", "8 B" },
+    { "Light in optical fibre", "Luz em fibra otica",
+      "Lumiere en fibre optique", "c/n", "~2e8 m/s (5 us/km)" },
 };
 #define CONST_COUNT (int)(sizeof constants / sizeof *constants)
 #define CONST_ROWS  11
@@ -596,7 +650,8 @@ static void constants_screen(void)
     int sel = 0, top = 0;
     while (1) {
         dclear(C_WHITE);
-        info_title(L("Constants & limits", "Constantes e limites"), COLOR);
+        info_title(L("Constants & limits", "Constantes e limites",
+            "Constantes et limites"), COLOR);
 
         if (sel < top) top = sel;
         if (sel >= top + CONST_ROWS) top = sel - CONST_ROWS + 1;
@@ -605,7 +660,7 @@ static void constants_screen(void)
             bool s = i == sel;
             if (s) drect(4, y - 1, DWIDTH - 9, y + 13, LIGHTC);
             dtext(10, y, s ? COLOR : C_BLACK, L(constants[i].name,
-                constants[i].name_pt));
+                constants[i].name_pt, constants[i].name_fr));
             dtext(290, y, s ? COLOR : C_DARK, constants[i].sym);
         }
         scrollbar_px(22, 22 + CONST_ROWS * 16, 0, CONST_COUNT, top,
@@ -619,7 +674,8 @@ static void constants_screen(void)
         int key = getkey().key;
         if (key == KEY_EXIT) return;
         if (key == INFO_KEY)
-            info_app(L("Constants & limits", "Constantes e limites"), COLOR);
+            info_app(L("Constants & limits", "Constantes e limites",
+                "Constantes et limites"), COLOR);
         else if (key == KEY_UP) sel = (sel + CONST_COUNT - 1) % CONST_COUNT;
         else if (key == KEY_DOWN) sel = (sel + 1) % CONST_COUNT;
     }
@@ -630,30 +686,41 @@ static void constants_screen(void)
 //---
 
 static menu_item_t const tools[] = {
-    { "Unit converter", "Conversor de unidades",
+    { "Unit converter", "Conversor de unidades", "Convertisseur d'unites",
       "Data size, data rate, time, frequency",
-      "Tamanho, taxa de dados, tempo, freq.", units_run, COLOR },
-    { "Transfer time", "Tempo de transferencia",
+      "Tamanho, taxa de dados, tempo, freq.",
+      "Taille, debit, temps, frequence", units_run, COLOR },
+    { "Transfer time", "Tempo de transferencia", "Temps de transfert",
       "Size, speed, time: solve the missing one",
-      "Tamanho, velocidade, tempo", transfer_screen, COLOR },
-    { "Media sizes", "Tamanho de media",
+      "Tamanho, velocidade, tempo",
+      "Taille, debit, temps: trouve le manquant", transfer_screen, COLOR },
+    { "Media sizes", "Tamanho de media", "Tailles de media",
       "Raw image, video and audio sizes",
-      "Imagem, video e audio sem compressao", media_screen, COLOR },
-    { "IEEE 754", "IEEE 754", "A number as float and double, bit by bit",
-      "Um numero em float e double, bit a bit", ieee_screen, COLOR },
-    { "Unix time", "Tempo Unix", "Timestamp <-> UTC date, weekday, 2038",
-      "Timestamp <-> data UTC, dia, 2038", unix_screen, COLOR },
-    { "CPU performance", "Desempenho do CPU",
+      "Imagem, video e audio sem compressao",
+      "Image, video et audio non compresses", media_screen, COLOR },
+    { "IEEE 754", "IEEE 754", "IEEE 754",
+      "A number as float and double, bit by bit",
+      "Um numero em float e double, bit a bit",
+      "Nombre en float et double, bit a bit", ieee_screen, COLOR },
+    { "Unix time", "Tempo Unix", "Heure Unix",
+      "Timestamp <-> UTC date, weekday, 2038",
+      "Timestamp <-> data UTC, dia, 2038",
+      "Timestamp <-> date UTC, jour, 2038", unix_screen, COLOR },
+    { "CPU performance", "Desempenho do CPU", "Performance CPU",
       "CPU time, MIPS, Amdahl's law",
-      "Tempo de CPU, MIPS, lei de Amdahl", cpu_screen, COLOR },
-    { "Constants & limits", "Constantes e limites",
+      "Tempo de CPU, MIPS, lei de Amdahl",
+      "Temps CPU, MIPS, loi d'Amdahl", cpu_screen, COLOR },
+    { "Constants & limits", "Constantes e limites", "Constantes et limites",
       "Powers of 2, integer and float limits...",
-      "Potencias de 2, limites de inteiros...", constants_screen, COLOR },
+      "Potencias de 2, limites de inteiros...",
+      "Puissances de 2, limites d'entiers...", constants_screen, COLOR },
 };
 
 static menu_t const menu = {
-    "Informatics", "Informatica", "Informatics toolkit " APPS_VERSION,
-    "Ferramentas de informatica " APPS_VERSION, COLOR,
+    "Informatics", "Informatica", "Informatique",
+    "Informatics toolkit " APPS_VERSION,
+    "Ferramentas de informatica " APPS_VERSION,
+    "Outils d'informatique " APPS_VERSION, COLOR,
     tools, (int)(sizeof tools / sizeof *tools),
 };
 

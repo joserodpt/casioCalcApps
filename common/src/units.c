@@ -74,19 +74,20 @@ static unit_t const data[] = {
     U("KiB", 1024), U("MiB", 1048576.0), U("GiB", 1073741824.0),
 };
 
-#define CAT(n, pt, arr) { n, pt, arr, (int)(sizeof arr / sizeof *arr) }
+#define CAT(n, pt, fr, arr) \
+    { n, pt, fr, arr, (int)(sizeof arr / sizeof *arr) }
 
 category_t const categories[] = {
-    CAT("Length", "Comprimento", length),
-    CAT("Area", "Area", area),
-    CAT("Volume", "Volume", volume),
-    CAT("Mass", "Massa", mass),
-    CAT("Temperature", "Temperatura", temp),
-    CAT("Pressure", "Pressao", pressure),
-    CAT("Energy", "Energia", energy),
-    CAT("Time", "Tempo", time_),
-    CAT("Speed", "Velocidade", speed),
-    CAT("Data", "Dados", data),
+    CAT("Length", "Comprimento", "Longueur", length),
+    CAT("Area", "Area", "Aire", area),
+    CAT("Volume", "Volume", "Volume", volume),
+    CAT("Mass", "Massa", "Masse", mass),
+    CAT("Temperature", "Temperatura", "Temperature", temp),
+    CAT("Pressure", "Pressao", "Pression", pressure),
+    CAT("Energy", "Energia", "Energie", energy),
+    CAT("Time", "Tempo", "Temps", time_),
+    CAT("Speed", "Velocidade", "Vitesse", speed),
+    CAT("Data", "Dados", "Donnees", data),
 };
 int const category_count = (int)(sizeof categories / sizeof *categories);
 
@@ -112,7 +113,7 @@ void units_screen_in(category_t const *cats, int count, int cat, int color)
     while (1) {
         category_t const *c = &cats[cat];
         dclear(C_WHITE);
-        info_title(L(c->name, c->name_pt), color);
+        info_title(L(c->name, c->name_pt, c->name_fr), color);
         double x = numfield_value(&val);
 
 #if GINT_HW_FX
@@ -136,12 +137,13 @@ void units_screen_in(category_t const *cats, int count, int cat, int color)
         }
 #else
 
-        dtext(10, 20, C_DARK, L("Value", "Valor"));
+        dtext(10, 20, C_DARK, L("Value", "Valor", "Valeur"));
         numfield_draw(&val, 70, 17, 150, true, color);
         dtext(226, 20, color, c->units[from].name);
         dline(6, 36, DWIDTH - 7, 36, C_LIGHT);
         dtext_opt(DWIDTH / 2, 209, C_DARK, C_NONE, DTEXT_CENTER, DTEXT_TOP,
-            L("<> category   ^v input unit", "<> categoria   ^v unidade"));
+            L("<> category   ^v input unit", "<> categoria   ^v unidade",
+              "<> categorie   ^v unite"));
 
         for (int i = 0; i < c->count; i++) {
             int y = 42 + i * 14;
@@ -159,7 +161,8 @@ void units_screen_in(category_t const *cats, int count, int cat, int color)
         int key = getkey().key;
         if (key == KEY_EXIT) return;
         if (key == INFO_KEY)
-            info_app(L("Unit converter", "Conversor de unidades"), color);
+            info_app(L("Unit converter", "Conversor de unidades",
+                "Convertisseur d'unites"), color);
         else if (key == KEY_LEFT) {
             cat = (cat + count - 1) % count;
             from = 0;

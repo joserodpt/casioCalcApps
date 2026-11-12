@@ -204,8 +204,8 @@ static void draw_list(state_t *s)
 
     dtext_opt(17, 10, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP, "Dec");
     dtext(22, 10, C_DARK, "Hx");
-    dtext(38, 10, C_DARK, L("Binary", "Binario"));
-    dtext(98, 10, C_DARK, L("Chr", "Car"));
+    dtext(38, 10, C_DARK, L("Binary", "Binario", "Binaire"));
+    dtext(98, 10, C_DARK, L("Chr", "Car", "Car"));
 
     for (int r = 0; r < LIST_ROWS; r++) {
         int c = s->top + r;
@@ -324,10 +324,12 @@ static void draw_utf8(state_t const *s)
         "%u", (unsigned)cp);
 
     if (is_surrogate(cp)) {
-        dtext(0, U_Y(1), C_BLACK, L("Surrogates D800-DFFF", "Substitutos"));
-        dtext(0, U_Y(2), C_BLACK, L("pair up in UTF-16:", "D800-DFFF: pares"));
+        dtext(0, U_Y(1), C_BLACK, L("Surrogates D800-DFFF", "Substitutos",
+            "Substituts D800-DFFF"));
+        dtext(0, U_Y(2), C_BLACK, L("pair up in UTF-16:", "D800-DFFF: pares",
+            "en paires (UTF-16):"));
         dtext(0, U_Y(3), C_BLACK, L("they have no UTF-8.",
-            "no UTF-16, sem UTF-8"));
+            "no UTF-16, sem UTF-8", "pas d'UTF-8."));
         return;
     }
 
@@ -361,9 +363,11 @@ static void draw_utf8(state_t const *s)
        length/continuation markers in grey and the code point bits black */
     dtext(0, U_Y(1), C_DARK, block_name(cp));
     if (n == 1) dtext(0, U_Y(2), C_DARK, L("1 byte, same as ASCII",
-        "1 byte, igual a ASCII"));
+        "1 byte, igual a ASCII",
+        "1 octet, comme ASCII"));
     else dprint(0, U_Y(2), C_DARK, L("%d bytes, grey: marks",
-        "%d bytes; cinza=marca"), n);
+        "%d bytes; cinza=marca",
+        "%d octets; gris=marq."), n);
 
     int marker[4] = { 1, 0, 0, 0 };
     if (n > 1) {
@@ -401,8 +405,8 @@ static void draw_list(state_t *s)
     dtext(50, hy, C_DARK, "Hex");
     dtext(92, hy, C_DARK, "Oct");
     dtext(132, hy, C_DARK, "Binary");
-    dtext(222, hy, C_DARK, L("Char", "Car"));
-    dtext(270, hy, C_DARK, L("Name", "Nome"));
+    dtext(222, hy, C_DARK, L("Char", "Car", "Car"));
+    dtext(270, hy, C_DARK, L("Name", "Nome", "Nom"));
     dline(6, LIST_Y - 2, DWIDTH - 7, LIST_Y - 2, C_LIGHT);
 
     for (int r = 0; r < LIST_ROWS; r++) {
@@ -426,7 +430,8 @@ static void draw_list(state_t *s)
             dtext(230, y, fg, buf);
         }
         if (!is_control(c) || c == 32)
-            dtext(270, y, dim, c == 32 ? L("Space", "Espaco") : short_name(c));
+            dtext(270, y, dim, c == 32 ? L("Space", "Espaco", "Espace")
+                : short_name(c));
         else {
             char const *e = c_escape(c);
             if (e) dtext(270, y, dim, e);
@@ -534,7 +539,7 @@ static void draw_utf8(state_t const *s)
     dfont(old);
 
     y = 44;
-    dprint(10, y, C_DARK, L("Decimal", "Decimal"));
+    dprint(10, y, C_DARK, L("Decimal", "Decimal", "Decimal"));
     dprint(96, y, C_BLACK, "%u", (unsigned)cp);
     dtext_opt(DWIDTH - 10, y, C_DARK, C_NONE, DTEXT_RIGHT, DTEXT_TOP,
         block_name(cp));
@@ -542,9 +547,11 @@ static void draw_utf8(state_t const *s)
 
     if (is_surrogate(cp)) {
         dtext(10, y + 6, C_RED, L("Surrogate code points (D800-DFFF) are",
-            "Pontos substitutos (D800-DFFF) so"));
+            "Pontos substitutos (D800-DFFF) so",
+            "Les substituts (D800-DFFF) vont par"));
         dtext(10, y + 19, C_RED, L("only used in pairs by UTF-16: no UTF-8.",
-            "usados em pares no UTF-16: sem UTF-8."));
+            "usados em pares no UTF-16: sem UTF-8.",
+            "paires en UTF-16 seulement: sans UTF-8."));
         return;
     }
 
@@ -614,9 +621,11 @@ static void draw_utf8(state_t const *s)
     }
     y += 16;
     dtext(60, y, C_DARK, n == 1 ? L("0xxxxxxx: one byte, same as ASCII",
-        "0xxxxxxx: um byte, igual a ASCII")
+        "0xxxxxxx: um byte, igual a ASCII",
+        "0xxxxxxx: un octet, comme ASCII")
         : L("Grey: length/continuation markers",
-        "Cinza: marcas de tamanho/continuacao"));
+        "Cinza: marcas de tamanho/continuacao",
+        "Gris: marques de longueur/suite"));
 }
 
 #endif /* GINT_HW_FX */
@@ -629,12 +638,14 @@ static void draw(state_t *s)
 {
 #if GINT_HW_FX
     char const * const titles[] = {
-        L("ASCII table", "Tabela ASCII"), L("ASCII grid", "Grelha ASCII"),
-        L("UTF-8 encoder", "UTF-8") };
+        L("ASCII table", "Tabela ASCII", "Table ASCII"),
+        L("ASCII grid", "Grelha ASCII", "Grille ASCII"),
+        L("UTF-8 encoder", "UTF-8", "UTF-8") };
 #else
     char const * const titles[] = {
-        L("ASCII table", "Tabela ASCII"), L("ASCII grid", "Grelha ASCII"),
-        L("UTF-8 encoder", "Codificador UTF-8") };
+        L("ASCII table", "Tabela ASCII", "Table ASCII"),
+        L("ASCII grid", "Grelha ASCII", "Grille ASCII"),
+        L("UTF-8 encoder", "Codificador UTF-8", "Encodeur UTF-8") };
 #endif
 
     dclear(C_WHITE);
@@ -645,11 +656,12 @@ static void draw(state_t *s)
     else draw_utf8(s);
 
 #if GINT_HW_FX
-    char const * const labels[] = { L("LST", "LST"), L("GRD", "GRL"),
+    char const * const labels[] = { L("LST", "LST", "LST"),
+        L("GRD", "GRL", "GRL"),
         "UTF" };
 #else
-    char const * const labels[] = { L("LIST", "LISTA"),
-        L("GRID", "GRELHA"), "UTF-8" };
+    char const * const labels[] = { L("LIST", "LISTA", "LISTE"),
+        L("GRID", "GRELHA", "GRILLE"), "UTF-8" };
 #endif
     for (int i = 0; i < 3; i++) {
         if (i == s->view) fkey_button_color(i + 1, labels[i], COLOR);
@@ -658,7 +670,7 @@ static void draw(state_t *s)
 #if GINT_HW_FX
     /* F6 flips between the two UTF-8 pages */
     if (s->view == VIEW_UTF8)
-        fkey_button(6, s->page ? L("ENC", "COD") : "BIT");
+        fkey_button(6, s->page ? L("ENC", "COD", "COD") : "BIT");
 #endif
     dupdate();
 }
@@ -690,7 +702,8 @@ int main(void)
             info_show("ASCII", "ASCII/UTF-8 " APPS_VERSION, COLOR);
 #else
             info_show("ASCII", L("ASCII / UTF-8 table " APPS_VERSION,
-                "Tabela ASCII / UTF-8 " APPS_VERSION), COLOR);
+                "Tabela ASCII / UTF-8 " APPS_VERSION,
+                "Table ASCII / UTF-8 " APPS_VERSION), COLOR);
 #endif
             continue;
         }
